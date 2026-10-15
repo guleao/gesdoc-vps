@@ -1,0 +1,3 @@
+- [bernhoeft-robo-projeto](bernhoeft-robo-projeto.md) — Robô somente leitura para monitorar pendências no portal Bernhoeft; estado, credenciais via env e próximos passos.
+- [atlas-robo-projeto](atlas-robo-projeto.md) — Robô Atlas (AFM Gestão): baixa pendências pela API, grava em SQLite/Excel e na tabela documentos do Neon.
+- [ableton-plugins-layout](ableton-plugins-layout.md) — Ableton, plugins and User Library on D: since 2026-10-09; old C:/B: paths are junctions.

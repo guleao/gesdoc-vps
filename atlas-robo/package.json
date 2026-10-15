@@ -1,0 +1,11 @@
+{
+  "name": "atlas-robo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Robô somente leitura do portal Atlas (AFM Gestão): lista documentos pendentes.",
+  "dependencies": {
+    "@neondatabase/serverless": "^1.2.0",
+    "exceljs": "^4.4.0",
+    "playwright": "^1.63.0"
+  }
+}

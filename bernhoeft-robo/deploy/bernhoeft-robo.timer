@@ -1,0 +1,10 @@
+[Unit]
+Description=Roda o robô Bernhoeft a cada 30 minutos
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=30min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,7 @@
+playwright-recaptcha
+static-ffmpeg
+# SpeechRecognition (dependência do solver) usa módulos removidos no Python 3.13+
+standard-aifc; python_version >= "3.13"
+audioop-lts; python_version >= "3.13"
+standard-chunk; python_version >= "3.13"
+standard-sunau; python_version >= "3.13"

@@ -1,0 +1,130 @@
+<title>Integração Atlas e GesDoc</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: coluna única de leitura, fluxo em três etapas no topo, tabelas de estado e de decisões abaixo */
+:root{--bg:#f6f7f5;--surface:#ffffff;--fg:#1d2420;--muted:#5d6a63;--line:#dfe4e0;--accent:#1f6b4f;--accent-soft:#e3f0ea;--warn:#9a5b00;--warn-soft:#fbefd9;--bad:#a3332b;--bad-soft:#f8e3e0;--code:#eef1ee;
+--sans:"IBM Plex Sans",system-ui,sans-serif;--mono:"IBM Plex Mono",ui-monospace,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121715;--surface:#1a211e;--fg:#e6ebe8;--muted:#9aa8a0;--line:#2b3631;--accent:#58c29a;--accent-soft:#1c2e27;--warn:#e3b05a;--warn-soft:#2e2514;--bad:#ee8c82;--bad-soft:#331c19;--code:#222b27;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121715;--surface:#1a211e;--fg:#e6ebe8;--muted:#9aa8a0;--line:#2b3631;--accent:#58c29a;--accent-soft:#1c2e27;--warn:#e3b05a;--warn-soft:#2e2514;--bad:#ee8c82;--bad-soft:#331c19;--code:#222b27;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:16px;line-height:1.6;padding-block:40px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:36px}
+h1{font-size:2rem;line-height:1.2;margin:0;text-wrap:balance;font-weight:600}
+h2{font-size:1.25rem;margin:0 0 12px;font-weight:600;text-wrap:balance}
+p{margin:0 0 12px;max-width:68ch}
+.meta{color:var(--muted);font-size:.9rem;margin-top:8px}
+code{font-family:var(--mono);font-size:.88em;background:var(--code);padding:1px 5px;border-radius:4px}
+.flow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.step{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px;min-width:0}
+.step b{display:block;margin-bottom:4px}
+.step small{color:var(--muted);display:block}
+.tag{display:inline-block;font-size:.75rem;font-family:var(--mono);padding:2px 8px;border-radius:99px;margin-bottom:8px}
+.t-ok{background:var(--accent-soft);color:var(--accent)}
+.t-warn{background:var(--warn-soft);color:var(--warn)}
+.t-bad{background:var(--bad-soft);color:var(--bad)}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:.92rem}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+tr:last-child td{border-bottom:0}
+td.n{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.note{border-left:3px solid var(--warn);background:var(--warn-soft);padding:12px 14px;border-radius:0 8px 8px 0}
+.note.ok{border-color:var(--accent);background:var(--accent-soft)}
+.note p:last-child{margin:0}
+ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+@media (max-width:600px){.flow{grid-template-columns:1fr}h1{font-size:1.6rem}}
+</style>
+
+<main>
+<header>
+<h1>Integração Atlas e GesDoc</h1>
+<p class="meta">Robô Atlas (Augusto) com a sincronização Factorial (Evilásio) · estado em 14/10/2026</p>
+</header>
+
+<section>
+<h2>Resumo</h2>
+<p>As duas partes já usam a mesma tabela <code>documentos</code> no Neon. O robô Atlas grava as pendências atrasadas. O serviço do Evilásio lê essas linhas, valida no Factorial, baixa os arquivos e avança o estado de cada uma.</p>
+<p>Só falta ligar o envio ao Atlas. Hoje há um risco de sobrescrita que foi corrigido (abaixo) e uma decisão em aberto sobre quem une os PDFs.</p>
+</section>
+
+<section>
+<h2>Fluxo</h2>
+<div class="flow">
+<div class="step"><span class="tag t-ok">funciona</span><b>1. Capturar</b>Robô Atlas lê <code>enc/document-reports/provider</code> e grava em <code>documentos</code> com <code>aba</code> preenchida e estado <code>PENDENTE_ENVIO</code>.<small>atlas-robo · neon.js</small></div>
+<div class="step"><span class="tag t-ok">funciona</span><b>2. Sincronizar</b>Valida o CPF no Factorial, acha e baixa os arquivos, grava estado, caminho, tamanho e SHA-256.<small>serviço do Evilásio</small></div>
+<div class="step"><span class="tag t-bad">não existe</span><b>3. Enviar ao Atlas</b>Subir cada arquivo para a pendência correspondente no portal.<small>a construir, mesmo molde do atlas-robo</small></div>
+</div>
+</section>
+
+<section>
+<h2>O que o Neon mostra hoje</h2>
+<div class="tablewrap"><table>
+<thead><tr><th>Estado</th><th>Linhas</th><th>Quem define</th></tr></thead>
+<tbody>
+<tr><td>PENDENTE_ENVIO</td><td class="n">124</td><td>Robô Atlas (linha nova)</td></tr>
+<tr><td>NAO_ENCONTRADO_FACTORIAL</td><td class="n">13</td><td>Sincronização</td></tr>
+<tr><td>LOCALIZADO</td><td class="n">12</td><td>Sincronização</td></tr>
+<tr><td>DIVERGENTE_FACTORIAL</td><td class="n">9</td><td>Sincronização</td></tr>
+<tr><td>COMPOSTO</td><td class="n">8</td><td>Sincronização</td></tr>
+<tr><td>AGUARDANDO_ASSINATURA</td><td class="n">2</td><td>Sincronização</td></tr>
+</tbody></table></div>
+<p class="meta" style="margin-top:8px">Os 44 em estados avançados batem com o exemplo do guia do Evilásio (8 + 12 + 13 + 2 + 9).</p>
+</section>
+
+<section>
+<h2>Correção feita no robô Atlas</h2>
+<div class="note ok">
+<p><b>Problema:</b> a cada coleta, o <code>neon.js</code> atualizava as linhas já existentes e reescrevia o estado para <code>PENDENTE_ENVIO</code>. As 20 linhas que o Evilásio avançou (COMPOSTO e LOCALIZADO) voltariam para a fila na próxima gravação.</p>
+<p><b>Correção:</b> no UPDATE, o <code>neon.js</code> não toca mais em <code>estado</code>. Linha nova continua entrando como <code>PENDENTE_ENVIO</code>. A simulação (<code>node neon.js --simular</code>) deu 0 novas, 168 atualizadas, 13 sem regra, sem gravar nada.</p>
+</div>
+</section>
+
+<section>
+<h2>União dos PDFs: ferramenta pronta</h2>
+<div class="note">
+<p>Combinado: a união usa o nosso Gotenberg. O guia do Evilásio diz que o serviço dele também une os doc_id 8, 9 e 10, e o Neon mostra 8 linhas COMPOSTO (6 do doc_id 9 e 2 do doc_id 10) com caminhos na máquina dele. Para os dois lados não gravarem na mesma linha, ele precisa desligar a composição dele quando a nossa entrar. Isso falta combinar com ele.</p>
+</div>
+<p style="margin-top:12px">Criei o <code>compor.js</code> no robô Atlas. Ele usa o mesmo nome e a mesma pasta que a sincronização: <code>factorial/&lt;id&gt;/doc&lt;doc_id&gt;_&lt;cpf&gt;_&lt;MM-AAAA&gt;.pdf</code>. Com <code>--gravar</code>, registra COMPOSTO, caminho, tamanho e SHA-256 no Neon.</p>
+<ul>
+<li>Por padrão só simula e mostra o que faria.</li>
+<li>Recusa linha já COMPOSTO, a menos que use <code>--substituir</code>.</li>
+<li>Confere a quantidade de partes de cada pacote antes de unir.</li>
+<li>O UPDATE só vale se o estado ainda for o que foi lido. Se a sincronização mexer na linha no meio, não grava.</li>
+<li>Só toca em estado, caminho, tamanho, hash e data de atualização.</li>
+</ul>
+<p class="meta" style="margin-top:8px">Testado: simulação, recusa de linha COMPOSTO, contagem de partes errada e a união em si (com PDFs falsos no demo do Gotenberg). A gravação no Neon não foi testada, para não alterar dados de produção.</p>
+<div class="tablewrap" style="margin-top:12px"><table>
+<thead><tr><th>Passo para ligar</th><th>Quem</th></tr></thead>
+<tbody>
+<tr><td>Deixar as partes de cada pacote (já baixadas) numa pasta, em vez de unir</td><td>Evilásio</td></tr>
+<tr><td>Rodar <code>node compor.js --id &lt;id&gt; parte1.pdf parte2.pdf --gravar</code> na ordem abaixo</td><td>Nosso lado</td></tr>
+<tr><td>Automatizar: ler as linhas LOCALIZADO dos doc_id 8, 9 e 10 e chamar o <code>compor.js</code></td><td>A fazer, depois que ele disser onde ficam as partes</td></tr>
+</tbody></table></div>
+<p style="margin-top:12px">Ordem das páginas, pelo guia: doc_id 8 = aviso, recibo, comprovante. doc_id 9 = TRCT, termo de quitação assinado, comprovante. doc_id 10 = guia, comprovante.</p>
+</section>
+
+<section>
+<h2>Pendências em aberto</h2>
+<div class="tablewrap"><table>
+<thead><tr><th>Item</th><th>Situação</th></tr></thead>
+<tbody>
+<tr><td>Onde ficam as partes baixadas de cada pacote e desligar a composição dele</td><td>Combinar com o Evilásio. Sem isso o <code>compor.js</code> roda só manualmente.</td></tr>
+<tr><td>Doc_id 8 (aviso e recibo de férias)</td><td>Nenhuma linha composta ainda. O guia diz que o aviso só é reconhecido se o nome do arquivo no Factorial tiver "aviso".</td></tr>
+<tr><td>"Folha de Pagamento Mensal Analítica" (8 linhas) e "Comprovante de Pagamento do TRCT" (5)</td><td>Sem doc_id, estão sendo puladas. Alguém precisa confirmar o par.</td></tr>
+<tr><td>Etapa 3, enviar ao Atlas</td><td>Não existe em nenhum dos lados.</td></tr>
+<tr><td>Permissões do usuário <code>robo_atlas</code></td><td>Tem SELECT, INSERT e UPDATE em <code>documentos</code>. Se formos gravar caminho e hash (opção B), confirmar que UPDATE cobre essas colunas.</td></tr>
+<tr><td>Instalar o Gotenberg e o robô na VPS</td><td>Preparado, não executado. O SSH não alcançou a VPS (Tailscale sem estado). Você precisa rodar o <code>subir-vps.ps1</code>.</td></tr>
+<tr><td>Credenciais do Evilásio no histórico do git</td><td>O guia manda rotacionar antes de produção.</td></tr>
+</tbody></table></div>
+</section>
+
+<section>
+<h2>Próximos passos sugeridos</h2>
+<ul>
+<li>Combinar com o Evilásio onde ficam as partes baixadas e quando ele desliga a composição.</li>
+<li>Automatizar o <code>compor.js</code> sobre as linhas LOCALIZADO dos doc_id 8, 9 e 10.</li>
+<li>Rodar o robô Atlas e a sincronização em horários combinados (o guia sugere cron a cada 2 horas, das 07:00 às 19:00, depois da captura).</li>
+<li>Só depois começar a etapa de envio ao Atlas, primeiro em modo simulação.</li>
+</ul>
+</section>
+</main>

@@ -1,0 +1,45 @@
+---
+name: bernhoeft-robo-projeto
+description: Projeto do robô que monitora documentos pendentes no portal Bernhoeft (ContractWeb); estado atual e próximos passos.
+metadata:
+  node_type: memory
+  type: project
+  originSessionId: 9b216f31-67b5-43bd-97cc-9282cd553858
+  modified: 2026-10-09T16:04:49.996Z
+---
+
+Robô para acompanhar documentos no portal Bernhoeft (ContractWeb, `https://newcontract.contractweb.com.br/`). Bernhoeft é um dos destinos de envio de documentos, junto com Atlas; os documentos vêm de SharePoint e Factorial, e cada regra define qual documento vai para qual destino, com periodicidade, validade e antecedência.
+
+**Estado (out/2026):**
+- Bernhoeft tem API (ContractWeb v3), mas sem documentação pública de envio de documentos, anexos ou status. O repositório público de testes da Bernhoeft só cobre contratos, terceiros, áreas e eventos.
+- Acesso atual é só pelo portal web, sem API. Alertas ficam para depois.
+- Há reCAPTCHA ("Não sou um robô") no login (out/2026 confirmado no spike). O robô não resolve; precisa de checagem manual ou de outro caminho.
+- Spike de 05/10/2026 com as credenciais reais (variáveis já com tamanho certo): o portal respondeu "Não foi possível entrar, verifique seus dados de acesso." Causa não confirmada: senha pode estar errada/antiga, ou o reCAPTCHA não foi marcado. Não repetir tentativas sem o usuário confirmar a senha.
+- Projeto do spike: `C:\Users\Ryzen 7\Documents\bernhoeft-robo` (`spike.js`, usa o Chrome do sistema; screenshots em `out/`).
+- Primeira fatia combinada: spike somente leitura com Playwright (login, tela de pendências, lista de documentos), sem enviar nada. Depois cruzar com a matriz de regras e gerar a lista de pendências.
+
+**Credenciais:** ficam em variáveis de ambiente do usuário `BERNHOEFT_USER` e `BERNHOEFT_PASSWORD` (gravadas com `setx`). Nunca no código nem no chat. A senha que foi colada no chat precisa ser trocada.
+
+**Pendência (out/2026):** o usuário trocou as credenciais (registro agora com usuário de 32 caracteres e senha de 8). A tentativa com as novas o portal recusou com "Validação do captcha incorreta" porque o reCAPTCHA não estava marcado. O spike agora preenche os campos e espera a pessoa marcar o reCAPTCHA e clicar em Login na janela (até 5 min). Não tentar automatizar o captcha. Atenção: o Node herda as variáveis da sessão aberta; ao rodar, recarregar com `[Environment]::GetEnvironmentVariable(..., 'User')` ou reabrir o terminal.
+
+**Atualização 06/10/2026 — `pendencias.js` (substitui o monitor na prática):** sessão salva em `profile/` funcionou após login manual. Lê Carregamento Trabalhista/Mobilização pelo endpoint `/AtualizarColaborador/ListarCompetenciasAjax` (hoje 0 competências para este usuário), lista todos os pedidos do relatório 012 (18, com paginação) e baixa o último "Concluido" como xlsx (clique chama `strapi.contractweb.com.br/api/v1/Download` que devolve `{"dados": URL assinada}`; o download do navegador é cancelado pelo portal, por isso a URL é buscada direto). O xlsx é lido com `exceljs`: "Não Entregue" = falta enviar (9 em 25/09), "Não Analisado" = enviado aguardando análise. Saídas: `out/pendencias.json`, `out/mudancas.txt` (NOVA/SAIU/ALTERADA), `out/historico/`. Flags `--loop`, `--concluidos`. O relatório baixado é de 25/09; para estado atual precisa de SOLICITAR no 012 (efeito no portal, não implementado, pedir OK ao usuário). O texto "acentos corrompidos" do monitor antigo era só o Get-Content do PowerShell sem `-Encoding UTF8`, o arquivo está certo.
+
+**Estado em 07/10/2026:** conta atual (Rodrigo Rocha, lado contratante/Equatorial) não tem permissão de upload (`/LinksContratante/CriarLink` = "Sem Permissão") e as telas de Carregamento estão vazias; upload não implementado (precisa conta de contratada, permissão ou gravação do fluxo). Criados `login.js`, `deploy/` (Ubuntu + systemd timer), `Dockerfile`/`docker-compose.yml` (não testados), `CLAUDE.md`. VPS: a nota "servidor GesDoc bloqueado aguardando o cliente" veio do doc do Plane de 21/09 e estava desatualizada. O servidor da GesDoc já existe: `srv2007033.hstgr.cloud` (Hostinger, Ubuntu 24.04, 4 vCPU/15 GB, n8n + Postgres gesdoc_prd/hml + Redis + Cloudflare Tunnel, acesso só por Tailscale SSH como `augusto`), auditado em 01/10 (sessão `ed4c4942`, relatórios em `C:\Users\Ryzen 7\auditoria-srv2007033-2026-10-01.md` e `relatorio-sessao-2026-10-02.md`). É a candidata para o robô; o usuário ainda não confirmou (09/10). Histórico completo em `Desktop\HISTORICO ROBO BERNHOEFT E VPS.md`. Sessão do portal expira em poucas horas, exigindo login manual com captcha. Ver [[bernhoeft-robo-duas-versoes]].
+
+**Captcha autorizado (07/10/2026):** o usuário disse que a empresa já autorizou automatizar o reCAPTCHA; isso substitui a regra antiga de "não tentar automatizar o captcha". Plano: CapSolver (`capsolver-core` + `capsolver-mcp` do PyPI, publicador oficial, `CAPSOLVER_API_KEY` em variável de ambiente). Instalação ainda não feita: o `pip install` foi negado pelo classificador de permissões do Claude Code; o usuário precisa rodar com `!` ou liberar a permissão, e fornecer a chave.
+
+**Captcha resolvido grátis (08/10/2026):** CapSolver abandonado (chave dava ERROR_KEY_DENIED_ACCESS). `playwright-recaptcha` (áudio, sem chave) funcionou no login real em ~9 s. Venv em `bernhoeft-robo/.venv-captcha` (Python 3.14 precisou de `standard-aifc audioop-lts standard-chunk standard-sunau`; FFmpeg via `static-ffmpeg`). Exige `locale='en-US'` no Playwright, senão o link de MP3 não é achado. Testes: `captcha_test_audio.py`, `captcha_test_portal.py`. INTEGRADO (08/10/2026): `login_auto.py` + `pendencias.js` chama quando a sessão expira (fecha o contexto, roda o Python, reabre); testado ponta a ponta headless com perfil novo no Windows. Intermitente (Google limita áudio seguidos; 4 tentativas com pausa). `deploy/setup-ubuntu.sh`, `Dockerfile` e `CLAUDE.md` atualizados, mas NÃO testados na VPS/Docker (IP de datacenter pode ser recusado pelo Google). Também corrigidos: menu lateral recolhido em perfil novo (`#bt-menu`) e caminho do Chrome no `login.js`.
+
+**Anti-Captcha (09/10/2026):** existe `ANTICAPTCHA_API_KEY` (escopo User, 32 caracteres). A chave é válida (`getBalance` deu errorId 0), mas o saldo é 0 e `createTask` devolve `ERROR_ZERO_BALANCE`. Só funciona depois de pôr crédito. O MCP CapSolver continua com `ERROR_KEY_DENIED_ACCESS`. `TWOCAPTCHA_API_KEY` (User, 32 caracteres) também existe, mas é idêntica à `ANTICAPTCHA_API_KEY`; o 2Captcha responde `ERROR_KEY_DOES_NOT_EXIST` (api.2captcha.com e res.php). Falta a chave real do painel do 2Captcha. Ainda em 09/10 o usuário trocou a `TWOCAPTCHA_API_KEY` (agora diferente da Anti-Captcha, 32 hex, sem espaços), mas o 2Captcha continua com `ERROR_KEY_DOES_NOT_EXIST` nos dois endpoints, e a Anti-Captcha também não a reconhece.
+
+**Ordem do captcha (09/10/2026, pedido do usuário):** `login_auto.py` tenta primeiro o áudio grátis (playwright-recaptcha) e, se falhar na mesma tentativa, os serviços pagos com chave (ordem `CAPTCHA_FALLBACK`). Antes era o contrário. Testado: áudio logou em ~10 s; com `CAPTCHA_AUDIO=0` os três pagos falham e saem da fila (2Captcha chave inexistente, Anti-Captcha sem saldo, CapSolver 401 KEY_DENIED_ACCESS). Agora o corpo do erro HTTP também é lido, e o trecho `CAP-...` é escondido no log. `instalar-hml.sh` agora passa as `*_API_KEY` do cofre para o container. SSH à VPS (augusto@100.103.196.93, Tailscale; o nome `srv2007033` falha na verificação de chave do host, o IP funciona) foi negado de novo pelo classificador em 09/10, então a instalação em homologação continua com o usuário.
+
+**Tarefas GesDoc a partir do robô (09/10/2026):** o usuário pediu para fechar tarefas do PDF `EQT_GesDoc_36_..._Tarefas` usando o robô e respondeu "termine entao" (autorizou mexer na VPS só em homologação e pôr a credencial no cofre SOPS). Feito localmente em `deploy/gesdoc/`: docs F3.25, F5.4, F3.17 (leitura), O2.1 (Bernhoeft), serviço F3.24 (testado no PC) e `instalar-hml.sh` (O2.6). SSH à VPS foi negado pelo classificador de permissões do Claude Code, então a instalação precisa ser rodada pelo usuário (ou liberada). Corrigido também: Dockerfile e `setup-ubuntu.sh` não instalavam o Chromium do Playwright Python (o `login_auto.py` usa ele no Linux).
+
+**Login (formulário real):** campo de usuário é `#Login` (placeholder "Digite o seu e-mail*"), senha é `#password`, botão é `#BotaoLogin`. Há também "Entrar com Microsoft" (`#btnLoginMicrosoft`), que não é usado.
+
+**Why:** o usuário quer um robô que lê o portal e lista pendências antes de qualquer envio automático.
+
+**How to apply:** antes de rodar, confirmar com `[bool]$env:BERNHOEFT_USER` (sem imprimir valores). Se as variáveis não aparecerem, o Claude Code precisa ser fechado e reaberto por completo. Não usar o MCP plane-uxnaut para esse trabalho (o usuário pediu para deixá-lo de lado).
+
+Transcrições de origem: sessão `3ad4593c-dae4-43d6-9c16-bb29e6783329` (levantamento da API e decisão do spike) e `9b216f31-67b5-43bd-97cc-9282cd553858` (reinício para carregar as variáveis).

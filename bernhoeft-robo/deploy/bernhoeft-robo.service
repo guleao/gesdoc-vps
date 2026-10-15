@@ -1,0 +1,14 @@
+[Unit]
+Description=Robô Bernhoeft - leitura de documentos pendentes (somente leitura)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=robo
+WorkingDirectory=/opt/bernhoeft-robo
+EnvironmentFile=/etc/bernhoeft-robo.env
+ExecStart=/usr/bin/node pendencias.js
+# código 2 = sessão expirada (precisa de login manual); não é falha do robô
+SuccessExitStatus=2
+TimeoutStartSec=600

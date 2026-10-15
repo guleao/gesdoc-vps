@@ -1,0 +1,15 @@
+services:
+  robo-bernhoeft:
+    build: .
+    restart: unless-stopped
+    environment:
+      HEADLESS: "1"
+      INTERVALO_MIN: "30"
+      PROFILE_DIR: /data/profile
+      # ALERT_WEBHOOK_URL: https://seu-n8n/webhook/bernhoeft-alerta
+    env_file: .env          # BERNHOEFT_USER e BERNHOEFT_PASSWORD (arquivo fora do git, chmod 600)
+    volumes:
+      - robo-data:/data
+      - ./out:/app/out
+volumes:
+  robo-data:

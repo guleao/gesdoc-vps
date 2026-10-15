@@ -1,0 +1,62 @@
+# Leitores de pendências (homologação): robô Bernhoeft e robô Atlas rodando sozinhos, em loop.
+# Somente leitura nos portais. As imagens são construídas pelo instalar-hml.sh.
+# Credenciais e a conexão do Neon vêm do cofre: subir sempre com
+#   sops exec-env infra/secrets/hml.enc.env 'docker compose -f services/pendencias/compose.hml.yml up -d [serviço...]'
+# (as variáveis listadas sem valor em "environment" são lidas do ambiente nessa hora).
+name: gesdoc-pendencias-hml
+
+services:
+  bernhoeft:
+    image: gesdoc/pendencias-bernhoeft:hml
+    command: ["node", "pendencias.js", "--loop"]
+    environment:
+      HEADLESS: "1"
+      INTERVALO_MIN: "30"
+      PROFILE_DIR: /data/profile
+      BERNHOEFT_USER:
+      BERNHOEFT_PASSWORD:
+      TWOCAPTCHA_API_KEY:
+      ANTICAPTCHA_API_KEY:
+      CAPMONSTER_API_KEY:
+      CAPSOLVER_API_KEY:
+      CAPTCHA_FALLBACK:
+      ALERT_WEBHOOK_URL:
+    volumes:
+      - bernhoeft-data:/data
+      - /opt/gesdoc/data/hml/pendencias-bernhoeft:/app/out
+    shm_size: 1gb
+    mem_limit: 2g
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped
+
+  atlas:
+    image: gesdoc/pendencias-atlas:hml
+    environment:
+      HEADLESS: "1"
+      INTERVALO_MIN: "60"
+      CODIGO_MIN: "30"
+      PROFILE_DIR: /data/profile
+      GOTENBERG_URL: http://pdf:3000
+      ATLAS_USER:
+      ATLAS_PASSWORD:
+      ROBO_DATABASE_URL:
+    volumes:
+      - atlas-data:/data
+      # Para o código de 8 dígitos do e-mail: gravar em /opt/gesdoc/data/hml/pendencias-atlas/codigo.txt
+      - /opt/gesdoc/data/hml/pendencias-atlas:/app/out
+    shm_size: 1gb
+    mem_limit: 2g
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped
+    networks: [default, pdf]
+
+volumes:
+  bernhoeft-data:
+    name: gesdoc-hml-pendencias-bernhoeft
+  atlas-data:
+    name: gesdoc-hml-pendencias-atlas
+
+networks:
+  pdf:
+    name: gesdoc-hml-pdf
+    external: true

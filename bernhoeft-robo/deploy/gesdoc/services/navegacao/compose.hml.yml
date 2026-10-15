@@ -1,0 +1,31 @@
+# Serviço de automação de navegação (F3.24), homologação.
+# Um Playwright Server headless em contêiner isolado. Os workers se conectam por
+# ws://navegacao:3000/ pela rede gesdoc-hml-navegacao. Não há porta exposta no host.
+# Rede própria (com saída para a internet): a gesdoc-hml-internal pode não ter saída, e o navegador precisa chegar aos portais.
+# Subir:  docker compose -f services/navegacao/compose.hml.yml up -d
+name: gesdoc-navegacao-hml
+
+services:
+  navegacao:
+    # A versão da imagem tem de ser a mesma do pacote playwright dos workers (hoje 1.63.0).
+    image: mcr.microsoft.com/playwright:v1.63.0-noble
+    init: true
+    user: pwuser
+    working_dir: /home/pwuser
+    # --max-clients: limite de sessões simultâneas. Conexões além do limite esperam na fila do próprio servidor até uma sessão fechar (testado em 09/10/2026).
+    command: ["/bin/sh", "-c", "npx -y playwright@1.63.0 run-server --port 3000 --host 0.0.0.0 --max-clients ${MAX_SESSOES:-3}"]
+    shm_size: 1gb
+    mem_limit: 3g
+    cpus: 2
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped
+    networks: [navegacao]
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('net').connect(3000,'127.0.0.1').on('connect',()=>process.exit(0)).on('error',()=>process.exit(1))\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+networks:
+  navegacao:
+    name: gesdoc-hml-navegacao

@@ -1,0 +1,549 @@
+<!doctype html><html><head><!-- frame-runtime --><script>window.__FRAME_PREAMBLE={"v":1,"capabilities":{"artifact":"artifact.Bnr0PUfi.js","assets":"assets.DOAjpBS9.js","comments":"comments.BYcmy890.js","db":"db.zFlAA4qL.js","dictation":"dictation.f3j7VXQ8.js","downloads":"downloads.axDW2QAi.js","embed":"embed.SWCZLzn6.js","endpoints":"endpoints.BPfoKaE1.js","files":"files.IkpCjcgM.js","mcp":"mcp.kl0G36TA.js","network":"network.B5UA9Su4.js","permissions":"permissions.6yWoDecA.js","reads":"reads.Bgov9hIw.js","room":"room.CBw289Md.js","sample":"sample.D5wHJkl_.js","self":"artifact.Bnr0PUfi.js","speech":"speech.DalMBY87.js","user":"user.uKicftX-.js"},"transforms":"_transforms.DF0fPd9f.js","comments":"_comments.D8v6wTdi.js","translate":"_translate.DqxC5ek1.js","ldx":"_ldx.B4FSryPi.js"}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     </script><script>(function(){"use strict";function fr(t){return t==="cookie"||t==="query"?t:void 0}function dr(t){return typeof t=="number"&&Number.isSafeInteger(t)&&t>0?t:void 0}var to=3e5;function hr(t,e){try{const r=t("navigation")[0],n=[r.responseStart,r.redirectEnd-r.redirectStart,r.domContentLoadedEventStart,e(),r.connectEnd-r.domainLookupStart,r.responseStart-r.requestStart];r.requestStart>0||(n.length=4);for(let a=0;a<n.length;a++)if(n[a]>=0&&n[a]<=3e5)n[a]=n[a]|0;else{if(a<4)return;n.length=4}return n}catch{return}}var pr=["light","dark","system"],mr=/^[A-Za-z0-9_-]{1,64}$/,Lt=/^[a-zA-Z_:][a-zA-Z0-9_:.-]{0,127}$/,vr=new Set(["class","hidden","value","checked","style","title","alt","placeholder","lang","dir","role","tabindex","disabled","readonly","contenteditable","open","colspan","rowspan"]);function _r(t){const e=t.toLowerCase();return e.startsWith("data-")||e.startsWith("aria-")||vr.has(e)}var Ot="data-ldx-props";function yr(t,e){if(e.toLowerCase()===Ot)return!0;const r=t.getAttribute(Ot);if(r===null)return!1;try{const n=JSON.parse(r);if(n===null||typeof n!="object"||Array.isArray(n))return!0;const a=e.toLowerCase();return Object.keys(n).some(s=>s.toLowerCase()===a)}catch{return!0}}var ro="http://www.w3.org/1999/xhtml",gr="http://www.w3.org/2000/svg",wr=new Set(["script","style","iframe","noscript","noframes","noembed","xmp","plaintext","template","title","textarea","object","embed"]),br=new Set(["script","style"]);function Er(t){const e=t.localName.toLowerCase();return t.namespaceURI==="http://www.w3.org/1999/xhtml"?!wr.has(e):t.namespaceURI===gr?!br.has(e):!1}function tt(t,e){return t===e||(t===160||t===32)&&(e===160||e===32)}function Sr(t,e){const r=t.length,n=e.length;let a=0;for(;a<r&&a<n&&tt(t.charCodeAt(a),e.charCodeAt(a));)a++;let s=0;for(;s<r-a&&s<n-a&&tt(t.charCodeAt(r-1-s),e.charCodeAt(n-1-s));)s++;return{p:a,s}}function kr(t,e){const r=t.firstChild;if(t.childNodes.length!==1||r===null||r.nodeType!==Node.TEXT_NODE){t.textContent=e;return}const n=r.data,a=n.length,s=e.length,{p:l,s:c}=Sr(n,e);l===a&&c===0&&a===s||r.replaceData(l,a-l-c,e.slice(l,s-c));const T=r.data,w=t.ownerDocument.getSelection?.()??null,_=w!==null&&w.rangeCount>0&&(w.anchorNode===r||w.focusNode===r)?{anchor:w.anchorNode,anchorOffset:w.anchorOffset,focus:w.focusNode,focusOffset:w.focusOffset}:null;let h=-1,A=-1;for(let p=0;p<T.length&&p<e.length;p++){const j=T.charCodeAt(p),R=e.charCodeAt(p);j!==R&&tt(j,R)&&(h<0&&(h=p),A=p)}const O=h>=0;if(O&&r.replaceData(h,A-h+1,e.slice(h,A+1)),O&&_!==null&&_.anchor!==null&&_.focus!==null)try{w.setBaseAndExtent(_.anchor,_.anchorOffset,_.focus,_.focusOffset)}catch{}}var Ar=new Set(["html","head","body","frameset"]);function Rr(t){return t.namespaceURI==="http://www.w3.org/1999/xhtml"&&Ar.has(t.localName)}function Tr(t){if(t===null||typeof t!="object")return!1;const e=t;if(typeof e.target!="string"||!mr.test(e.target)||e.text!==void 0&&typeof e.text!="string")return!1;if(e.attrsSet!==void 0){if(e.attrsSet===null||typeof e.attrsSet!="object")return!1;for(const[r,n]of Object.entries(e.attrsSet))if(!Lt.test(r)||typeof n!="string")return!1}if(e.attrsRemoved!==void 0){if(!Array.isArray(e.attrsRemoved))return!1;for(const r of e.attrsRemoved)if(typeof r!="string"||!Lt.test(r))return!1}return!0}function Lr(t,e){if(t===null||typeof t!="object")return!1;const{seq:r,elements:n}=t;if(typeof r!="number"||!Number.isSafeInteger(r)||!Array.isArray(n)||n.length===0||n.length>64)return!1;for(let a=0;a<n.length;a++)if(!e(n[a]))return!1;return!0}function Or(t){return t===null||typeof t!="object"?!1:Lr(t.__frame_patch,Tr)}function Mr(t){if(t===null||typeof t!="object")return!1;const e=t.__frame_init;return e!==null&&typeof e=="object"}function Pr(t){return t!==null&&typeof t=="object"&&t.__frame_size_poke===!0}function Nr(t){if(t===null||typeof t!="object")return!1;const e=t.__frame_host_visible;return e!==null&&typeof e=="object"&&typeof e.visible=="boolean"}function Cr(t){if(t===null||typeof t!="object")return!1;const e=t.__frame_theme;if(e===null||typeof e!="object")return!1;const r=e.theme;return typeof r=="string"&&pr.includes(r)}var Fr=["ok","empty","snapshot_error","snapshot_timeout","unclonable","oversize","unavailable","restore_error","withheld"],jr=["TypeError","RangeError","ReferenceError","SyntaxError","DataCloneError","QuotaExceededError","AbortError","TimeoutError","SecurityError","Error","other"];function xr(t){return typeof t=="string"&&jr.includes(t)?t:"other"}var Ir=Object.freeze({until:null,now:!1}),Dr="__claude_hot",Hr="__claude_hot_in",Br=/^__claude_hot(?:_in)?(?::|$)/,Mt=/^[0-9a-z]{1,32}$/,rt=t=>t===void 0?Dr:"__claude_hot:"+t,Le=t=>t===void 0?Hr:"__claude_hot_in:"+t;function qr(t,e){const r=[];for(let n=0;n<t.length;n++){const a=t.key(n);a!==null&&a!==e&&Br.test(a)&&r.push(a)}for(const n of r)t.removeItem(n)}function Ur(t){let e=null;try{e=q(JSON.parse(t)?.hot)}catch{return null}return e===null||typeof e.k!="string"||!Mt.test(e.k)?null:he(e.g)?{k:e.k,g:e.g}:{k:e.k}}var no=262144,Kr=3e3,Gr=5e3,Pt=/^[a-z0-9._:-]{1,64}$/,$r=["none","hot-restart","hard-reload"],zr=["asset","doc","added","removed"],Wr=1500,Vr=/^[0-9a-f]{64}$/;function q(t){return t!==null&&typeof t=="object"?t:null}function he(t){return typeof t=="number"&&Number.isInteger(t)&&t>=0&&t<2**31}function Nt(t){return t===void 0||typeof t=="number"&&Number.isFinite(t)}function Xr(t){return t===void 0||typeof t=="string"&&Pt.test(t)}function Ct(t){const e=q(t);return e!==null&&(e.until===null||typeof e.until=="number"&&Number.isFinite(e.until))&&typeof e.now=="boolean"}function nt(t){const e=q(t);return e!==null&&typeof e.ver=="string"&&e.ver.length<=128&&Nt(e.seq)&&typeof e.handoff=="string"&&Fr.includes(e.handoff)&&Xr(e.note)}function Ft(t){const e=q(t);return e!==null&&he(e.gen)&&(e.phase==="final"||e.phase==="pending")&&(e.from===null||nt(e.from))}function Yr(t){const e=q(t);return e!==null&&e.kv===1&&he(e.gen)&&nt(e.from)&&Object.hasOwn(e,"data")}function Jr(t){const e=q(t);return e!==null&&e.__frame_hot_snapshot===!0&&he(e.gen)&&typeof e.timeoutMs=="number"&&e.timeoutMs>=0&&e.timeoutMs<=6e4&&(e.handoff===void 0||typeof e.handoff=="boolean")&&(e.deadline===void 0||Ct(e.deadline))&&Nt(e.seq)&&(e.note===void 0||typeof e.note=="string")&&(e.key===void 0||typeof e.key=="string")}function Zr(t){const e=q(t);return e!==null&&e.__frame_hot_start===!0&&he(e.gen)&&nt(e.from)}function Qr(t){return typeof t=="string"&&t.length>=1&&t.length<=128}function jt(t){return q(t)!==null&&!Array.isArray(t)}function en(t){const e=q(t);return e!==null&&e.__frame_cap_grant===!0&&typeof e.cap=="string"&&Qr(e.ver)&&(e.grant===void 0||jt(e.grant))&&(e.budgets===void 0||jt(e.budgets)&&Object.values(e.budgets).every(Number.isFinite))&&(e.brokerGen===void 0||he(e.brokerGen))}function tn(t){const e=q(t);return e!==null&&e.__frame_cap_rewired===!0&&(e.caps===void 0||Array.isArray(e.caps)&&e.caps.every(r=>typeof r=="string"))&&(e.brokerGen===void 0||he(e.brokerGen))}function Ge(t){const e=q(t);return e!==null&&typeof e.ver=="string"&&e.ver.length<=128&&Number.isFinite(e.seq)}function xt(t){if(t==null||typeof t=="string")return!0;const e=q(t);return e!==null&&typeof e.doc=="string"&&typeof e.profile=="string"}function rn(t){const e=q(t);return e!==null&&typeof e.path=="string"&&zr.includes(e.kind)&&xt(e.from)&&xt(e.to)}function nn(t){return t===null?null:Object.freeze(t.filter(rn))}function on(t){const e=q(t);return e!==null&&e.__frame_hot_update===!0&&Number.isFinite(e.id)&&Ge(e.from)&&Ge(e.to)&&(e.changed===null||Array.isArray(e.changed))&&$r.includes(e.required)&&Ct(e.deadline)&&typeof e.verdictTimeoutMs=="number"&&e.verdictTimeoutMs>=0&&e.verdictTimeoutMs<=6e4&&(e.preflight===void 0||typeof e.preflight=="string"&&Vr.test(e.preflight))}function an(t){const e=q(t);return e!==null&&e.__frame_hot_readdress===!0&&Ge(e.from)&&Ge(e.to)}var pe=/^[\w.-]+\.js$/;function sn(t,e,r){return r?"inert":typeof e=="string"&&pe.test(e)?t?[e]:"inert":t?"inert":"framed"}var It=Object.freeze({[Symbol("claude.hot.restart")]:!0});function Dt(t,e){let r;try{r=t??sessionStorage}catch{return null}const n=rt(e?.k),a=Le(e?.k);let s=null;try{s=r.getItem(n)}catch{}try{r.removeItem(n)}catch{}try{qr(r,a)}catch{}let l=null;if(s!==null&&!(e!==null&&e.g===void 0))try{const c=JSON.parse(s);Yr(c)&&(e===null||c.gen===e.g)&&(l=c)}catch{}if(l===null)try{r.removeItem(a)}catch{}return l}function Ht(){const t=/^\/_f\/([^/]{1,128})\//.exec(location.pathname);return t?t[1]:""}var ln=/^[^/\\?#]{1,128}$/,ot=t=>ln.test(t)&&t!=="."&&t!=="..";function Bt(t,e,r){const n=new URL(t),a="/_f/"+e+"/";if(!e||!n.pathname.startsWith(a)||!ot(r))return null;const s=n.search.slice(1).split("&").filter(l=>!/^__frame_t(?:=|$)/.test(l)).join("&");return n.origin+"/_f/"+r+"/"+n.pathname.slice(a.length)+(s?"?"+s:"")+n.hash}var $e="{}";function Oe(t){if(!t)return null;const e={ver:t.ver,handoff:t.handoff};return t.seq!==void 0&&(e.seq=t.seq),t.note!==void 0&&(e.note=t.note),e}function qt(t,e){return t!==null&&t.note===void 0&&e?.note!==void 0?{...t,note:e.note}:t}function Ut(t){const e=t?.k;return e!==null&&typeof e=="object"?e:void 0}function cn(t,e,r,n=null){const a=setTimeout,s=clearTimeout,l=queueMicrotask,c=performance.now.bind(performance),T=new TextEncoder;let w=null,_=null;try{w=history,_=w.replaceState.bind(w)}catch{}const h=(...o)=>{try{console.warn(...o)}catch{}};let A=Ht(),O=null;try{O=sessionStorage}catch{}const p={storage:O,fetch:typeof fetch=="function"?fetch.bind(globalThis):null,entry:location.origin+location.pathname+location.search,ver:A,priors:[],key:n?.k};let j=n?.k;const R=typeof requestAnimationFrame=="function"?requestAnimationFrame:o=>a(()=>o(c()),16);let y=e?.data??{},b=Oe(e?.from),x=e?.gen??0,D=e!==null,B=!1,G=!1,H=null,be=!1;const Fe=new AbortController;let je=null,U=null,Ee=null,xe=!1,le=()=>{};const ce=new Promise(o=>{le=o});let ve=!1,u=!1,E=!1,m,g=null,I=!1,$=!1,K=!1,te=!1,Y=!1,_e=!1;const ye=o=>{for(const f of[rt(o),Le(o)])try{O?.removeItem(f)}catch{}},z=(o,f)=>{try{f!==null&&r.post(o,f)}catch{}},Ie=()=>Y||=K&&(U===null||te),J=()=>{const o={__frame_hot:!0,ready:U!==null,accept:Ee!==null,demand:!0};_e=!Y,_e&&(o.booting=!0),ve&&(o.readData=!0),E&&(o.threw=!0),g?.assess&&(o.preflight=!0),z(o,H)};let De=!1,re=!1,ue=!1,He=!1;const Je=()=>{De||!be||ue||(De=!0,z({__frame_reveal_hold:!0},"*"))},Se=()=>new Promise(o=>{let f,d=0;const v=M=>{if(f===void 0)f=M;else if(M!==f||++d>=8){o();return}try{R(v)}catch{o()}};try{R(v)}catch{o()}}),Be=()=>{ue=!0,z({__frame_reveal_ready:!0},"*")},qe=o=>{re||(re=!0,o.then(f=>{if(f===!1)return;let d=null;try{d=g?.settle?.()??null}catch{}return(d===null?Se():new Promise(v=>{a(v,50),Promise.resolve(d).then(v,v)}).then(Se)).then(Be)}))},gt=()=>{if(He||!ue)return;He=!0;const o=()=>{try{g?.afterReveal?.()}catch{}};o(),Se().then(()=>{o(),Be()})},ee=(o=!1)=>{if(xe||U===null||!D||!G)return;xe=!0;const f=U,d=y;l(()=>{let v;try{v=f(d)}catch(P){throw le(!1),P}let M=!1;try{M=typeof v?.then=="function"}catch{}if(!M){le(!0);return}Promise.resolve(v).then(()=>le(!0),P=>{le(!1),l(()=>{throw P})})}),qe(o?ce:r.dcl.then(()=>ce))},fe=o=>typeof o=="string"&&Pt.test(o)?o:void 0,ke=o=>{const f={__frame_hot_restart:!0},d=fe(o?.note);d!==void 0&&(f.note=d),o?.required==="hard-reload"&&(f.required="hard-reload"),z(f,H)},Ue=Object.freeze({get data(){return G||(u=!0),!D&&!ve&&(ve=!0,G&&J()),y},get from(){return b},get gen(){return x},signal:Fe.signal,snapshot(o){typeof o=="function"&&(je=o)},ready(o){typeof o!="function"||U!==null||(U=o,Je(),J(),B&&z({__frame_hot_ready:!0,gen:x},H),ee())},accept(o){typeof o=="function"&&(Ee=o,J())},restart(o){const f={note:o?.note,required:o?.required};if(G){ke(f);return}const d=m;m={note:fe(d?.note)??f.note,required:d?.required==="hard-reload"||f.required==="hard-reload"?"hard-reload":void 0}}});let i=null,S=()=>{};const k=new Promise(o=>{S=o});let N=null;const Z=()=>N??=r.dcl.then(()=>{let o=!1;try{o=i!==null&&i.expect()}catch{}if(!o)return;const f=i.maxMs;return new Promise(d=>{k.then(d),a(d,f)})}),Q=()=>{if(!I||$||g===null)return;$=!0;const o=g;Z().then(()=>{try{ue||o.afterStart(Ut(e),!1)}catch{}})},de=o=>{e!==null&&u&&(ve=!0),y={},b=null,x=0;try{O?.removeItem(Le(n?.k))}catch{}e!==null&&!o&&qe(r.dcl.then(()=>U!==null?ce:void 0))},$n=()=>{I=!0,qe(Z().then(()=>U!==null?ce:void 0)),Q()};try{addEventListener("error",()=>{E||U!==null||(E=!0,J())})}catch{}const sr=()=>{a(()=>{!Y&&Ie()&&_e&&J()},0)};try{K=document.readyState==="complete",K||addEventListener("load",()=>{K=!0,sr()},{once:!0})}catch{K=!0}Ie(),ce.then(()=>{te=!0,sr()});let ge=-1,wt,bt,Ke=!0,Et=!1,St,Ze=null;const kt=o=>{const f=Ze===null;Ze=Ke&&o[0]!=="withheld"?o:["withheld",o[1],$e];let d=o[0];if(Ke&&d!=="withheld"){const M={ver:A,handoff:d};wt!==void 0&&(M.seq=wt),bt!==void 0&&(M.note=bt);try{if(O===null)throw new Error("no storage");O.setItem(rt(j),'{"kv":1,"gen":'+ge+',"from":'+JSON.stringify(M)+(St!==void 0?',"k":'+JSON.stringify(St):"")+',"data":'+(d==="ok"?o[2]:$e)+"}")}catch{d="unavailable"}}else{d="withheld",ye(j);try{g?.release?.()}catch{}}const v={__frame_hot_snapshotted:!0,gen:ge,handoff:d,bytes:o[1]};o[3]!==void 0&&(v.errName=o[3]),z(v,H),f&&(d==="snapshot_error"||d==="unclonable"||d==="oversize")&&h("claude.hot: snapshot",d,o[3])},Ae=o=>{try{return xr(o?.name)}catch{return"other"}},Re=(o,f,d=0)=>kt(f===void 0?[o,d,$e]:[o,d,$e,Ae(f)]),zn=o=>{if(o.gen<=ge)return;const f=ge>=0;if(ge=o.gen,wt=o.seq,bt=fe(o.note),typeof o.key=="string"&&Mt.test(o.key)&&o.key!==j&&(ye(j),j=o.key),Ke&&=o.handoff!==!1,f){Ze!==null?kt(Ze):Et&&z({__frame_hot_held:!0,gen:ge},H);return}Fe.abort();const d=Object.freeze({handoff:Ke,timeoutMs:o.timeoutMs,deadline:o.deadline??Ir}),v=je,M=()=>{if(Ke)try{St=g?.capture()}catch{}if(v===null){Re("empty");return}let L=!1;const W=a(()=>{L||(L=!0,Re("snapshot_timeout"))},Math.max(0,d.timeoutMs));Promise.resolve().then(()=>v(d)).then(Te=>{if(L)return;L=!0,s(W);let ne;try{ne=JSON.stringify(Te)}catch(At){Re("unclonable",At);return}if(typeof ne!="string"){Re("unclonable");return}let oe=ne.length;try{oe=T.encode(ne).length}catch{}if(oe>262144){Re("oversize",void 0,oe);return}kt(["ok",oe,ne])},Te=>{L||(L=!0,s(W),Re("snapshot_error",Te))})};let P=null;try{P=g?.holdForIme()??null}catch{}if(P===null)M();else{Et=!0,z({__frame_hot_held:!0,gen:ge},H);const L=()=>{Et=!1,M()};P.then(L,L)}},Wn=o=>{if(!B||D||U===null||o.gen!==x)return;let f=null;try{f=Dt(O,n&&{k:n.k,g:o.gen})}catch{}if(f!==null&&f.gen!==o.gen){f=null;try{O?.removeItem(Le(n?.k))}catch{}}y=f?.data??{},b=qt(Oe(f?.from??o.from),Oe(o.from)),f!==null&&(x=f.gen),D=!0,B=!1;const d=Ut(f);ce.then(v=>{try{v&&g?.afterStart(d,!0)}catch{}}),ee(!0)},ir=o=>{const f=A,d=p.entry;let v="",M,P=null;try{if(v=location.href,M=w.state,P=Bt(v,f,o),P!==null)if(_(M,"",P),location.pathname.startsWith("/_f/"+o+"/"))P=location.href;else return{failed:"navigate event canceled"}}catch(L){return{failed:Ae(L)}}A=p.ver=o,p.priors.push(f)>8&&p.priors.splice(1,1);try{p.entry=Bt(d,f,o)??d}catch{}return[P,f,d,v,M]},Vn=({from:o,to:f})=>{let d,v;if(!ot(f.ver))d="adopt_failed",v="not a version path segment";else if(f.ver===A)d="adopted";else if(!A||o.ver!==A)d="stale";else{const P=ir(f.ver);"failed"in P?(d="adopt_failed",v=P.failed):d=P[0]===null?"adopt_skipped":"adopted"}v!==void 0&&h(`claude.hot: could not move this page's URL to its new version folder /_f/${f.ver}/ (${v})`);const M={__frame_hot_readdressed:!0,to:f.ver,at:A,outcome:d};z(M,H)};let Qe=0;const Xn=o=>{const f=Ee;if(f===null||o.id<=Qe)return;Qe=o.id;const d=g?.assess;if(o.preflight===void 0||d===void 0){lr(o,f);return}let v=!1;const M=W=>{v||(v=!0,s(L),o.id===Qe&&lr(o,f,W))},P=()=>M(d.timeout(o)),L=a(P,Wr+100);d.run(o,window).then(M,P)},lr=(o,f,d)=>{let v,M=!1,P=!1,L,W,Te=null;const ne=C=>{if(P)return!1;if(L!==void 0&&L!==C)return h(`claude.hot: u.${C}() ignored - u.${L}() was called first`),!1;const ae=L===void 0;return L=C,ae},oe=C=>{L="restart",h(`claude.hot: ${C} - restarting`)},At=()=>{if(!ne("adopt")||o.id!==Qe)return;const C=o.to.ver;if(et.required!=="none"){oe(`u.adopt() needs required 'none', it is '${et.required}'`);return}if(!ot(C)){oe("u.adopt() cannot address this version");return}if(!A||C===A)return;const ae=ir(C);if("failed"in ae){W="adopt_failed",oe(`adopt_failed ${ae.failed}; URL not changed`);return}const[X,Tt,Zn,ur,Qn]=ae;X===null?(W="adopt_skipped",h(`claude.hot: adopt_skipped - page already left /_f/${Tt}/; URL not changed, update still applied`)):W="adopted",Te=()=>{if(A===C){if(X!==null)try{if(location.href!==X)h("claude.hot: adopt_revert_skipped - update not applied; URL left where the page navigated");else{if(_(Qn,"",ur),location.href!==ur){h("claude.hot: adopt_revert_failed navigate event canceled - URL still at the new version");return}W="adopt_reverted",h("claude.hot: adopt_reverted - adopt() was called but the handler threw; URL restored")}}catch(eo){h(`claude.hot: adopt_revert_failed ${Ae(eo)} - URL still at the new version`);return}A=p.ver=Tt,p.entry=Zn,p.priors[p.priors.length-1]===Tt&&p.priors.pop(),X===null&&(W=void 0)}}},et=Object.freeze({from:{ver:o.from.ver,seq:o.from.seq},to:{ver:o.to.ver,seq:o.to.seq},changed:nn(o.changed),required:o.required,deadline:o.deadline,adopt:At,defer(){return ne("defer")&&et.deadline.now&&oe("u.defer() past the deadline"),It},restart(C){return ne("restart"),L==="restart"&&!P&&(v??=fe(C?.note),M||=C?.required==="hard-reload"),It},...d?.update}),Yn=(C,ae)=>{P=!0,C==="threw"?(Te?.(),v??=Ae(ae).toLowerCase()):L===void 0&&h(C==="timeout"?"claude.hot: accept handler did not answer in time - restarting":"claude.hot: accept handler settled without defer/restart/adopt - restarting");const X={__frame_hot_verdict:!0,id:o.id};X.verdict=C==="threw"||L===void 0||L==="restart"?"restart":L==="adopt"?"applied":"deferred",X.verdict==="restart"&&(M&&(X.required="hard-reload"),v!==void 0&&(X.note=v)),W!==void 0&&(X.verdict==="applied"||W!=="adopted")&&(X.adopt=W),z(Object.assign(X,d?.verdict),H)};let cr=!1;const Rt=(C,ae)=>cr?!1:(cr=!0,s(Jn),Yn(C,ae),!0),Jn=a(()=>Rt("timeout"),o.verdictTimeoutMs);Promise.resolve().then(()=>f(et)).then(()=>Rt("settled"),C=>{!Rt("threw",C)&&L==="adopt"&&ke({note:Ae(C).toLowerCase()}),h("claude.hot: accept",Ae(C))})};try{t.hot===void 0&&Object.defineProperty(t,"hot",{value:Ue,writable:!1,configurable:!1,enumerable:!1})}catch{}return{hot:Ue,boot:p,afterConnect(){be=!0,(e!==null||U!==null)&&Je()},onInit(o,f){H=f,G=!0;const d=Ft(o)?o:null;d?.phase==="final"&&e!==null&&e.gen===d.gen?(D=!0,b=qt(b,Oe(d.from)),$n()):(B=d?.phase==="pending",de(B),D=!B,x=d?.gen??0,b=Oe(d?.from)),J(),_e&&a(()=>{Y||(Y=!0,J())},Gr),B&&U!==null&&z({__frame_hot_ready:!0,gen:x},f),m!==void 0&&(ke(m),m=void 0),ee()},onNoInit(){G=!0,de(!1),D=!0,ee()},onShell(o){return o?.__frame_revealed===!0?(gt(),!1):Jr(o)?(zn(o),!0):Zr(o)?(Wn(o),!0):on(o)?(Xn(o),!0):an(o)?(Vn(o),!0):!1},attachExtras(o){g=o,Q(),o.assess&&J()},inSlot:()=>Le(j),hydration(o,f){i??={expect:o,maxMs:f}},hydrated(){S()},carried(){return D?y:{}},presented:()=>ue}}var oo="frame_ldx_runtime",un="frame_ldx_build",ao="script#an-form",fn=256;function at(t,e,r){for(const n of t)r(n)&&t.delete(n);t.size>=fn&&!t.has(e)&&t.delete(t.values().next().value),t.add(e)}function Me(t,e,r,n){try{const a=t[e];if(typeof a!="function")return;t[e]=function(...s){if(n){let c;try{c=n(this)}catch{}if(c!==void 0)return c}const l=a.apply(this,s);try{r?.(this)}catch{}return l}}catch{}}var dn=()=>{},st;function hn(){if(st)return st;const t={media:new Set,contexts:new Set,wakeLocks:new Set,gate:null,refuse:null,onStart:null,onStop:null};st=t;const e=l=>t.gate?.(l),r=l=>{t.onStop?.(l)},n=window.HTMLMediaElement?.prototype;n&&(Me(n,"play",l=>{at(t.media,l,c=>c.paused),t.onStart?.(l)},e),Me(n,"pause",r));const a=window.AudioContext,s=window.AudioNode?.prototype;a&&s&&(Me(s,"connect",l=>{const c=l.context;c instanceof a&&(at(t.contexts,c,T=>T.state==="closed"),t.onStart?.(c))}),Me(a.prototype,"resume",void 0,e),Me(a.prototype,"suspend",r));try{const l=window.WakeLock?.prototype,c=l?.request;l&&typeof c=="function"&&(l.request=function(...T){if(t.refuse)return t.refuse();const w=c.apply(this,T);return Promise.resolve(w).then(_=>{at(t.wakeLocks,_,h=>h.released),t.onStart?.(_)},dn),w})}catch{}return t}function pn(t){let e=window;for(let r=0;e.parent&&e.parent!==e&&r<8;r++)if(e=e.parent,t(e))return!0;return!1}function mn(){let t=null;const e=()=>t??parent,r=n=>t?n===t:pn(a=>a===n);return{post(n,a){if(t){e().postMessage(n,a);return}let s=parent;for(let l=0;l<8&&(s.postMessage(n,a),!(!s.parent||s.parent===s));l++)s=s.parent},on(n){const a=s=>{const l=s.source;r(l)&&n(s.data,s.origin,s.isTrusted,()=>{t??=l})};return addEventListener("message",a),()=>removeEventListener("message",a)},port:n=>({post(a,s){if(s?.activation){e().postMessage(a,{targetOrigin:n,includeUserActivation:!0});return}if(s?.transfer){e().postMessage(a,n,s.transfer);return}e().postMessage(a,n)},on(a,s){const l=c=>{r(c.source)&&c.origin===n&&a(c.data,c)};return addEventListener("message",l,s),()=>removeEventListener("message",l,s)}})}}function vn(){const t={post:()=>{},on:()=>()=>{}};return{...t,port:()=>t}}var _n=500,yn=2e4,gn="data-token-reads",wn="data-frame-refused-watch",bn="data-frame-unsupported",En=/(?:^|\s)stylesheet(?:\s|$)/i;function Sn(t,e){let r="";if(t instanceof HTMLScriptElement?r=t.src:t instanceof HTMLLinkElement&&En.test(t.rel)&&(r=t.href),!r)return null;try{const n=new URL(r);return n.origin===location.origin&&n.pathname.startsWith(e)?n.origin+n.pathname:null}catch{return null}}function kn(t,e,r){if(!t||e!=="query")return;const n="/_f/"+t+"/";document.documentElement.setAttribute(wn,"");const a=location.href,s=fetch,l=setTimeout,c={method:"HEAD",cache:"no-store",credentials:"same-origin"},T=p=>p.ok||p.status===304;let w=!1,_=!1;const h=()=>removeEventListener("error",O,!0),A=async p=>{const j=await s(p,c);if(T(j))_=!0;else if(j.status===403){const R=await s(a,c);if(T(R)){const y=(await s(p,c)).status;y===403?(_=!0,document.documentElement.setAttribute(bn,""),r()):y<500&&(_=!0)}else R.status>=400&&R.status<500&&(_=!0)}},O=p=>{if(_||w)return;if(document.documentElement.hasAttribute(gn)){_=!0,h();return}const j=Sn(p.target,n);j&&(w=!0,l(()=>{A(j).catch(()=>{}).finally(()=>{w=!1,_&&h()})},_n))};addEventListener("error",O,!0),addEventListener("load",h,{once:!0}),l(h,yn)}var it="__frame_scroll",An=150,Rn=310,Tn=160,Ln=3e4,Kt="p,h1,h2,h3,h4,h5,h6,li,pre,blockquote,tr,dt,dd,figcaption,summary",Gt=()=>innerWidth<=Rn&&innerHeight<=Tn,$t=t=>{const e=document.createTreeWalker(t,NodeFilter.SHOW_TEXT);let r="";for(;r.length<600&&e.nextNode();)r+=e.currentNode.nodeValue.slice(0,600-r.length);const n=r.replace(/\s+/g," ").trim().slice(0,120);let a=2166136261;for(let s=0;s<n.length;s++)a=Math.imul(a^n.charCodeAt(s),16777619);return n.length>11?a>>>0||1:0},zt=t=>{for(let e=t;e&&e!==document.scrollingElement;e=e.parentElement){const r=getComputedStyle(e).position;if(r==="fixed"||r==="sticky"||e!==t&&e.scrollTop)return!1}return!0},On=()=>{const t=[],e=[];try{for(let r=0;r<16;r++){const n=document.elementFromPoint(innerWidth/(r%2?4:2),innerHeight*(r>>1)/8+1);let a=n?.closest(Kt)??n;for(;a&&!a.matches(Kt)&&![...a.childNodes].some(l=>l.nodeType===3&&l.nodeValue?.trim());)a=a.parentElement;const s=a&&!e.includes(a)?$t(a):0;s&&!t.some(l=>l[0]===s&&l[2]===a.tagName)&&zt(a)&&(e.push(a),t.push([s,Math.round(a.getBoundingClientRect().top),a.tagName]))}}catch{}return t.sort((r,n)=>+(r[1]<0)-+(n[1]<0)),t.length?t.slice(0,3):void 0},Mn=t=>{try{for(const[e,r,n]of t.a??[]){const a=document.getElementsByTagName(n);let s;for(let c=0;c<a.length&&a.length<5e3;c++)$t(a[c])===e&&(s=s===void 0||s?.contains(a[c])?a[c]:null);const l=s?.getBoundingClientRect();if(l?.height&&s.checkVisibility?.()!==!1&&zt(s)&&isFinite(r))return Math.max(0,Math.round(scrollY+l.top-r))}}catch{}return t.y};function Pn(){let t=0,e=!1,r=!1,n=!1,a={y:0},s=null;const l=b=>{try{sessionStorage.setItem(it,JSON.stringify(b))}catch{}},c=b=>{if(clearTimeout(t),s===null)return;const x=s;s=null,l({y:x,a:b&&x>0?On():void 0})},T=()=>{if(e){e=!1;return}r=!0,s=scrollY,clearTimeout(t),t=setTimeout(c,An,!0)};try{addEventListener("scroll",T,{passive:!0}),addEventListener("pagehide",()=>c())}catch{}const w=()=>{let b;try{b=sessionStorage.getItem(it)}catch{return null}if(b===null)return null;let x;try{x=JSON.parse(b)}catch{x=null}const{y:D,a:B}=x??{};if(!(typeof D=="number"&&Number.isFinite(D)&&D>=0)){try{sessionStorage.removeItem(it)}catch{}return null}const G=H=>Array.isArray(H)&&typeof H[0]=="number"&&Number.isFinite(H[1])&&typeof H[2]=="string";return{y:D,a:Array.isArray(B)&&B.length<4&&B.every(G)?B:void 0}};let _=!1,h=-1;const A=b=>{try{const x=scrollY,D=Mn(b);scrollTo({top:D,left:0,behavior:"instant"}),a=Gt()?b:{y:D,a:b.a},n=!0,clearTimeout(t),s=null,l(a),h=scrollY,h!==x&&(e=!0);const B=D!==b.y&&document.readyState!=="complete";(h!==D||B)&&!_&&(_=!0,addEventListener("load",()=>{try{scrollY===h&&A(w()??a)}catch{}},{once:!0}))}catch{}},O=()=>{try{return!!location.hash}catch{return!0}};let p=!1;const j=()=>{try{if(p||!Gt())return;p=!0;const b=Date.now(),x=()=>{try{removeEventListener("resize",x)}catch{}Date.now()-b>Ln||r||O()||A(w()??a)};addEventListener("resize",x)}catch{}};let R=!1,y=!1;return{restore(){if(R||(R=!0,O()))return;const b=w();b!==null&&(A(b),j())},promoted(){if(y||(y=!0,O()))return;const b=w();b!==null?(A(b),j()):n&&A(a)}}}function Nn(t,e,r,n){let a=null;try{a=window.trustedTypes?.createPolicy("frame-runtime",{createScriptURL:T=>T})??null}catch{}const s=window.Worker,l=s?.prototype,c=Object.freeze({Worker:s,workerOn:l?.addEventListener,workerPost:l?.postMessage,workerTerminate:l?.terminate,fetch:window.fetch.bind(window),preventDefault:Event.prototype.preventDefault,now:Date.now,policy:a,origins:e});r(t).then(T=>T?.bootTopLevel?T.bootTopLevel(c,n):n.settle()).catch(()=>n.settle())}var so="modulepreload",io=function(t){return"/"+t},lo={},Cn=function(e,r,n){let a=Promise.resolve();function s(l){const c=new Event("vite:preloadError",{cancelable:!0});if(c.payload=l,window.dispatchEvent(c),!c.defaultPrevented)throw l}return a.then(l=>{for(const c of l||[])c.status==="rejected"&&s(c.reason);return e().catch(s)})},Fn=window===top,Wt=Object.getOwnPropertyDescriptor(window,"claude"),ze=sn(Fn,window.__FRAME_PREAMBLE?.topLevel,Wt?.writable===!1),lt=typeof ze=="object"&&ze[0],F=lt?vn():mn();(function(){const t=Object.defineProperty,e=globalThis,r=["RTCPeerConnection","webkitRTCPeerConnection","RTCDataChannel","RTCIceCandidate","RTCSessionDescription","RTCRtpSender","RTCRtpReceiver"];let n=0;for(let a=0;a<r.length;a++){const s=r[a];try{t(e,s,{value:void 0,writable:!1,configurable:!1})}catch{try{delete e[s]}catch{}try{t(e,s,{value:void 0,writable:!1,configurable:!0})}catch{}}typeof e[s]=="function"&&n++}if(n&&ze==="framed")try{F.post({__frame_rtc_lockdown_failed:n},"*")}catch{}})();var Vt=1e4,jn=2e3,ct=2e3,ut=Object.freeze([...window.__FRAME_PREAMBLE?.origins??["https://claude.ai","https://preview.claude.ai"]]);function Xt(t){for(const e of ut)if(e.endsWith(":*"))try{const r=new URL(t);if(`${r.protocol}//${r.hostname}:*`===e)return!0}catch{}else if(t===e)return!0;return!1}var Pe=Object.freeze({...window.__FRAME_PREAMBLE?.capabilities}),Ne=window.__FRAME_PREAMBLE?.transforms,ft=window.__FRAME_PREAMBLE?.comments,dt=window.__FRAME_PREAMBLE?.translate,me=window.__FRAME_PREAMBLE?.ldx,We=fr(window.__FRAME_PREAMBLE?.cred),Yt=(()=>{try{const[t]=performance.getEntriesByType("navigation"),e=t?.serverTiming?.find(r=>r.name==="frame-cred-exp");return e!==void 0&&/^\d{1,15}$/.test(e.description)?dr(Number(e.description)):void 0}catch{return}})();function Jt(t){return Cn(()=>import("/_runtime/"+t),void 0)}var Ce=new Set,Zt=setTimeout,xn=fetch,In=AbortController,Dn=800+800*Math.random(),Hn=3e3,Ve=null,Qt=new Map;function Bn(t,e){let r=Qt.get(t);return r||Qt.set(t,r=qn(t,e)),r}function qn(t,e){if(Ve?.has(t))return Promise.resolve("csp");if(navigator.onLine===!1)return Promise.resolve("offline");const r=new In;let n=!1;return Zt(()=>{n=!0,r.abort()},Hn),xn("/_runtime/"+t,{signal:r.signal}).then(a=>(r.abort(),a.ok?/javascript/i.test(a.headers.get("content-type")??"")?e instanceof Error&&/:\d+:\d+\)?$/m.test(e.stack??"")?"eval":"served":"mime":"http"),()=>n?"timeout":Ve?.has(t)?"csp":"net")}function se(t){if(!Ve){const e=Ve=new Set;try{document.addEventListener("securitypolicyviolation",r=>{const n=/\/_runtime\/([^/?#]+)/.exec(r.blockedURI);n&&r.disposition!=="report"&&e.add(n[1])})}catch{}}return Jt(t).catch(()=>new Promise(e=>Zt(e,Dn)).then(()=>Jt(t+"?r=1")).then(e=>(e!==void 0&&Ce.add(t),e)))}function er(t,e,r){return{contract:t.contract,changes:new Set(t.changes??[]),flags:new Set(t.flags??[]),capabilities:t.capabilities??{},capBudgets:t.capBudgets??{},brokerGen:t.brokerGen,transforms:new Map,shellOrigin:e,shell:r,mount:yt,hooks:Xe,pipe:()=>({wrap:(n,a)=>(...s)=>{try{return a(...s)}catch(l){return Promise.reject(l)}}})}}var we=null,V=null;function tr(t,e,r){try{Object.defineProperty(t,e,{value:r,writable:!1,configurable:!1,enumerable:!0})}catch{try{Object.defineProperty(t,e,{value:r,writable:!1,configurable:!0,enumerable:!0})}catch{}}}var ht=!1,Xe={editBefore:null,edit:null};function Un(t,e,r=!1){const n=[];let a;if(r)try{Xe.editBefore?.(t)}catch{}for(const s of t.elements){const l=document.querySelector(`[data-id="${s.target}"]`);if(!l){a=s.target;break}if([...Object.keys(s.attrsSet??{}),...s.attrsRemoved??[]].some(c=>!_r(c)||yr(l,c))){a=s.target;break}if(s.text!==void 0&&(!Er(l)||Rr(l))){a=s.target;break}for(const[c,T]of Object.entries(s.attrsSet??{}))if(!nr(l,c)){try{l.setAttribute(c,T)}catch{}rr(l,c,T)}for(const c of s.attrsRemoved??[])nr(l,c)||(l.removeAttribute(c),rr(l,c,null));typeof s.text=="string"&&kr(l,s.text),n.push(s.target)}if(r)try{Xe.edit?.(t.seq,n,a)}catch{}if(a!==void 0){F.post({__frame_patch_miss:{seq:t.seq}},e);return}try{document.dispatchEvent(new CustomEvent("claude:edit",{detail:{seq:t.seq,targets:n}}))}catch{}}function rr(t,e,r){if(!(t instanceof HTMLInputElement))return;const n=e.toLowerCase();n==="checked"?t.checked=r!==null:n==="value"&&t.type!=="file"&&(t.value=r??"")}function nr(t,e){const r=e.toLowerCase(),n=t;return r==="data-id"||(r==="value"||r==="checked")&&(n.__artifactSecret===!0||/^(password|hidden|file)$/.test(n.type??"")||/(^|\s)(cc-|one-time-code|current-password|new-password)/i.test(`${t.getAttribute("autocomplete")??""} ${n.autocomplete??""}`))}function or(t){const e=document.documentElement;t==="light"||t==="dark"?(e.dataset.theme=t,e.style.colorScheme=t,ht=!0):ht&&(delete e.dataset.theme,e.style.colorScheme="",ht=!1)}var ie=new Map,pt=null;function mt(){let t;const e={u:new Promise(r=>{t=r}),r:r=>{e.done=!0,t(r)},done:!1,nulled:!1};return e}function Ye(t,e){t.nulled=!0,t.ver=e,t.r(null)}function vt(t,e){for(const[r,n]of ie)n.done||(e&&n.asked?e(r,n):Ye(n,t))}function Kn(){for(const t of ie.values())if(t.asked&&!t.done)return!0;return!1}var Gn=Object.freeze(Object.assign(Object.create(null),{call:Function.prototype.call,apply:Function.prototype.apply,bind:Function.prototype.bind})),_t=!1,yt=(t,e)=>{let r=ie.get(t);if(r?.nulled&&_t)r=mt(),ie.set(t,r);else if(!r||r.done){r?.nulled&&V&&F.post({__frame_cap_telemetry:{kind:"cap-load-error",cap:t,phase:"install"}},V);return}const n=typeof e=="function"?Object.setPrototypeOf(e,Gn):Object.assign(Object.create(null),e);typeof n.then=="function"&&delete n.then,r.want=void 0,r.r(Object.freeze(n))};function ar(){const t=Wt?.value??{};tr(window,"claude",t);for(const e of Object.keys(Pe)){if(t[e]!==void 0){tr(t,e,t[e]);continue}ie.set(e,mt())}if(t.use===void 0){const e=r=>{if(typeof r!="string"||!Object.hasOwn(Pe,r))return Promise.resolve(null);let n=ie.get(r);return n?(pt&&(n.nulled||n.want!==void 0)&&(n=pt(r,n)),n.asked=!0,n.u):Promise.resolve(t[r]??null)};try{Object.defineProperty(t,"use",{value:e,writable:!0,configurable:!0,enumerable:!1})}catch{}}return t}if(ze==="framed"){let t;const e=Ne&&pe.test(Ne)?se(Ne).catch(u=>{t={f:Ne,e:u}}):Promise.resolve(void 0),r=u=>{if(u.type==="auxclick"&&u.button!==1)return;const E=u.target,m=E&&E.closest?E.closest("a[href],area[href]"):null;if(!m)return;const g=m.getAttribute("href");if(!g)return;let I;try{I=new URL(g,document.baseURI)}catch{return}if((I.protocol==="http:"||I.protocol==="https:")&&I.origin!==location.origin){u.preventDefault();const $=(m.getAttribute("target")??"").toLowerCase(),K=u.type==="auxclick"||u.metaKey||u.ctrlKey||u.shiftKey||u.altKey||!["","_self","_top","_parent"].includes($);F.post({__frame_nav:!0,url:I.href,newTab:K},"*")}};addEventListener("click",r,!0),addEventListener("auxclick",r,!0);const n={},a=u=>{u.isTrusted&&(n.pointer=!0)},s=u=>{u.isTrusted&&(n.click=!0)};addEventListener("pointermove",a,{capture:!0,passive:!0}),addEventListener("click",s,{capture:!0,passive:!0});const l={cb:null};addEventListener("keydown",u=>l.cb?.(u),!0);const c={cb:null};addEventListener("keydown",u=>c.cb?.(u));const T=hn();e.then(u=>u?.installEscapeForward?.(l,E=>{V&&F.post(E,V)})),e.then(u=>{try{u?.installFocusKeep?.()}catch{}}),e.then(u=>{if(!u?.wireNav)return;const E=F.port("*");u.wireNav(E),removeEventListener("click",r,!0),removeEventListener("auxclick",r,!0),removeEventListener("pointermove",a,!0),removeEventListener("click",s,!0),u.wireEngagement?.(n,E,T)});let w=null;try{w=Pn()}catch{}const _=document.readyState==="loading"?new Promise(u=>document.addEventListener("DOMContentLoaded",()=>u(),{once:!0})):Promise.resolve();let h="dcl",A=!1;_.then(()=>{A=!0});let O=null,p=null;try{p=Ur(window.name),O=Dt(null,p)}catch{}const j=ar();let R=null;try{R=cn(j,O,{post:(u,E)=>F.post(u,E),dcl:_},p)}catch{}e.then(u=>{try{R&&u?.installHotExtras?.(R)}catch{}});let y=null;const b=()=>Array.isArray(y?.flags)&&y.flags.includes("frame_ldx_runtime")&&!!me&&pe.test(me)&&document.querySelector("script#an-form")!==null;try{R?.hydration(b,Kr)}catch{}let x=null,D=0;const B=F.on((u,E,m,g)=>{Xt(E)&&Mr(u)&&(g(),y=u.__frame_init,V=E,B(),clearTimeout(D),x?.())});if(We){const u=Yt===void 0?{__frame_cred:We}:{__frame_cred:We,exp:Yt};for(const E of ut)try{E.endsWith(":*")||F.post(u,E)}catch{}}F.post({__frame_connect:!0},"*");try{R?.afterConnect()}catch{}const G=setTimeout,H=clearTimeout;let be=()=>NaN,Fe=()=>[];try{be=performance.now.bind(performance),Fe=performance.getEntriesByType.bind(performance)}catch{}let je=0;const U=()=>{try{F.post({__frame_alive:!0},"*")}catch{}je=G(U,jn)},Ee=()=>H(je);U(),addEventListener("load",Ee,{once:!0});const xe=new Promise(u=>{x=u,D=setTimeout(()=>{B(),u()},Vt)}),le=new WeakSet;addEventListener("error",u=>{u.target&&le.add(u.target)},!0);try{kn(Ht(),We,()=>{e.then(u=>{try{u?.drawRefusedNotice?.()}catch{}})})}catch{}const ce=()=>{let u=[];try{u=[...document.querySelectorAll("link[rel~=stylesheet]:not([rel~=alternate])")].filter(m=>!m.sheet&&!m.disabled&&!le.has(m)&&m.getAttribute("href")&&URL.canParse(m.href)&&(!m.media||matchMedia(m.media).matches))}catch{}let E=u.length;return E===0?Promise.resolve():new Promise(m=>{try{const g=ct-be();g>0&&(h="sheets");const I=G(m,g>0?g<ct?g:ct:0),$=()=>{--E===0&&(H(I),m())};for(const K of u)K.addEventListener("load",$,{once:!0}),K.addEventListener("error",$,{once:!0})}catch{m()}})};_.then(()=>{try{w?.restore()}catch{}}),Promise.all([xe,_,e]).then(([,,u])=>{if(y?.hostOverlays!==!0||!V)return;const E=I=>{try{return I?.()===!0}catch{return!1}},m=E(u?.declaresCover),g=y.hostSides===!0?{cover:m,sides:E(u?.declaresSides)}:{cover:m};if(F.post({__frame_layout:g},V),y.hostBackground===!0){const I=V;try{u?.watchBackground?.($=>F.post({__frame_layout:{...g,background:$}},I))}catch{}}});const ve={cb:null};F.on((u,E)=>{if(Xt(E)&&Pr(u)){try{w?.promoted()}catch{}ve.cb?.()}}),xe.then(async()=>{if(!y||!V){vt();try{R?.onNoInit()}catch{}return}if(or(y.theme),y.hostVisible===!1&&e.then(i=>i?.applyHostVisible?.(!1,T)),y.hostKeys!==void 0){const i=V,S=y.hostKeys;e.then(k=>k?.installHostKeyForward?.(c,S,N=>F.post(N,i)))}try{R?.onInit(y.hot,V)}catch{}let u;const E=()=>{try{!u&&me&&b()&&(u=se(me),u.then(i=>i?.prefetch?.()).catch(()=>{}))}catch{}};E(),_.then(E);const m=V,g=F.port(m),I=(i,S)=>F.post({__frame_cap_telemetry:{kind:"cap-load-error",cap:i,phase:S}},m),$=(i,S,k)=>{new Promise(N=>N(Bn(S,k))).then(N=>I(i,N),()=>I(i))},K=i=>F.post({__frame_cap_recovered:{cap:i}},m);let te=y.brokerGen;const Y=()=>R?.boot.ver??"",_e=Y(),ye=(i,S)=>{const k=Y();H(S.t),S.want=k,S.t=G(()=>{S.done||Ye(S,k)},Vt),F.post({__frame_cap_want:!0,cap:i,ver:k},m)},z=(i,S)=>{const k=ie.get(i.cap),N=Pe[i.cap];if(!S||!k||k.done||k.want!==i.ver||!pe.test(N))return;if(H(k.t),k.want=void 0,te=i.brokerGen??te,i.ver!==Y()){ye(i.cap,k);return}if(!i.grant||i.cap==="network"){Ye(k,i.ver);return}const Z=we,Q=we={...Z,capabilities:{...Z.capabilities,[i.cap]:i.grant},capBudgets:{...Z.capBudgets,[i.cap]:{...Z.capBudgets[i.cap],...i.budgets}}};se(N).then(de=>{Ce.has(N)&&K(i.cap),Q.brokerGen=te,_t=!0;try{de?.install?.(Q)}catch{I(i.cap,"install")}finally{_t=!1}},de=>$(i.cap,N,de)).then(()=>{k.done||Ye(k,i.ver)})};let Ie=!1,J=!1;F.on((i,S,k)=>{if(S!==m)return;try{if(R?.onShell(i))return}catch{}if(Cr(i)&&or(i.__frame_theme.theme),en(i)&&z(i,k),k&&tn(i)&&(te=i.brokerGen??te),Nr(i)){const Q=i.__frame_host_visible.visible;e.then(de=>de?.applyHostVisible?.(Q,T))}Or(i)&&Un(i.__frame_patch,m,k);const N=i?.__fc_mode;N&&typeof N=="object"&&!Ie&&ft&&pe.test(ft)&&(Ie=!0,se(ft).then(Q=>Q.install?.(m,N.on===!0,g)).catch(()=>{}));const Z=i?.__ft_cmd;Z&&typeof Z=="object"&&!J&&dt&&pe.test(dt)&&(J=!0,se(dt).then(Q=>Q.install?.(m,Z,g)).catch(()=>{}))});const De=Object.keys(y.capabilities??{}).filter(i=>Object.hasOwn(Pe,i)).map(i=>[i,Pe[i]]).filter(i=>typeof i[1]=="string"&&pe.test(i[1])),re=m;let ue=!1,He=()=>{};const Je=new Promise(i=>{He=()=>{ue=!0,i()}}),Se=()=>(ue||(h="caps"),Je),Be=O!==null||Ft(y.hot)||y.hostVisible===!1||y.hostOverlays===!0;A&&(h="init");const qe=_.then(()=>Be?Se():new Promise(i=>G(i,0))).then(ce).then(()=>{let i=!0;try{i=Be||Kn()}catch{}return i?Se():void 0}).then(()=>{Ee();const i=hr(Fe,be);F.post(i?{__frame_ready:!0,nav:i,gate:h}:{__frame_ready:!0,gate:h},re),e.then(S=>{S?.installSizeReporter?.(re,ve,g),S?.installPaintReporter?.(g)})}),gt=await Promise.allSettled(De.map(([,i])=>se(i))),ee=await e;if(ee?.buildBoot||(t?$("_transforms",t.f,t.e):I("_transforms")),ee?.buildBoot)try{we=ee.buildBoot(y,ee.TRANSFORMS??{},{shellOrigin:re,mount:yt,hooks:Xe,shell:g},i=>F.post({__frame_cap_telemetry:i},re))}catch{I("_transforms","install"),we=er(y,re,g)}else we=er(y,re,g);ee?.buildBoot&&Ce.has(Ne??"")&&K("_transforms");const fe=we;fe.brokerGen=te,gt.forEach((i,S)=>{const[k,N]=De[S];if(i.status!=="fulfilled"){$(k,N,i.reason);return}Ce.has(N)&&K(k);try{i.value?.install?.(fe)}catch{I(k,"install")}});const ke=y.capWants===!0;ke&&(pt=(i,S)=>{const k=Y();if(!k)return S;if(!S.nulled)return S.want!==k&&ye(i,S),S;if(k===S.ver)return S;const N=mt();return ie.set(i,N),ye(i,N),N}),vt(_e,ke&&Y()!==_e?ye:void 0),He(),await qe;let Ue=!1;try{Ue=b()}catch{}me&&Ue?(u??se(me)).then(i=>i?.boot?.({shellOrigin:m,build:fe.flags.has(un),hot:R?.hot??null,carried:R?.carried(),presented:()=>R?.presented()??!0})).catch(()=>!1).then(i=>{R?.hydrated(),i!==!0?I("_ldx"):Ce.has(me)&&K("_ldx")}):R?.hydrated()})}else lt&&(ar(),Nn(lt,ut,se,{settle:vt,mount:yt}))})();</script><!-- /frame-runtime --><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Implantação Sincronização Factorial</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600;700&display=swap">
+<style>
+/* Layout: runbook de operação — índice fixo à esquerda no desktop, coluna única de leitura; passos numerados porque a ordem importa */
+:root {
+  --bg: #f6f7f5;
+  --surface: #ffffff;
+  --ink: #1b2420;
+  --muted: #5b6862;
+  --line: #d9dfdb;
+  --accent: #0f6b5c;
+  --accent-soft: #e2f0ec;
+  --code-bg: #eef1ef;
+  --warn: #8a5a00;
+  --warn-soft: #fbf1dc;
+  --danger: #a3302a;
+  --danger-soft: #f8e4e2;
+  --ok: #1e7a3c;
+  --font-display: "IBM Plex Sans Condensed", "Arial Narrow", "Segoe UI", sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121715; --surface: #1a211e; --ink: #e4ebe7; --muted: #9aa8a1; --line: #2c3632;
+    --accent: #5ec4ad; --accent-soft: #17332c; --code-bg: #212a26;
+    --warn: #e8b85c; --warn-soft: #2e2617; --danger: #f08a82; --danger-soft: #331d1b; --ok: #6fd18e;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121715; --surface: #1a211e; --ink: #e4ebe7; --muted: #9aa8a1; --line: #2c3632;
+  --accent: #5ec4ad; --accent-soft: #17332c; --code-bg: #212a26;
+  --warn: #e8b85c; --warn-soft: #2e2617; --danger: #f08a82; --danger-soft: #331d1b; --ok: #6fd18e;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15.5px; line-height: 1.6; }
+.pagina { max-width: 1180px; margin: 0 auto; padding: 32px 20px 80px; display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 48px; }
+@media (max-width: 900px) { .pagina { grid-template-columns: minmax(0, 1fr); gap: 24px; padding-block: 20px 60px; } }
+
+/* Índice */
+.indice { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 24px); align-self: start; font-size: 13.5px; }
+.indice h2 { font-family: var(--font-display); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; }
+.indice ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; counter-reset: idx; }
+.indice a { display: block; padding: 4px 10px; border-left: 2px solid var(--line); color: var(--muted); text-decoration: none; }
+.indice a:hover, .indice a:focus-visible { color: var(--accent); border-left-color: var(--accent); outline: none; }
+@media (max-width: 900px) {
+  .indice { position: static; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; }
+  .indice ol { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+}
+
+main { min-width: 0; }
+header.topo { padding-bottom: 24px; border-bottom: 1px solid var(--line); margin-bottom: 8px; }
+.eyebrow { font-family: var(--font-mono); font-size: 12px; color: var(--accent); letter-spacing: .04em; }
+h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(30px, 4.4vw, 42px); line-height: 1.08; margin: 8px 0 12px; text-wrap: balance; letter-spacing: -.01em; }
+.lead { font-size: 17px; color: var(--muted); max-width: 68ch; margin: 0; }
+.meta { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 16px; font-size: 13px; color: var(--muted); }
+.meta b { color: var(--ink); font-weight: 500; }
+
+section { padding-top: 36px; scroll-margin-top: 16px; }
+h2.sec { font-family: var(--font-display); font-weight: 700; font-size: 24px; margin: 0 0 6px; display: flex; gap: 12px; align-items: baseline; text-wrap: balance; }
+h2.sec .num { font-family: var(--font-mono); font-size: 14px; font-weight: 500; color: var(--accent); min-width: 2.2em; }
+h3 { font-family: var(--font-display); font-weight: 600; font-size: 17px; margin: 22px 0 6px; }
+p, li { max-width: 72ch; }
+p { margin: 8px 0; }
+ul, ol.passos { padding-left: 22px; margin: 8px 0; }
+li { margin: 4px 0; }
+a { color: var(--accent); }
+code { font-family: var(--font-mono); font-size: .88em; background: var(--code-bg); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+.conferir { font-size: 14.5px; }
+.conferir::before { content: "Conferir: "; font-weight: 600; color: var(--ok); }
+
+/* Blocos de comando */
+.cmd { position: relative; margin: 10px 0; background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; }
+.cmd pre { margin: 0; padding: 12px 84px 12px 14px; overflow-x: auto; font-family: var(--font-mono); font-size: 13px; line-height: 1.55; white-space: pre; }
+.cmd .rotulo { position: absolute; top: -9px; left: 12px; background: var(--bg); padding: 0 6px; font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+.copiar { position: absolute; top: 8px; right: 8px; font: 500 12px var(--font-body); color: var(--accent); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 4px 10px; cursor: pointer; }
+.copiar:hover { border-color: var(--accent); }
+.copiar:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Avisos */
+.aviso { margin: 14px 0; padding: 12px 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); max-width: 80ch; }
+.aviso strong:first-child { display: block; margin-bottom: 2px; }
+.aviso.atencao { background: var(--warn-soft); border-color: transparent; }
+.aviso.atencao strong:first-child { color: var(--warn); }
+.aviso.perigo { background: var(--danger-soft); border-color: transparent; }
+.aviso.perigo strong:first-child { color: var(--danger); }
+.aviso.info { background: var(--accent-soft); border-color: transparent; }
+.aviso.info strong:first-child { color: var(--accent); }
+
+/* Fluxo */
+.fluxo { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 16px 0; }
+.etapa { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; min-width: 0; }
+.etapa.nossa { border-color: var(--accent); box-shadow: inset 0 3px 0 var(--accent); }
+.etapa .quem { font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); }
+.etapa h4 { margin: 4px 0 6px; font-family: var(--font-display); font-size: 16px; }
+.etapa p { font-size: 13.5px; margin: 0; color: var(--muted); }
+.estado-pill { display: inline-block; font-family: var(--font-mono); font-size: 11px; padding: 1px 7px; border-radius: 999px; background: var(--code-bg); color: var(--muted); margin-top: 8px; }
+.etapa.nossa .estado-pill { background: var(--accent-soft); color: var(--accent); }
+@media (max-width: 700px) { .fluxo { grid-template-columns: minmax(0, 1fr); } }
+
+/* Tabelas */
+.tabela { overflow-x: auto; margin: 12px 0; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--font-display); font-weight: 600; font-size: 13px; letter-spacing: .02em; color: var(--muted); background: var(--code-bg); }
+tr:last-child td { border-bottom: 0; }
+td code { white-space: nowrap; }
+
+.pacotes td:last-child { font-family: var(--font-mono); font-size: 12.5px; }
+.chip { display: inline-block; font-family: var(--font-mono); font-size: 11.5px; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.chip.ok { background: var(--accent-soft); color: var(--accent); }
+.chip.acao { background: var(--warn-soft); color: var(--warn); }
+.chip.erro { background: var(--danger-soft); color: var(--danger); }
+
+/* Checklist */
+.checklist { list-style: none; padding: 0; margin: 12px 0; display: grid; gap: 6px; max-width: 80ch; }
+.checklist label { display: flex; gap: 10px; align-items: flex-start; padding: 9px 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; cursor: pointer; }
+.checklist input { margin-top: 4px; accent-color: var(--accent); width: 16px; height: 16px; flex: none; }
+.checklist input:checked + span { color: var(--muted); text-decoration: line-through; }
+.progresso { font-family: var(--font-mono); font-size: 13px; color: var(--muted); }
+
+footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+html { scroll-behavior: smooth; }
+</style>
+
+<div class="pagina">
+  <nav class="indice" aria-label="Índice">
+    <h2>Neste guia</h2>
+    <ol>
+      <li><a href="#visao">Visão geral</a></li>
+      <li><a href="#receber">O que você recebe</a></li>
+      <li><a href="#requisitos">1. Pré-requisitos</a></li>
+      <li><a href="#instalacao">2. Instalação</a></li>
+      <li><a href="#env">3. Configuração (.env)</a></li>
+      <li><a href="#banco">4. Preparar o banco</a></li>
+      <li><a href="#primeira">5. Primeira execução</a></li>
+      <li><a href="#cron">6. Agendamento</a></li>
+      <li><a href="#api">7. API (opcional)</a></li>
+      <li><a href="#testes">8. Testes automatizados</a></li>
+      <li><a href="#operacao">Operação do dia a dia</a></li>
+      <li><a href="#atualizar">Atualizar versão</a></li>
+      <li><a href="#seguranca">Segurança e LGPD</a></li>
+      <li><a href="#problemas">Problemas comuns</a></li>
+      <li><a href="#checklist">Checklist final</a></li>
+      <li><a href="#windows">Anexo: Windows</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <header class="topo">
+      <div class="eyebrow">gestao-documental-equatorial · branch main</div>
+      <h1>Implantação da sincronização Factorial</h1>
+      <p class="lead">Oi, Augusto! Este é o guia para subir no servidor o serviço que vem depois da sua captura de pendências. Siga na ordem: cada passo diz o que conferir antes de ir para o próximo.</p>
+      <div class="meta">
+        <span><b>Repositório:</b> <a href="https://github.com/evilasioferreira/gestao-documental-equatorial" target="_blank" rel="noopener">github.com/evilasioferreira/gestao-documental-equatorial</a></span>
+        <span><b>Servidor:</b> Linux (Ubuntu 22.04+), Python 3.10+</span>
+        <span><b>Tempo estimado:</b> ~1 hora</span>
+      </div>
+    </header>
+
+    <section id="visao">
+      <h2 class="sec">Visão geral</h2>
+      <p>O processo tem três etapas. A sua já roda; esta é a do meio; o envio ao Atlas é a próxima a ser feita.</p>
+      <div class="fluxo">
+        <div class="etapa">
+          <div class="quem">Seu serviço · a cada 2 h</div>
+          <h4>Captura</h4>
+          <p>Busca no Atlas os documentos pendentes e alimenta a tabela <code>documentos</code> no Neon.</p>
+          <span class="estado-pill">em produção</span>
+        </div>
+        <div class="etapa nossa">
+          <div class="quem">Este guia · a cada 2 h, depois da captura</div>
+          <h4>Sincronização Factorial</h4>
+          <p>Lê as pendências, valida e busca na Factorial, baixa, une os pacotes em PDF e grava o resultado no Neon.</p>
+          <span class="estado-pill">pronto para subir</span>
+        </div>
+        <div class="etapa">
+          <div class="quem">Próxima etapa</div>
+          <h4>Envio ao Atlas</h4>
+          <p>Pega os arquivos prontos em disco e faz o upload no Atlas, registrando o protocolo.</p>
+          <span class="estado-pill">a fazer</span>
+        </div>
+      </div>
+
+      <h3>O que o serviço faz com cada pendência atrasada da Factorial</h3>
+      <ol class="passos">
+        <li><b>Valida o empregado na Factorial</b> (fonte da verdade). Se o CPF não existe, ou se o Atlas cobra rescisão de alguém que está ativo, marca como divergente e não busca nada.</li>
+        <li><b>Busca os documentos na API da Factorial</b> e casa pelo nome do arquivo, pasta e data. O conteúdo dos documentos não é aberto.</li>
+        <li><b>Baixa os arquivos.</b></li>
+        <li><b>Une num PDF único</b> quando o Atlas exige o pacote (tabela abaixo). Documentos simples seguem com o arquivo original.</li>
+        <li><b>Grava no Neon</b> estado, caminho do arquivo, tamanho e hash SHA-256. Quando falta algo, registra um alerta com o motivo.</li>
+      </ol>
+
+      <div class="tabela">
+        <table class="pacotes">
+          <thead><tr><th>doc_id</th><th>Pacote (um único upload)</th><th>Ordem no PDF</th></tr></thead>
+          <tbody>
+            <tr><td>8</td><td>Aviso e recibo de férias</td><td>aviso → recibo → comprovante</td></tr>
+            <tr><td>9</td><td>TRCT</td><td>TRCT → termo de quitação assinado → comprovante</td></tr>
+            <tr><td>10</td><td>GFD rescisória</td><td>guia → comprovante</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </section>
+
+    <section id="receber">
+      <h2 class="sec">O que você recebe</h2>
+      <ul>
+        <li><b>Acesso ao repositório</b> (é privado): convite do GitHub para a sua conta.</li>
+        <li><b>Credenciais, por canal seguro e separado deste guia:</b> a <code>DATABASE_URL</code> do Neon (produção) e a chave da Factorial.</li>
+        <li>A <code>SECRET_KEY</code> você mesmo gera no servidor (passo 3).</li>
+      </ul>
+      <div class="aviso atencao">
+        <strong>Copie e cole a chave da Factorial; nunca digite</strong>
+        Ela tem centenas de caracteres, e um único caractere trocado (<code>l</code>/<code>I</code>, <code>0</code>/<code>O</code>, <code>5</code>/<code>S</code>) faz a Factorial responder 401. Já aconteceu durante o desenvolvimento.
+      </div>
+      <div class="tabela">
+        <table>
+          <thead><tr><th>Variável</th><th>O que é</th><th>De onde vem</th></tr></thead>
+          <tbody>
+            <tr><td><code>DATABASE_URL</code></td><td>Postgres de produção</td><td>Recebida por canal seguro (Neon → branch <i>production</i> → <i>Connection string</i>)</td></tr>
+            <tr><td><code>FACTORIAL_API_KEY</code></td><td>Chave da API da Factorial, enviada no header <code>x-api-key</code>, sem <code>Bearer</code></td><td>Recebida por canal seguro</td></tr>
+            <tr><td><code>SECRET_KEY</code></td><td>Assina os tokens JWT da API</td><td>Gerada no servidor (passo 3)</td></tr>
+            <tr><td><code>FACTORIAL_PASTA_DOWNLOAD</code></td><td>Onde ficam os PDFs finais</td><td><code>/srv/gesdoc/downloads</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="requisitos">
+      <h2 class="sec"><span class="num">1</span>Pré-requisitos do servidor</h2>
+      <div class="tabela">
+        <table>
+          <thead><tr><th>Item</th><th>Detalhe</th></tr></thead>
+          <tbody>
+            <tr><td>Sistema</td><td>Ubuntu 22.04+ (ou outro Linux com systemd e cron). Para Windows, veja o <a href="#windows">anexo</a>.</td></tr>
+            <tr><td>Python</td><td>3.10 ou superior (<code>python3 --version</code>)</td></tr>
+            <tr><td>Saída de rede (HTTPS)</td><td><code>api.factorialhr.com</code> (443) e o Neon (<code>*.neon.tech</code>, porta 5432)</td></tr>
+            <tr><td>Disco</td><td>0,5 a 1 MB por documento; alguns GB em <code>/srv/gesdoc/downloads</code> bastam. Em container, use um volume persistente.</td></tr>
+            <tr><td>Acesso</td><td>Usuário com <code>sudo</code> para a instalação</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="cmd"><span class="rotulo">bash</span><button class="copiar" type="button">Copiar</button><pre>sudo apt update &amp;&amp; sudo apt install -y git python3 python3-venv</pre></div>
+    </section>
+
+    <section id="instalacao">
+      <h2 class="sec"><span class="num">2</span>Instalação</h2>
+      <p>Crie um usuário de serviço (sem login), a pasta dos documentos e a pasta de logs:</p>
+      <div class="cmd"><span class="rotulo">bash</span><button class="copiar" type="button">Copiar</button><pre>sudo useradd --system --create-home --home-dir /opt/gesdoc --shell /usr/sbin/nologin gesdoc
+sudo mkdir -p /srv/gesdoc/downloads /var/log/gesdoc
+sudo chown -R gesdoc:gesdoc /srv/gesdoc /var/log/gesdoc
+sudo chmod 700 /srv/gesdoc/downloads</pre></div>
+      <p>Clone o repositório e instale as dependências num ambiente virtual. Como o repositório é privado, no <code>git clone</code> use um <i>Personal Access Token</i> do GitHub como senha (ou uma <i>deploy key</i> SSH só de leitura).</p>
+      <div class="cmd"><span class="rotulo">bash</span><button class="copiar" type="button">Copiar</button><pre>sudo -u gesdoc git clone https://github.com/evilasioferreira/gestao-documental-equatorial.git /opt/gesdoc/app
+cd /opt/gesdoc/app
+sudo -u gesdoc python3 -m venv .venv
+sudo -u gesdoc .venv/bin/pip install -r requirements.txt</pre></div>
+      <div class="cmd"><span class="rotulo">conferir</span><button class="copiar" type="button">Copiar</button><pre>sudo -u gesdoc .venv/bin/python -c "import pypdf, PIL, flask; print('ok')"</pre></div>
+      <p class="conferir">imprime <code>ok</code>.</p>
+      <div class="aviso info">
+        <strong>Daqui em diante, tudo roda dentro de <code>/opt/gesdoc/app</code></strong>
+        Se aparecer <code>No such file or directory</code> para <code>requirements.txt</code>, <code>.env</code> ou um <code>.py</code>, o terminal está em outra pasta: rode <code>cd /opt/gesdoc/app</code>.
+      </div>
+    </section>
+
+    <section id="env">
+      <h2 class="sec"><span class="num">3</span>Configuração (<code>.env</code>)</h2>
+      <p>Gere a <code>SECRET_KEY</code>:</p>
+      <div class="cmd"><span class="rotulo">bash</span><button class="copiar" type="button">Copiar</button><pre>python3 -c "import secrets; print(secrets.token_urlsafe(48))"</pre></div>
+      <p>Crie o <code>.env</code> a partir do modelo e preencha:</p>
+      <div class="cmd"><span class="rotulo">bash</span><button class="copiar" type="button">Copiar</button><pre>sudo -u gesdoc cp .env.example .env
+sudo -u gesdoc nano .env</pre></div>
+      <div class="cmd"><span class="rotulo">.env</span><button class="copiar" type="button">Copiar</button><pre>DATABASE_URL=postgresql://usuario:senha@ep-....neon.tech/neondb?sslmode=require
+SECRET_KEY=&lt;valor gerado acima&gt;
+FACTORIAL_API_URL=https://api.factorialhr.com/api/2026-10-01/resources
+FACTORIAL_API_KEY=&lt;chave da Factorial&gt;
+FACTORIAL_PASTA_DOWNLOAD=/srv/gesdoc/downloads</pre></div>
+      <p>Proteja o arquivo:</p>
+      <div class="cmd"><span class="rotulo">bash</span><button class="copiar" type="button">Copiar</button><pre>sudo chmod 600 .env</pre></div>
+      <h3>Testar as duas conexões</h3>
+      <div class="cmd"><span class="rotulo">Neon</span><button class="copiar" type="button">Copiar</button><pre>sudo -u gesdoc .venv/bin/python -c "from dotenv import load_dotenv; load_dotenv(); import os, psycopg2; psycopg2.connect(os.environ['DATABASE_URL']).close(); print('Neon ok')"</pre></div>
+      <div class="cmd"><span class="rotulo">Factorial</span><button class="copiar" type="button">Copiar</button><pre>sudo -u gesdoc .venv/bin/python -c "from dotenv import load_dotenv; load_dotenv(); import os, requests; r = requests.get(os.environ['FACTORIAL_API_URL'] + '/employees/employees?limit=1', headers={'x-api-key': os.environ['FACTORIAL_API_KEY']}, timeout=30); print('Factorial', r.status_code)"</pre></div>
+      <p class="conferir"><code>Neon ok</code> e <code>Factorial 200</code>. Se a Factorial der <code>401</code>, a chave está errada (veja o aviso da seção anterior).</p>
+    </section>
+
+    <section id="banco">
+      <h2 class="sec"><span class="num">4</span>Preparar o banco <span style="font-size:14px;color:var(--muted);font-weight:500">(uma vez só)</span></h2>
+      <h3>4.1 — Regras dos pacotes</h3>
+      <p>No SQL Editor do Neon (branch production), os doc_id 2 a 10 devem estar com <code>requer_composicao = true</code>:</p>
+      <div class="cmd"><span class="rotulo">sql</span><button class="copiar" type="button">Copiar</button><pre>SELECT doc_id, nome, requer_composicao FROM documento_regras WHERE doc_id BETWEEN 2 AND 10 ORDER BY doc_id;</pre></div>
+      <p>Se algum estiver <code>false</code>:</p>
+      <div class="cmd"><span class="rotulo">sql</span><button class="copiar" type="button">Copiar</button><pre>UPDATE documento_regras SET requer_composicao = (doc_id BETWEEN 2 AND 10), atualizado_em = now()
+WHERE requer_composicao IS DISTINCT FROM (doc_id BETWEEN 2 AND 10);</pre></div>
+
+      <h3>4.2 — Regerar os arquivos neste servidor</h3>
+      <div class="aviso atencao">
+        <strong>Não pule este passo</strong>
+        As pendências já marcadas como prontas (<code>COMPOSTO</code>/<code>LOCALIZADO</code>) foram processadas em outra máquina, ou pelo n8n, que não guardava arquivo. Os PDFs delas <b>não existem neste servidor</b>. Em 14/10/2026 eram 20: 8 <code>COMPOSTO</code> + 12 <code>LOCALIZADO</code>.
+      </div>
+      <p>Veja quantas são:</p>
+      <div class="cmd"><span class="rotulo">sql</span><button class="copiar" type="button">Copiar</button><pre>SELECT estado, count(*) FROM documentos
+WHERE estado IN ('COMPOSTO', 'LOCALIZADO') AND caminho_origem NOT LIKE '/srv/gesdoc/%'
+GROUP BY 1;</pre></div>
+      <p>Volte-as para a fila; o serviço baixa da Factorial e compõe tudo de novo no passo 5:</p>
+      <div class="cmd"><span class="rotulo">sql</span><button class="copiar" type="button">Copiar</button><pre>UPDATE documentos SET estado = 'PENDENTE_ENVIO', atualizado_em = now()
+WHERE estado IN ('COMPOSTO', 'LOCALIZADO') AND caminho_origem NOT LIKE '/srv/gesdoc/%';</pre></div>
+    </section>
+
+    <section id="primeira">
+      <h2 class="sec"><span class="num">5</span>Primeira execução (manual)</h2>
+      <div class="cmd"><span class="rotulo">bash</span><button class="copiar" type="button">Copiar</button><pre>sudo -u gesdoc .venv/bin/python sincronizacao_factorial.py</pre></div>
+      <p>A saída termina com o resumo. Com os dados de 14/10/2026, o esperado era:</p>
+      <div class="cmd"><span class="rotulo">saída esperada</span><button class="copiar" type="button">Copiar</button><pre>{
+  "pendencias": 44,
+  "por_estado": {"COMPOSTO": 8, "LOCALIZADO": 12, "NAO_ENCONTRADO_FACTORIAL": 13,
+                 "AGUARDANDO_ASSINATURA": 2, "DIVERGENTE_FACTORIAL": 9},
+  "alertas_novos": 0
+}</pre></div>
+      <p>Os números mudam conforme as pendências do dia. O importante é não haver erro e aparecerem <code>COMPOSTO</code>/<code>LOCALIZADO</code>.</p>
+      <h3>Conferir os arquivos e o banco</h3>
+      <div class="cmd"><span class="rotulo">bash</span><button class="copiar" type="button">Copiar</button><pre>sudo ls -R /srv/gesdoc/downloads | head -30</pre></div>
+      <p>Cada pendência resolvida tem uma pasta com o número dela; os pacotes aparecem como <code>doc&lt;id&gt;_&lt;cpf&gt;_&lt;MM-AAAA&gt;.pdf</code>.</p>
+      <div class="cmd"><span class="rotulo">sql</span><button class="copiar" type="button">Copiar</button><pre>SELECT id, doc_id, estado, caminho_origem, tamanho_bytes FROM documentos
+WHERE estado IN ('COMPOSTO', 'LOCALIZADO') ORDER BY id;</pre></div>
+      <p class="conferir">todos os <code>caminho_origem</code> começam com <code>/srv/gesdoc/downloads/</code>.</p>
+      <p><b>Rode o mesmo comando de novo:</b> deve terminar com <code>"alertas_novos": 0</code> e sem <code>COMPOSTO</code>/<code>LOCALIZADO</code> no resumo. O que já está pronto sai da fila e nada é duplicado.</p>
+    </section>
+
+    <section id="cron">
+      <h2 class="sec"><span class="num">6</span>Agendamento (cron)</h2>
+      <p>A cada 2 horas, das 07h às 19h, <b>depois</b> da sua captura. O <code>flock</code> impede duas execuções ao mesmo tempo.</p>
+      <div class="cmd"><span class="rotulo">bash</span><button class="copiar" type="button">Copiar</button><pre>sudo crontab -u gesdoc -e</pre></div>
+      <div class="cmd"><span class="rotulo">linha do cron</span><button class="copiar" type="button">Copiar</button><pre>0 7-19/2 * * * cd /opt/gesdoc/app &amp;&amp; /usr/bin/flock -n /tmp/gesdoc-sinc.lock .venv/bin/python sincronizacao_factorial.py &gt;&gt; /var/log/gesdoc/sincronizacao.log 2&gt;&amp;1</pre></div>
+      <p>Se a sua captura roda nos mesmos horários pares, desloque este para depois dela (ex.: <code>30 7-19/2 * * *</code> roda aos 30 minutos).</p>
+      <p>O cron usa o horário do servidor. Confira o fuso:</p>
+      <div class="cmd"><span class="rotulo">bash</span><button class="copiar" type="button">Copiar</button><pre>timedatectl
+sudo timedatectl set-timezone America/Sao_Paulo   # se não estiver</pre></div>
+      <p>Depois do primeiro horário agendado:</p>
+      <div class="cmd"><span class="rotulo">bash</span><button class="copiar" type="button">Copiar</button><pre>tail -n 30 /var/log/gesdoc/sincronizacao.log</pre></div>
+      <h3>Rotação do log</h3>
+      <p>Crie <code>/etc/logrotate.d/gesdoc</code>:</p>
+      <div class="cmd"><span class="rotulo">/etc/logrotate.d/gesdoc</span><button class="copiar" type="button">Copiar</button><pre>/var/log/gesdoc/*.log {
+    weekly
+    rotate 8
+    compress
+    missingok
+    notifempty
+}</pre></div>
+    </section>
+
+    <section id="api">
+      <h2 class="sec"><span class="num">7</span>API (opcional)</h2>
+      <p>Só é necessária se outro sistema for disparar a sincronização sob demanda (<code>POST /factorial/sincronizar</code>). O agendamento funciona sem ela.</p>
+      <p>Crie <code>/etc/systemd/system/gesdoc-api.service</code>:</p>
+      <div class="cmd"><span class="rotulo">systemd</span><button class="copiar" type="button">Copiar</button><pre>[Unit]
+Description=GesDoc - API de sincronizacao Factorial
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=gesdoc
+WorkingDirectory=/opt/gesdoc/app
+ExecStart=/opt/gesdoc/app/.venv/bin/gunicorn --workers 2 --bind 127.0.0.1:5000 --timeout 900 app:app
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target</pre></div>
+      <p>O <code>--timeout 900</code> cobre uma sincronização completa, que pode levar alguns minutos. A API escuta só em <code>127.0.0.1</code>; para acesso externo, coloque um proxy com HTTPS (nginx/Caddy) na frente e não exponha a porta 5000.</p>
+      <div class="cmd"><span class="rotulo">bash</span><button class="copiar" type="button">Copiar</button><pre>sudo systemctl daemon-reload
+sudo systemctl enable --now gesdoc-api
+curl -s http://127.0.0.1:5000/health</pre></div>
+      <p class="conferir"><code>"database": "conectado"</code>.</p>
+      <p>Para as rotas protegidas, gere um token (vale 30 dias, assinado com a <code>SECRET_KEY</code> do <code>.env</code>) e chame a rota:</p>
+      <div class="cmd"><span class="rotulo">bash</span><button class="copiar" type="button">Copiar</button><pre>sudo -u gesdoc .venv/bin/python generate_jwt_token.py
+curl -s -X POST http://127.0.0.1:5000/factorial/sincronizar -H "Authorization: Bearer &lt;token&gt;" -H "Content-Type: application/json" -d '{"ids": [119]}'</pre></div>
+      <p>Sem <code>ids</code>, processa todas as pendências elegíveis. Se a Factorial recusar a chave, a rota responde <code>502</code> e não altera nada. Logs: <code>journalctl -u gesdoc-api -n 100</code> e <code>/opt/gesdoc/app/logs/</code>.</p>
+    </section>
+
+    <section id="testes">
+      <h2 class="sec"><span class="num">8</span>Testes automatizados <span style="font-size:14px;color:var(--muted);font-weight:500">(recomendado)</span></h2>
+      <p>Os testes gravam e apagam dados, então precisam de um <b>branch de teste</b> do Neon, nunca de produção. Crie o branch a partir de production no console do Neon e anote a connection string e o identificador do endpoint (<code>ep-...</code>). Crie <code>/opt/gesdoc/app/.env.test</code>:</p>
+      <div class="cmd"><span class="rotulo">.env.test</span><button class="copiar" type="button">Copiar</button><pre>TEST_DATABASE_URL=postgresql://usuario:senha@ep-branch-de-teste....neon.tech/neondb?sslmode=require
+TEST_BRANCH_ID=ep-branch-de-teste</pre></div>
+      <p>No branch de teste, aplique o SQL do passo 4.1. Depois:</p>
+      <div class="cmd"><span class="rotulo">bash</span><button class="copiar" type="button">Copiar</button><pre>sudo chmod 600 .env.test
+sudo -u gesdoc .venv/bin/python -m pytest tests -q</pre></div>
+      <p class="conferir"><code>42 passed</code>. A Factorial é simulada nos testes; nada é chamado na Factorial real.</p>
+    </section>
+
+    <section id="operacao">
+      <h2 class="sec">Operação do dia a dia</h2>
+      <div class="tabela">
+        <table>
+          <thead><tr><th>Estado</th><th>Significa</th><th>Ação</th></tr></thead>
+          <tbody>
+            <tr><td><span class="chip ok">COMPOSTO</span> <span class="chip ok">LOCALIZADO</span></td><td>Arquivo pronto em <code>caminho_origem</code></td><td>Nenhuma (aguarda o envio ao Atlas)</td></tr>
+            <tr><td><span class="chip acao">NAO_ENCONTRADO_FACTORIAL</span></td><td>Falta item na Factorial (ex.: aviso de férias, comprovante)</td><td>RH sobe o arquivo na Factorial com o tipo no nome (“aviso de férias”, “comprovante”). A próxima execução resolve sozinha</td></tr>
+            <tr><td><span class="chip acao">AGUARDANDO_ASSINATURA</span></td><td>Documento existe mas não está assinado</td><td>Colher a assinatura. A próxima execução resolve sozinha</td></tr>
+            <tr><td><span class="chip erro">DIVERGENTE_FACTORIAL</span></td><td>CPF não existe na Factorial, ou o Atlas cobra rescisão de quem está ativo</td><td>Conferir com o RH; a Factorial é a fonte da verdade (provável cobrança indevida no Atlas)</td></tr>
+            <tr><td><span class="chip erro">ERRO_COMPOSICAO</span></td><td>Um item não é PDF nem imagem</td><td>Substituir o arquivo na Factorial por PDF</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>O alerta (tabela <code>alerta</code>) só é criado quando o estado muda; reexecutar não duplica.</p>
+      <h3>Consultas úteis</h3>
+      <div class="cmd"><span class="rotulo">sql · situação geral</span><button class="copiar" type="button">Copiar</button><pre>SELECT d.estado, count(*) FROM documentos d JOIN documento_regras r ON r.doc_id = d.doc_id
+WHERE d.aba = 'Atrasados' AND r.origem = 'Factorial' AND d.cpf IS NOT NULL GROUP BY 1 ORDER BY 1;</pre></div>
+      <div class="cmd"><span class="rotulo">sql · pendências que precisam de ação</span><button class="copiar" type="button">Copiar</button><pre>SELECT a.documento_id, d.funcionario, d.nome, a.descricao, a.criado_em
+FROM alerta a JOIN documentos d ON d.id = a.documento_id
+WHERE d.estado IN ('NAO_ENCONTRADO_FACTORIAL', 'AGUARDANDO_ASSINATURA', 'DIVERGENTE_FACTORIAL', 'ERRO_COMPOSICAO')
+ORDER BY a.criado_em DESC;</pre></div>
+      <div class="cmd"><span class="rotulo">sql · reprocessar uma pendência (ex.: 119)</span><button class="copiar" type="button">Copiar</button><pre>UPDATE documentos SET estado = 'PENDENTE_ENVIO' WHERE id = 119;</pre></div>
+      <p>Depois rode o passo 5, ou chame a API com <code>{"ids": [119]}</code>.</p>
+    </section>
+
+    <section id="atualizar">
+      <h2 class="sec">Atualizar para uma versão nova</h2>
+      <div class="cmd"><span class="rotulo">bash</span><button class="copiar" type="button">Copiar</button><pre>cd /opt/gesdoc/app
+sudo -u gesdoc git pull
+sudo -u gesdoc .venv/bin/pip install -r requirements.txt
+sudo -u gesdoc .venv/bin/python -m pytest tests -q
+sudo systemctl restart gesdoc-api   # só se a API estiver instalada</pre></div>
+      <p>O cron passa a usar a versão nova na próxima execução.</p>
+    </section>
+
+    <section id="seguranca">
+      <h2 class="sec">Segurança e dados pessoais (LGPD)</h2>
+      <ul>
+        <li><code>/srv/gesdoc/downloads</code> guarda documentos trabalhistas com CPF: mantenha <code>chmod 700</code>, dono <code>gesdoc</code>, e só inclua no backup se o backup também for protegido.</li>
+        <li><code>.env</code> e <code>.env.test</code> com <code>chmod 600</code>; nunca commitar (o <code>.gitignore</code> já cobre).</li>
+        <li>Os logs (<code>logs/</code>, <code>/var/log/gesdoc/</code>) podem ter nomes e CPFs: não compartilhe sem anonimizar.</li>
+        <li>Use só as credenciais que o Evilásio te passar por canal seguro. As antigas apareceram no histórico do git e devem estar trocadas antes de entrar em produção; se tiver dúvida, confirme com ele.</li>
+      </ul>
+    </section>
+
+    <section id="problemas">
+      <h2 class="sec">Problemas comuns</h2>
+      <div class="tabela">
+        <table>
+          <thead><tr><th>Sintoma</th><th>Causa e solução</th></tr></thead>
+          <tbody>
+            <tr><td><code>No such file or directory</code> (<code>requirements.txt</code>, <code>.env</code>, <code>.py</code>)</td><td>Terminal fora da pasta: <code>cd /opt/gesdoc/app</code></td></tr>
+            <tr><td><code>HTTPError: 401</code> / <code>{"errors": null}</code></td><td><code>FACTORIAL_API_KEY</code> errada ou com espaço/quebra de linha: copie e cole de novo. O header é <code>x-api-key</code>, sem <code>Bearer</code></td></tr>
+            <tr><td><code>DATABASE_URL não configurada</code> / <code>SECRET_KEY não configurada</code></td><td><code>.env</code> ausente, com nome errado, ou rodando de outra pasta</td></tr>
+            <tr><td><code>psycopg2.OperationalError</code></td><td>Sem saída para o Neon na porta 5432, ou senha errada</td></tr>
+            <tr><td>Cron não roda</td><td><code>sudo crontab -u gesdoc -l</code> para conferir; veja <code>/var/log/gesdoc/sincronizacao.log</code> e <code>grep CRON /var/log/syslog</code></td></tr>
+            <tr><td>Execução “pulada” sem log</td><td>O <code>flock</code> encontrou a anterior ainda rodando. Normal de vez em quando; se for sempre, veja por que a anterior trava</td></tr>
+            <tr><td><code>PermissionError</code> em <code>/srv/gesdoc/downloads</code></td><td>Rode como <code>gesdoc</code> (<code>sudo -u gesdoc ...</code>) e confira <code>chown -R gesdoc:gesdoc /srv/gesdoc</code></td></tr>
+            <tr><td><code>Token não fornecido</code> / <code>Token inválido</code> na API</td><td>Gere token novo com <code>generate_jwt_token.py</code> (expira em 30 dias) neste servidor, com a mesma <code>SECRET_KEY</code></td></tr>
+            <tr><td><code>TEST_DATABASE_URL ausente…</code> nos testes</td><td>Falta <code>.env.test</code>, ou o <code>TEST_BRANCH_ID</code> não aparece dentro da URL</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="checklist">
+      <h2 class="sec">Checklist final</h2>
+      <p class="progresso" id="progresso" aria-live="polite">0 de 10 concluídos</p>
+      <ul class="checklist" id="lista-checklist">
+        <li><label><input type="checkbox" id="ck2"><span>Credenciais recebidas por canal seguro e coladas no <code>.env</code></span></label></li>
+        <li><label><input type="checkbox" id="ck3"><span><code>.env</code> com <code>chmod 600</code>; <code>/srv/gesdoc/downloads</code> com <code>chmod 700</code></span></label></li>
+        <li><label><input type="checkbox" id="ck4"><span><code>Neon ok</code> e <code>Factorial 200</code> (passo 3)</span></label></li>
+        <li><label><input type="checkbox" id="ck5"><span><code>requer_composicao = true</code> nos doc_id 2 a 10 (passo 4.1)</span></label></li>
+        <li><label><input type="checkbox" id="ck6"><span>Pendências antigas voltadas para a fila (passo 4.2)</span></label></li>
+        <li><label><input type="checkbox" id="ck7"><span>Primeira execução sem erro, com <code>caminho_origem</code> em <code>/srv/gesdoc/downloads/</code> (passo 5)</span></label></li>
+        <li><label><input type="checkbox" id="ck8"><span>Segunda execução com <code>"alertas_novos": 0</code></span></label></li>
+        <li><label><input type="checkbox" id="ck9"><span>Cron instalado e primeira execução agendada registrada no log (passo 6)</span></label></li>
+        <li><label><input type="checkbox" id="ck10"><span>(Se usar) API respondendo <code>/health</code> com <code>"database": "conectado"</code> (passo 7)</span></label></li>
+        <li><label><input type="checkbox" id="ck11"><span>(Recomendado) <code>42 passed</code> contra o branch de teste (passo 8)</span></label></li>
+      </ul>
+      <h3>Ainda não coberto por este serviço</h3>
+      <ul>
+        <li><b>Envio ao Atlas:</b> próxima etapa; os arquivos ficam prontos em disco, com caminho e hash no banco.</li>
+        <li><b>Documentos do SharePoint</b> (VA, VT, seguro, plano de saúde e odontológico, VR).</li>
+        <li><b>Aviso de férias:</b> só é reconhecido se o arquivo na Factorial tiver “aviso” no nome. Hoje nenhum aviso de 2026 está assim, então as férias ficam como “não encontrado” até o RH subir os avisos.</li>
+      </ul>
+    </section>
+
+    <section id="windows">
+      <h2 class="sec">Anexo: servidor Windows</h2>
+      <ol class="passos">
+        <li>Instale Python 3.10+ (marque “Add to PATH”) e Git. Clone em, por exemplo, <code>C:\gesdoc\app</code>.</li>
+        <li>Na pasta do projeto: <code>py -3 -m venv .venv</code> e <code>.venv\Scripts\pip install -r requirements.txt</code>.</li>
+        <li>No <code>.env</code>, use <code>FACTORIAL_PASTA_DOWNLOAD=C:\gesdoc\downloads</code>. No passo 4.2, troque <code>'/srv/gesdoc/%'</code> por <code>'C:\\gesdoc\\%'</code> (no <code>LIKE</code> do Postgres a barra invertida precisa ser dobrada).</li>
+        <li>Agendamento: <b>Agendador de Tarefas</b> → Criar Tarefa → disparador diário às 07:00, repetir a cada 2 horas por 12 horas → ação: programa <code>C:\gesdoc\app\.venv\Scripts\python.exe</code>, argumentos <code>sincronizacao_factorial.py</code>, <b>“Iniciar em”</b> <code>C:\gesdoc\app</code> (sem isso o <code>.env</code> não é encontrado) → em Configurações, “Não iniciar uma nova instância” se já estiver rodando.</li>
+        <li>API: o <code>gunicorn</code> não roda no Windows; use <code>.venv\Scripts\python app.py</code> (porta 5000) como serviço via NSSM, ou dispense a API e use só o agendamento.</li>
+        <li>No PowerShell, use <code>curl.exe</code> em vez de <code>curl</code>.</li>
+      </ol>
+    </section>
+
+    <footer>
+      Dúvidas durante a instalação: fale com o Evilásio e mande a saída do comando que deu diferente do esperado. A versão completa deste guia também está no repositório, em <code>DEPLOY.md</code>.
+    </footer>
+  </main>
+</div>
+
+<script>
+(function () {
+  // Botões de copiar
+  document.querySelectorAll('.cmd').forEach(function (bloco) {
+    var botao = bloco.querySelector('.copiar');
+    var pre = bloco.querySelector('pre');
+    botao.addEventListener('click', function () {
+      var texto = pre.innerText;
+      var pronto = function () { botao.textContent = 'Copiado'; setTimeout(function () { botao.textContent = 'Copiar'; }, 1600); };
+      var selecionar = function () {
+        var faixa = document.createRange(); faixa.selectNodeContents(pre);
+        var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(faixa);
+        botao.textContent = 'Selecionado: Ctrl+C';
+        setTimeout(function () { botao.textContent = 'Copiar'; }, 2400);
+      };
+      try {
+        navigator.clipboard.writeText(texto).then(pronto, selecionar);
+      } catch (e) { selecionar(); }
+    });
+  });
+
+  // Checklist (marcações ficam só no navegador de quem abre)
+  var CHAVE = 'gesdoc-implantacao-checklist';
+  var caixas = Array.prototype.slice.call(document.querySelectorAll('#lista-checklist input'));
+  var progresso = document.getElementById('progresso');
+  var salvo = {};
+  try { salvo = JSON.parse(localStorage.getItem(CHAVE) || '{}') || {}; } catch (e) { salvo = {}; }
+  var atualizar = function () {
+    var feitos = caixas.filter(function (c) { return c.checked; }).length;
+    progresso.textContent = feitos + ' de ' + caixas.length + ' concluídos';
+  };
+  caixas.forEach(function (c) {
+    if (salvo[c.id]) c.checked = true;
+    c.addEventListener('change', function () {
+      salvo[c.id] = c.checked;
+      try { localStorage.setItem(CHAVE, JSON.stringify(salvo)); } catch (e) {}
+      atualizar();
+    });
+  });
+  atualizar();
+})();
+</script>
+
+</body></html>

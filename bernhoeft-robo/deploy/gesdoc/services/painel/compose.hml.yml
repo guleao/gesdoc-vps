@@ -1,0 +1,52 @@
+# Painel da automação (homologação): estado dos robôs, logs, pendências, estados no Neon, PDF e n8n.
+# Só leitura nos portais, exceto: código de 2FA do Atlas (codigo.txt), sinal rodar-agora dos robôs e PDFs em PACOTES. Acesso SÓ pelo Tailscale: http://100.103.196.93:3020
+# O Docker é lido pelo docker-socket-proxy (só listar containers e ler logs; POST bloqueado), em 127.0.0.1:3021.
+# Rede do host: o painel alcança Gotenberg (127.0.0.1:3010) e n8n (127.0.0.1:5678) e escuta só no IP do Tailscale.
+# Subir (o ROBO_DATABASE_URL vem do cofre, para ler os estados no Neon):
+#   sops exec-env infra/secrets/hml.enc.env 'docker compose -f services/painel/compose.hml.yml up -d'
+name: gesdoc-painel-hml
+
+services:
+  docker:
+    image: tecnativa/docker-socket-proxy:0.3.0
+    environment:
+      CONTAINERS: "1"
+      POST: "0"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports:
+      - "127.0.0.1:3021:2375"
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped
+
+  painel:
+    image: node:22-alpine
+    working_dir: /app
+    command: ["node", "server.js"]
+    user: "1000:1000"
+    network_mode: host
+    environment:
+      ESCUTAR: "100.103.196.93"
+      PORTA: "3020"
+      DOCKER_URL: http://127.0.0.1:3021
+      CODIGO_MIN: "30"
+      PACOTES: /pacotes
+      ROBO_DATABASE_URL:
+      # Pacotes Bernhoeft (pacote.js): só leitura na Factorial; sem a chave o painel funciona, só não monta pacote.
+      FACTORIAL_API_KEY:
+      FACTORIAL_API_URL:
+    volumes:
+      - ./server.js:/app/server.js:ro
+      - ./pacote.js:/app/pacote.js:ro
+      - ./auto.js:/app/auto.js:ro
+      - ./pagina.html:/app/pagina.html:ro
+      - /opt/gesdoc/data/hml:/dados:ro
+      # Gravável só para: codigo.txt e rodar-agora (Atlas) e rodar-agora (Bernhoeft), do botão Reiniciar.
+      - /opt/gesdoc/data/hml/pendencias-atlas:/codigo
+      - /opt/gesdoc/data/hml/pendencias-bernhoeft:/sinal-bernhoeft
+      # Documentos de funcionários (LGPD): pasta chmod 700, só pelo painel (Tailscale).
+      - /opt/gesdoc/data/hml/pacotes-bernhoeft:/pacotes
+    mem_limit: 512m
+    security_opt: ["no-new-privileges:true"]
+    depends_on: [docker]
+    restart: unless-stopped

@@ -1,0 +1,6 @@
+# >>> MESA (gerado; não edite este bloco)
+/atlas-robo/node_modules/
+/atlas-robo/out/
+/atlas-robo/.env.example
+/bernhoeft-robo/.env.example
+# <<< MESA

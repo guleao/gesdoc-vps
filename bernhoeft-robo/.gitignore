@@ -1,0 +1,8 @@
+node_modules/
+profile/
+out/
+.env
+*.log
+.venv-captcha/
+__pycache__/
+profile-teste*/

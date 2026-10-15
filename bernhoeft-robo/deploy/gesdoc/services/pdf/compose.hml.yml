@@ -1,0 +1,34 @@
+# Serviço de PDF (Gotenberg), homologação. Une os PDFs de uma pendência num arquivo só (POST /forms/pdfengines/merge).
+# Quem chama: o unir-pdfs.js do robô Atlas (GOTENBERG_URL) e, se precisar, o n8n.
+# A porta fica só no 127.0.0.1 da VPS (nada exposto para fora). Os contêineres usam http://pdf:3000 pela rede gesdoc-hml-pdf.
+# Subir:  docker compose -f services/pdf/compose.hml.yml up -d
+# Testar: curl -fsS http://127.0.0.1:3010/health
+name: gesdoc-pdf-hml
+
+services:
+  pdf:
+    image: gotenberg/gotenberg:8
+    command:
+      - gotenberg
+      - --api-timeout=120s
+      - --api-disable-health-check-logging=true
+      # Só junta PDFs: o navegador interno do Gotenberg não acessa nenhuma URL nem roda JavaScript.
+      - --chromium-deny-list=^.*$
+      - --chromium-disable-javascript=true
+      - --webhook-disable=true
+    mem_limit: 1g
+    cpus: 1
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${PDF_PORTA:-3010}:3000"
+    networks: [pdf]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:3000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+networks:
+  pdf:
+    name: gesdoc-hml-pdf

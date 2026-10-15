@@ -1,0 +1,1293 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Painel da automação</title>
+<style>
+  :root {
+    --fundo: #f4f4f2; --cartao: #fcfcfb; --tinta: #0b0b0b; --tinta2: #52514e; --apagado: #898781; --linha: #e1e0d9;
+    --serie: #2a78d6; --bom: #0ca30c; --aviso: #fab219; --serio: #ec835a; --critico: #d03b3b; --neutro: #f0efec;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --fundo: #111110; --cartao: #1a1a19; --tinta: #f0efec; --tinta2: #c3c2b7; --apagado: #898781; --linha: #2c2c2a;
+      --serie: #3987e5; --neutro: #383835; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--fundo); color: var(--tinta); }
+  /* Topo fixo: marca, estado ao vivo, ações; abaixo, as abas na ordem da apresentação */
+  .topo { display: flex; align-items: center; gap: 24px; padding: 12px 28px; flex-wrap: wrap;
+    background: var(--cartao); border-bottom: 1px solid var(--linha); }
+  .marca { display: flex; align-items: center; gap: 12px; }
+  .logo { width: 34px; height: 34px; flex: none; }
+  .topo h1 { font-size: 19px; margin: 0; line-height: 1.2; }
+  .topo .sub { color: var(--tinta2); font-size: 12px; }
+  .status { display: flex; flex-direction: column; font-size: 12px; color: var(--tinta2); }
+  .acoesTopo { margin-left: auto; display: flex; align-items: center; gap: 14px; font-size: 13px; color: var(--tinta2); }
+  .acoesTopo button { padding: 4px 12px; font-size: 13px; }
+  main { padding: 18px 28px 48px; display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(440px, 1fr)); max-width: 1800px; margin: 0 auto; }
+  .cartao { background: var(--cartao); border: 1px solid var(--linha); border-radius: 12px; padding: 18px 20px; min-width: 0; }
+  .largo { grid-column: 1 / -1; }
+  h2 { font-size: 16px; margin: 0 0 12px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; }
+  h2 small { font-weight: normal; color: var(--apagado); font-size: 13px; }
+  .apagado { color: var(--apagado); }
+  .tinta2 { color: var(--tinta2); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; color: var(--apagado); font-weight: 500; border-bottom: 1px solid var(--linha); padding: 4px 6px; }
+  td { border-bottom: 1px solid var(--linha); padding: 5px 6px; vertical-align: top; }
+  .rolar { max-height: 340px; overflow: auto; }
+
+  /* Fluxo de etapas */
+  .fluxo { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+  @media (max-width: 1000px) { .fluxo { grid-template-columns: repeat(2, 1fr); } }
+  .etapa { border: 1px solid var(--linha); border-radius: 8px; padding: 10px; position: relative; }
+  .etapa .n { color: var(--apagado); font-size: 12px; }
+  .etapa .t { font-weight: 600; margin: 2px 0 6px; }
+  .etapa .d { color: var(--tinta2); font-size: 12px; margin-top: 6px; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 2px 8px 2px 6px;
+    border-radius: 999px; background: var(--neutro); color: var(--tinta); }
+  .chip i { width: 16px; height: 16px; border-radius: 50%; display: inline-grid; place-items: center; font-style: normal;
+    font-size: 11px; color: #fff; background: var(--apagado); }
+  .chip.ok i { background: var(--bom); }
+  .chip.aviso i { background: var(--aviso); color: #0b0b0b; }
+  .chip.falha i { background: var(--critico); }
+
+  /* Barras */
+  .barras { display: grid; grid-template-columns: max-content 1fr max-content; gap: 6px 10px; align-items: center; }
+  .barras .rot { color: var(--tinta2); font-size: 13px; }
+  .barras .trilho { height: 14px; }
+  .barras .barra { height: 14px; background: var(--serie); border-radius: 0 4px 4px 0; min-width: 2px; }
+  .barras .val { font-variant-numeric: tabular-nums; font-size: 13px; }
+
+  /* Código do Atlas */
+  .codigo { display: flex; gap: 8px; margin: 10px 0; flex-wrap: wrap; align-items: center; }
+  .codigo input { font: 600 18px ui-monospace, monospace; letter-spacing: 3px; width: 160px; padding: 6px 10px;
+    border: 1px solid var(--linha); border-radius: 6px; background: var(--fundo); color: var(--tinta); }
+  button { font: inherit; padding: 6px 14px; border-radius: 6px; border: 1px solid var(--linha); background: var(--serie); color: #fff; cursor: pointer; }
+  button.sec { background: transparent; color: var(--tinta); }
+  .alerta { border-left: 4px solid var(--aviso); padding: 8px 12px; background: var(--neutro); border-radius: 4px; margin: 8px 0; }
+
+  /* Sparkline */
+  .spark { position: relative; }
+  .spark svg { width: 100%; height: 70px; display: block; }
+  .dica { position: absolute; pointer-events: none; background: var(--tinta); color: var(--cartao); font-size: 12px;
+    padding: 3px 8px; border-radius: 4px; white-space: nowrap; transform: translate(-50%, -110%); display: none; }
+
+  /* Logs */
+  .log { font: 12px/1.5 ui-monospace, Consolas, monospace; white-space: pre-wrap; word-break: break-word; max-height: 460px; overflow: auto;
+    background: var(--fundo); border-radius: 6px; padding: 8px 10px; }
+  .log .h { color: var(--apagado); }
+  .log .f { display: inline-block; min-width: 76px; color: var(--tinta2); }
+  .log .erro { color: var(--critico); }
+  .log .forte { font-weight: 700; }
+  .filtros { display: flex; gap: 12px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+  select { font: inherit; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--linha); background: var(--cartao); color: var(--tinta); }
+  .visor { width: 100%; height: 820px; border: 1px solid var(--linha); border-radius: 6px; background: #fff; margin-top: 8px; }
+  .lista-docs { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; margin: 10px 0; font-size: 13px; }
+  a { color: var(--serie); }
+  .tag { font-size: 11px; font-weight: 700; padding: 1px 6px; border-radius: 4px; background: var(--neutro); }
+
+  /* Abas */
+  .abas { position: sticky; top: 0; z-index: 9; display: flex; gap: 2px; padding: 0 22px; background: var(--cartao); border-bottom: 1px solid var(--linha); overflow-x: auto; }
+  .abas button { background: transparent; color: var(--tinta2); border: 0; border-bottom: 3px solid transparent; border-radius: 0; padding: 10px 14px 9px; font-size: 14px; white-space: nowrap; }
+  .abas button b { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; margin-right: 7px; font-size: 11px;
+    background: var(--neutro); color: var(--tinta2); }
+  .abas button:hover { color: var(--tinta); }
+  .abas button.ativa { color: var(--tinta); border-bottom-color: var(--serie); font-weight: 600; }
+  .abas button.ativa b { background: var(--serie); color: #fff; }
+  .abas button.tecnica { margin-left: auto; font-size: 13px; color: var(--apagado); }
+  [hidden] { display: none !important; }
+
+  /* Esteira: estações em fila, ligadas por uma correia que anda (para quando a estação está parada) */
+  .esteira { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(170px, 1fr); gap: 0; overflow-x: auto; padding: 4px 0 8px; }
+  .estacao { position: relative; padding: 0 10px; display: flex; flex-direction: column; }
+  .estacao .caixa { flex: 1; border: 1px solid var(--linha); border-top: 4px solid var(--apagado); border-radius: 8px; padding: 10px; background: var(--cartao); }
+  .estacao.ok .caixa { border-top-color: var(--bom); }
+  .estacao.aviso .caixa { border-top-color: var(--aviso); }
+  .estacao.falha .caixa { border-top-color: var(--critico); }
+  .estacao .n { font: 600 12px ui-monospace, monospace; color: var(--apagado); }
+  .estacao .t { font-weight: 600; margin: 2px 0 6px; }
+  .estacao .onde { font-size: 12px; color: var(--apagado); margin-top: 6px; }
+  .estacao .faz { font-size: 13px; color: var(--tinta2); margin-top: 8px; }
+  .estacao dl { display: grid; grid-template-columns: max-content 1fr; gap: 2px 8px; font-size: 12px; margin: 8px 0 0; }
+  .estacao dt { color: var(--apagado); }
+  .estacao dd { margin: 0; }
+  .estacao .agora { font-size: 12px; margin-top: 8px; padding-top: 6px; border-top: 1px dashed var(--linha); color: var(--tinta2); }
+  .correia { height: 12px; margin: 10px 10px 0; border-radius: 6px; background: repeating-linear-gradient(90deg, var(--linha) 0 14px, var(--neutro) 14px 28px); }
+  .estacao.ok .correia, .estacao.aviso .correia { animation: anda 1.2s linear infinite; }
+  .estacao.falha .correia { background: repeating-linear-gradient(90deg, var(--critico) 0 6px, var(--neutro) 6px 28px); opacity: .5; }
+  @keyframes anda { from { background-position: 0 0; } to { background-position: 28px 0; } }
+  @media (prefers-reduced-motion: reduce) { .estacao .correia { animation: none !important; } }
+  .estacao:not(:last-child)::after { content: '➜'; position: absolute; right: -8px; top: 96px; color: var(--apagado); font-size: 16px; }
+  .trava { border-left: 4px solid var(--critico); padding: 8px 12px; background: var(--neutro); border-radius: 4px; margin: 10px 0 0; }
+  .legenda { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--tinta2); }
+  .regras li { margin: 3px 0; }
+  .reiniciar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+  button.perigo { background: transparent; color: var(--critico); border-color: var(--critico); }
+  button:disabled { opacity: .5; cursor: default; }
+
+  /* Fontes do Ao vivo: cor = identidade (ordem fixa da paleta categórica); infraestrutura em cinza. O nome vai sempre escrito. */
+  :root { --f-atlas: #2a78d6; --f-bern: #eb6834; --f-esteira: #1baf7a; --f-pdf: #eda100; --f-neon: #e87ba4; --f-pacotes: #008300; --f-infra: #898781; }
+  @media (prefers-color-scheme: dark) { :root { --f-atlas: #3987e5; --f-bern: #d95926; --f-esteira: #199e70; --f-pdf: #c98500; --f-neon: #d55181; --f-pacotes: #008300; } }
+
+  /* Números do topo (stat tiles) */
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 12px; }
+  .kpi { border: 1px solid var(--linha); border-radius: 8px; padding: 10px 12px; background: var(--cartao); }
+  .kpi .r { font-size: 12px; color: var(--tinta2); }
+  .kpi .v { font-size: 26px; font-weight: 600; line-height: 1.2; margin-top: 2px; }
+  .kpi .s { font-size: 12px; color: var(--apagado); margin-top: 2px; }
+  button.kpi { text-align: left; color: var(--tinta); cursor: pointer; font: inherit; }
+  button.kpi.ativa { outline: 2px solid var(--serie); outline-offset: -1px; }
+
+  /* Ao vivo */
+  .ponto { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--apagado); margin-right: 5px; vertical-align: 1px; }
+  .ponto.on { background: var(--bom); box-shadow: 0 0 0 0 var(--bom); animation: pulsa 2s infinite; }
+  .ponto.off { background: var(--critico); }
+  @keyframes pulsa { 0% { box-shadow: 0 0 0 0 rgba(12,163,12,.5); } 70% { box-shadow: 0 0 0 7px rgba(12,163,12,0); } 100% { box-shadow: 0 0 0 0 rgba(12,163,12,0); } }
+  @media (prefers-reduced-motion: reduce) { .ponto.on { animation: none; } }
+  .vivo { max-height: calc(100vh - 290px); min-height: 360px; }
+  .vivo.curto { max-height: 300px; min-height: 0; }
+  .vivo .ln { display: grid; grid-template-columns: 70px 94px 1fr; gap: 8px; padding: 1px 0; border-bottom: 1px solid transparent; }
+  .vivo .ln:hover { background: var(--neutro); }
+  .vivo .ln.novo { animation: chega 1.6s ease-out; }
+  @keyframes chega { from { background: color-mix(in srgb, var(--serie) 22%, transparent); } to { background: transparent; } }
+  .vivo .fn { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--tinta2); }
+  .vivo .fn::before { content: ''; display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; background: var(--cor, var(--f-infra)); }
+  .vivo .ln.erro .tx { color: var(--critico); }
+  .vivo .ln.erro .tx::before { content: '✕ '; font-weight: 700; }
+  .vivo .ln.aviso .tx::before { content: '! '; font-weight: 700; color: var(--aviso); }
+  .vivo .ln.ok .tx::before { content: '✓ '; color: var(--bom); }
+  .fontes { display: flex; gap: 6px; flex-wrap: wrap; }
+  .fontes button { background: transparent; color: var(--tinta); padding: 3px 10px; font-size: 12px; }
+  .fontes button::before { content: ''; display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; background: var(--cor, var(--f-infra)); }
+  .fontes button.fora { opacity: .4; text-decoration: line-through; }
+  input.busca { font: inherit; padding: 5px 10px; border: 1px solid var(--linha); border-radius: 6px; background: var(--fundo); color: var(--tinta); min-width: 240px; }
+
+  /* Tabela de pendências */
+  .pend th { position: sticky; top: 0; background: var(--cartao); cursor: pointer; user-select: none; white-space: nowrap; z-index: 1; }
+  .pend th[data-ord]:hover { color: var(--tinta); }
+  .pend tr.linha { cursor: pointer; }
+  .pend tr.linha:hover td { background: var(--neutro); }
+  .pend tr.aberta td { background: var(--neutro); }
+  .pend td.det { background: var(--fundo); padding: 12px 14px; }
+  .pend .arq { font-size: 12px; }
+  .pend td { font-size: 13px; }
+  .det dl { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 6px 18px; margin: 0 0 10px; }
+  .det dl div { min-width: 0; }
+  .det dt { font-size: 11px; color: var(--apagado); text-transform: uppercase; letter-spacing: .03em; }
+  .det dd { margin: 0; word-break: break-word; }
+  .det table td, .det table th { font-size: 12px; }
+  .alto { max-height: calc(100vh - 330px); min-height: 400px; }
+  .origem { font-size: 11px; font-weight: 700; padding: 1px 6px; border-radius: 4px; border: 1px solid var(--linha); white-space: nowrap; }
+  .origem::before { content: ''; display: inline-block; width: 7px; height: 7px; border-radius: 2px; margin-right: 5px; background: var(--cor); }
+
+  /* Visor de PDFs */
+  .pdfs { display: grid; grid-template-columns: 360px 1fr; gap: 14px; }
+  @media (max-width: 1100px) { .pdfs { grid-template-columns: 1fr; } }
+  .pdfLista { max-height: calc(100vh - 170px); overflow: auto; display: flex; flex-direction: column; gap: 6px; }
+  .pdfLista h3 { font-size: 12px; color: var(--apagado); font-weight: 600; margin: 8px 0 2px; text-transform: uppercase; letter-spacing: .03em; }
+  .pdfItem { text-align: left; background: var(--cartao); color: var(--tinta); border: 1px solid var(--linha); border-radius: 8px; padding: 8px 10px; font-size: 13px; }
+  .pdfItem.ativo { border-color: var(--serie); box-shadow: inset 3px 0 0 var(--serie); }
+  .pdfItem .t { font-weight: 600; }
+  .pdfItem .s { color: var(--tinta2); font-size: 12px; margin-top: 2px; }
+  .pdfItem .m { color: var(--apagado); font-size: 12px; margin-top: 4px; }
+  .pdfCab { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .pdfCab .grow { flex: 1; min-width: 200px; }
+  .pdfPartes { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .pdfPartes button { background: transparent; color: var(--tinta); font-size: 12px; padding: 4px 10px; }
+  .pdfPartes button.ativa { background: var(--serie); color: #fff; border-color: var(--serie); }
+  .visor.grande { height: calc(100vh - 250px); min-height: 520px; }
+  a.botao { display: inline-block; padding: 6px 14px; border-radius: 6px; border: 1px solid var(--linha); color: var(--tinta); text-decoration: none; }
+  body.ocultar .nomeP { filter: blur(5px); }
+
+  /* Visão geral */
+  #aba-geral, #aba-operacao, #aba-vivo { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  @media (max-width: 1000px) { #aba-geral, #aba-operacao, #aba-vivo { grid-template-columns: 1fr; } }
+  .chip { white-space: nowrap; }
+  .hero { display: grid; grid-template-columns: 1.3fr 1fr; gap: 28px; align-items: center; }
+  @media (max-width: 1000px) { .hero { grid-template-columns: 1fr; } }
+  .hero p { margin: 0 0 8px; font-size: 15px; max-width: 70ch; }
+  h2.grande { font-size: 22px; margin-bottom: 10px; }
+  .saude { display: grid; gap: 6px; }
+  .saude .item { display: flex; align-items: center; gap: 10px; padding: 7px 12px; border: 1px solid var(--linha); border-radius: 8px; background: var(--fundo); }
+  .saude .item .nome { font-weight: 600; min-width: 170px; }
+  .saude .item .det { color: var(--tinta2); font-size: 12px; margin-left: auto; text-align: right; }
+  .kpis.grandes { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+  .kpis.grandes .kpi { padding: 14px 16px; }
+  .kpis.grandes .v { font-size: 36px; }
+  .kpis.grandes .r { font-size: 13px; font-weight: 600; color: var(--tinta); }
+  button.kpi:hover { border-color: var(--serie); }
+  .kpi.destaque { border-top: 3px solid var(--bom); }
+  .kpi.atencao { border-top: 3px solid var(--aviso); }
+  .kpi.parado { border-top: 3px solid var(--apagado); }
+  .mini { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+  .mini div { background: var(--fundo); border-radius: 8px; padding: 8px 10px; }
+  .mini b { display: block; font-size: 22px; font-variant-numeric: tabular-nums; }
+  .mini span { font-size: 12px; color: var(--tinta2); }
+  .proximos { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+  .proximos li { display: grid; grid-template-columns: 210px 1fr; gap: 10px; align-items: start; padding: 8px 0; border-bottom: 1px solid var(--linha); }
+  .proximos li:last-child { border-bottom: 0; }
+  .proximos .o { font-weight: 600; }
+  .proximos .q { color: var(--tinta2); font-size: 13px; }
+  #faixa:empty { display: none; }
+  .faixa { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; max-width: 1800px; margin: 14px auto 0; padding: 10px 16px;
+    border-left: 4px solid var(--aviso); background: var(--cartao); border-radius: 8px; width: calc(100% - 56px); }
+  .fluxo .etapa { background: var(--fundo); border-top: 4px solid var(--apagado); }
+  .fluxo .etapa.ok { border-top-color: var(--bom); }
+  .fluxo .etapa.aviso { border-top-color: var(--aviso); }
+  .fluxo .etapa.falha { border-top-color: var(--critico); }
+  .fluxo .etapa:not(:last-child)::after { content: '➜'; position: absolute; right: -8px; top: 50%; transform: translateY(-50%); color: var(--apagado); z-index: 1; }
+  .fluxo .etapa .n { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--neutro); font-weight: 600; color: var(--tinta2); }
+  .fluxo .etapa .t { font-size: 14px; }
+  :fullscreen body, body:fullscreen { overflow: auto; }
+</style>
+</head>
+<body>
+<header class="topo">
+  <div class="marca">
+    <svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><rect x="5" y="3" width="18" height="24" rx="3" fill="var(--serie)"/><rect x="10" y="7" width="18" height="22" rx="3" fill="var(--cartao)" stroke="var(--serie)" stroke-width="2"/><path d="M14 15h10M14 19h10M14 23h6" stroke="var(--serie)" stroke-width="2" stroke-linecap="round"/></svg>
+    <div><h1 id="nomeApp"></h1><div class="sub" id="subApp"></div></div>
+  </div>
+  <div class="status">
+    <span id="vivoEstado"><span class="ponto"></span>conectando ao vivo…</span>
+    <span class="apagado" id="hora">carregando…</span>
+  </div>
+  <div class="acoesTopo">
+    <label title="Borra os nomes de funcionários na tela (e no CSV usa só as iniciais)"><input type="checkbox" id="ocultar"> ocultar nomes</label>
+    <button class="sec" id="telaCheia" title="tela cheia (F11)">⛶ tela cheia</button>
+  </div>
+</header>
+<nav class="abas">
+  <button data-aba="geral" class="ativa"><b>1</b>Visão geral</button>
+  <button data-aba="esteira"><b>2</b>Como funciona</button>
+  <button data-aba="pendencias"><b>3</b>Pendências</button>
+  <button data-aba="pdfs"><b>4</b>Documentos montados</button>
+  <button data-aba="vivo"><b>5</b>Ao vivo</button>
+  <button data-aba="operacao" class="tecnica">Operação</button>
+</nav>
+<div id="faixa"></div>
+
+<!-- 1 · Visão geral: o que mostrar primeiro na reunião -->
+<main id="aba-geral">
+  <section class="cartao largo hero">
+    <div>
+      <h2 class="grande">O que a automação faz</h2>
+      <p class="tinta2">Os robôs entram nos portais dos fornecedores (<b>Atlas</b> e <b>Bernhoeft</b>), leem quais documentos estão pendentes,
+        procuram o arquivo certo na <b>Factorial</b> e montam o PDF pronto para entregar.</p>
+      <p class="tinta2">Hoje tudo roda em <b>modo leitura</b>: nada é enviado aos portais sem aprovação.</p>
+    </div>
+    <div class="saude" id="saude"></div>
+  </section>
+
+  <section class="cartao largo">
+    <h2>Números de agora <small>clique num número para ver os detalhes</small></h2>
+    <div class="kpis grandes" id="resumo"></div>
+  </section>
+
+  <section class="cartao largo">
+    <h2>Caminho do documento <small>do portal até a entrega · a cor mostra como cada etapa está agora</small></h2>
+    <div class="fluxo" id="fluxo"></div>
+  </section>
+
+  <section class="cartao">
+    <h2><span class="origem" style="--cor:var(--f-bern)">Bernhoeft</span> portal ContractWeb</h2>
+    <div id="geralBern"></div>
+  </section>
+
+  <section class="cartao">
+    <h2><span class="origem" style="--cor:var(--f-atlas)">Atlas</span> portal AFM</h2>
+    <div id="geralAtlas"></div>
+  </section>
+
+  <section class="cartao">
+    <h2><span class="ponto on" id="pontoMini"></span>Acontecendo agora <small><a href="#vivo" id="irVivo">abrir o Ao vivo completo</a></small></h2>
+    <div class="log vivo curto" id="vivoMini"></div>
+  </section>
+
+  <section class="cartao">
+    <h2>Próximos passos <small>o que falta para entregar sozinho</small></h2>
+    <div id="proximos"></div>
+  </section>
+</main>
+
+<!-- 2 · Como funciona -->
+<main id="aba-esteira" hidden>
+  <section class="cartao largo">
+    <h2>Como a automação funciona <small>cada documento anda numa esteira, estação por estação; a cor no topo é o estado de agora</small></h2>
+    <div class="legenda" id="legenda"></div>
+  </section>
+  <section class="cartao largo">
+    <h2>Esteira 1 · Bernhoeft <small>automática: pendências do ContractWeb → Factorial → PDF pronto para subir, sem ninguém escolher</small></h2>
+    <div class="esteira" id="esteiraBern"></div>
+    <div id="travaBern"></div>
+  </section>
+  <section class="cartao largo">
+    <h2>Esteira 2 · Atlas <small>pendências do Atlas (AFM) até o envio, passando pelo banco e pela Factorial</small></h2>
+    <div class="esteira" id="esteiraAtlas"></div>
+    <div id="travaAtlas"></div>
+  </section>
+  <section class="cartao largo">
+    <h2>Regras que valem em todas as estações</h2>
+    <ul class="regras">
+      <li><b>Acesso restrito:</b> o painel só abre pela VPN da equipe (Tailscale); fora dela não existe.</li>
+      <li><b>Nada é enviado sozinho:</b> os robôs só leem os portais. O envio só liga depois de aprovado.</li>
+      <li><b>Factorial só leitura:</b> os arquivos são baixados por links temporários, sem mandar a chave junto.</li>
+      <li><b>Segredos no cofre:</b> senhas e chaves ficam num cofre criptografado no servidor, nunca no código nem nesta página.</li>
+      <li><b>Documentos de funcionário (LGPD):</b> os PDFs montados ficam numa pasta fechada do servidor e só aparecem aqui; CPF aparece sempre mascarado.</li>
+    </ul>
+  </section>
+</main>
+
+<!-- 3 · Pendências -->
+<main id="aba-pendencias" hidden>
+  <section class="cartao largo">
+    <h2>Pendências e o que foi achado na Factorial <small>Bernhoeft (portal ContractWeb, pela esteira automática) e Atlas (banco, pela sincronização) · clique numa linha para ver tudo · atualiza a cada 30 s</small></h2>
+    <div class="kpis" id="pendKpis"></div>
+    <div class="filtros">
+      <input id="pendBusca" class="busca" placeholder="buscar: contrato, documento, arquivo, unidade, funcionário…">
+      <label>origem <select id="pendOrigem"><option value="">Bernhoeft + Atlas</option><option>Bernhoeft</option><option>Atlas</option></select></label>
+      <button class="sec" id="pendCsv">Exportar CSV</button>
+      <span id="pendConta" class="tinta2"></span>
+    </div>
+    <div id="pendTabela" class="rolar alto"></div>
+  </section>
+</main>
+
+<!-- 4 · Documentos montados -->
+<main id="aba-pdfs" hidden>
+  <section class="cartao largo">
+    <div class="pdfs">
+      <div>
+        <h2>Documentos montados <small id="pdfConta"></small></h2>
+        <input id="pdfBusca" class="busca" style="width:100%;margin-bottom:8px" placeholder="filtrar PDFs…">
+        <div class="pdfLista" id="pdfLista"></div>
+      </div>
+      <div>
+        <div id="pdfCab"></div>
+        <iframe id="pdfFrame" class="visor grande" title="visor de PDF"></iframe>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- 5 · Ao vivo -->
+<main id="aba-vivo" hidden>
+  <section class="cartao largo">
+    <h2>Ao vivo <small>cada linha aparece na hora em que acontece: robôs, esteira, PDF, banco, servidor e o próprio painel</small></h2>
+    <div class="filtros">
+      <div class="fontes" id="vivoFontes"></div>
+    </div>
+    <div class="filtros">
+      <input id="vivoBusca" class="busca" placeholder="filtrar texto…">
+      <label>mostrar <select id="vivoNivel"><option value="">tudo</option><option value="aviso">avisos e erros</option><option value="erro">só erros</option></select></label>
+      <label><input type="checkbox" id="vivoRolar" checked> rolar sozinho</label>
+      <button class="sec" id="vivoPausar">Pausar</button>
+      <button class="sec" id="vivoBaixar">Baixar log (.txt)</button>
+      <span id="vivoConta" class="tinta2"></span>
+    </div>
+    <div class="log vivo" id="vivoLog"></div>
+  </section>
+  <section class="cartao">
+    <h2>Eventos por fonte <small>desde que o painel subiu</small></h2>
+    <div id="vivoPorFonte"></div>
+  </section>
+  <section class="cartao">
+    <h2>Últimos avisos e erros</h2>
+    <div id="vivoErros" class="rolar"></div>
+  </section>
+</main>
+
+<!-- Operação: bastidores (controles, código do Atlas, serviços, pacotes manuais) -->
+<main id="aba-operacao" hidden>
+  <section class="cartao largo">
+    <h2>Controles <small>leituras novas e reinícios · nada aqui envia documento</small></h2>
+    <div class="reiniciar"></div>
+  </section>
+
+  <section class="cartao">
+    <h2>Atlas <small>login (código por e-mail) e coleta</small></h2>
+    <div id="atlas"></div>
+  </section>
+
+  <section class="cartao">
+    <h2>Serviços <small>o que está rodando no servidor</small></h2>
+    <div id="servicos"></div>
+  </section>
+
+  <section class="cartao largo">
+    <h2>Esteira automática Bernhoeft <small>a cada leitura nova do portal: pendências → Factorial → PDF unido, pronto para subir (nada é enviado)</small></h2>
+    <div id="autoResumo"></div>
+    <div id="autoTabela" class="rolar" style="max-height:520px"></div>
+    <div id="autoVer"></div>
+  </section>
+
+  <section class="cartao">
+    <h2>Bernhoeft <small>pendências no portal, leitura a leitura</small></h2>
+    <div id="bern"></div>
+  </section>
+
+  <section class="cartao">
+    <h2>Documentos do Atlas no banco <small>por estado</small></h2>
+    <div id="neon"></div>
+  </section>
+
+  <section class="cartao largo">
+    <h2>Pacotes manuais <small>documentos da Factorial unidos num PDF, para conferir antes de enviar (nada é enviado)</small></h2>
+    <div id="pacAviso"></div>
+    <div class="codigo">
+      <input id="pacBusca" placeholder="nome completo ou CPF do funcionário" style="width:340px;letter-spacing:0;font:inherit">
+      <button id="pacMontar">Montar pacote</button>
+      <span id="pacMsg" class="tinta2"></span>
+    </div>
+    <div class="codigo">
+      <input id="empTitulo" placeholder="documento de empresa (ex.: Brigada de Incêndio MA)" style="width:340px;letter-spacing:0;font:inherit">
+      <input id="empIds" placeholder="IDs da Factorial, na ordem (ex.: 46090538 46150754)" style="width:340px;letter-spacing:0;font:inherit">
+      <button id="empMontar">Unir em 1 PDF</button>
+    </div>
+    <div id="pacTarefa"></div>
+    <div id="pacLista" class="rolar"></div>
+    <div id="pacVer"></div>
+  </section>
+
+  <section class="cartao largo">
+    <h2>Últimas mudanças no banco <small>o que o robô e a sincronização mexeram</small></h2>
+    <div id="recentes" class="rolar"></div>
+  </section>
+
+  <section class="cartao largo">
+    <h2>Histórico de um serviço <small>últimas linhas guardadas pelo servidor</small></h2>
+    <div class="filtros">
+      <label><input type="checkbox" id="soImportantes"> só o que importa</label>
+      <label>fonte <select id="fonte"><option value="">todas</option><option>Atlas</option><option>Bernhoeft</option><option>PDF</option></select></label>
+      <label>serviço <select id="container"><option value="">(robôs + PDF juntos)</option></select></label>
+      <button class="sec" id="logCarregar">Carregar</button>
+    </div>
+    <div class="log" id="log"></div>
+  </section>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const hora = (iso) => iso ? new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '—';
+const dataHora = (iso) => iso ? new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—';
+function ha(iso) {
+  if (!iso) return '—';
+  const m = Math.round((Date.now() - new Date(iso)) / 60000);
+  if (m < 1) return 'agora'; if (m < 60) return `há ${m} min`;
+  const h = Math.floor(m / 60); if (h < 48) return `há ${h} h ${m % 60} min`;
+  return `há ${Math.floor(h / 24)} dias`;
+}
+function falta(iso) { const m = Math.round((new Date(iso) - Date.now()) / 60000); return m <= 0 ? 'agora' : `em ${m} min`; }
+const chip = (tipo, texto) => `<span class="chip ${tipo}"><i>${{ ok: '✓', aviso: '!', falha: '✕', nada: '–' }[tipo]}</i>${esc(texto)}</span>`;
+
+// Nome que aparece no topo e na aba do navegador (trocar só aqui).
+const NOME = 'Automação de Documentos';
+const SUBNOME = 'Equatorial · documentos dos fornecedores · homologação';
+$('nomeApp').textContent = NOME; $('subApp').textContent = SUBNOME; document.title = NOME;
+
+let E = null;
+
+function fluxo(e) {
+  const b = e.bernhoeft, a = e.atlas, n = e.neon;
+  const est = Object.fromEntries((n.estados || []).map((x) => [x.estado, x.n]));
+  const soma = (...k) => k.reduce((s, x) => s + (est[x] || 0), 0);
+  const totalNeon = Object.values(est).reduce((s, x) => s + x, 0);
+  const recente = (iso, min) => iso && Date.now() - new Date(iso) < min * 60000;
+  const etapas = [
+    { t: 'Ler pendências · Bernhoeft',
+      s: recente(b.coletado_em, 70) ? chip('ok', 'lendo') : chip('falha', 'parado'),
+      d: `${(b.pendentes || []).length} pendente(s) · última leitura ${ha(b.coletado_em)}` },
+    { t: 'Ler pendências · Atlas',
+      s: a.login === 'ok' && recente(a.coletado_em, 130) ? chip('ok', 'lendo')
+        : a.login === 'aguardando_codigo' ? chip('aviso', 'esperando código')
+        : a.login === 'verificando' ? chip('aviso', 'verificando código')
+        : chip('falha', 'sem login'),
+      d: a.coletado_em ? `última coleta ${ha(a.coletado_em)}` : 'ainda não coletou na VPS' },
+    { t: 'Gravar no banco',
+      s: n.erro ? chip('falha', 'sem acesso') : recente(a.coletado_em, 130) ? chip('ok', 'gravando') : chip('aviso', 'sem dados novos'),
+      d: n.erro ? esc(n.erro) : `${totalNeon} documento(s) no Neon` },
+    { t: 'Achar na Factorial',
+      s: soma('LOCALIZADO', 'COMPOSTO') ? chip('ok', `${soma('LOCALIZADO', 'COMPOSTO')} achados`) : chip('nada', 'nada achado'),
+      d: `serviço do Evilásio · ${soma('NAO_ENCONTRADO_FACTORIAL')} não encontrado(s), ${soma('DIVERGENTE_FACTORIAL')} divergente(s)` },
+    { t: 'Unir PDFs',
+      s: e.gotenberg !== 'ok' ? chip('falha', 'Gotenberg fora') : e.unioes.total ? chip('ok', `${e.unioes.total} união(ões)`) : chip('nada', 'nenhuma união'),
+      d: `Gotenberg ${esc(e.gotenberg)} · ${soma('COMPOSTO')} composto(s) no banco${e.unioes.ultima ? ' · última ' + ha(e.unioes.ultima) : ''}` },
+    { t: 'Enviar ao portal',
+      s: soma('ENVIADO') ? chip('ok', `${soma('ENVIADO')} enviado(s)`) : chip('nada', 'ainda não existe'),
+      d: a.simulacao ? `simulação: ${a.simulacao.itens} item(ns) ${ha(a.simulacao.gerado_em)}` : 'envio real não implementado (só simulação)' },
+  ];
+  $('fluxo').innerHTML = etapas.map((x, i) => `<div class="etapa ${(x.s.match(/chip (\w+)/) || [])[1] || ''}"><div class="n">${i + 1}</div><div class="t">${x.t}</div>${x.s}<div class="d">${x.d}</div></div>`).join('');
+}
+
+// ---------- Aba "Como funciona": as duas esteiras ----------
+// Cada estação: e = estado (ok/aviso/falha/nada), s = chip, onde roda, o que faz, entra/sai, agora = número ao vivo, trava = por que parou.
+function esteiras(e) {
+  const b = e.bernhoeft, a = e.atlas, n = e.neon;
+  const est = Object.fromEntries((n.estados || []).map((x) => [x.estado, x.n]));
+  const soma = (...k) => k.reduce((s, x) => s + (est[x] || 0), 0);
+  const totalNeon = Object.values(est).reduce((s, x) => s + x, 0);
+  const recente = (iso, min) => iso && Date.now() - new Date(iso) < min * 60000;
+  const gotOk = e.gotenberg === 'ok';
+  const itensAuto = A?.itens || [];
+  const achou = itensAuto.filter((i) => i.arquivos.length).length;
+  const prontos = itensAuto.filter((i) => i.estado === 'pronto').length;
+  const loginAtlas = a.login === 'ok' ? ['ok', 'logado']
+    : a.login === 'aguardando_codigo' ? ['aviso', 'esperando código'] : a.login === 'verificando' ? ['aviso', 'verificando código'] : ['falha', 'sem login'];
+
+  const atlasEst = [
+    { e: loginAtlas[0], s: loginAtlas[1], t: 'Coletar pendências', onde: 'robô Atlas · container pendencias-atlas · a cada 60 min',
+      faz: 'Entra no Atlas (AFM) pela API e lista o que falta entregar. O login pede um código que chega por e-mail.',
+      entra: 'portal Atlas + código de 2FA', sai: 'lista de pendências (pendencias.json)',
+      agora: a.coletado_em ? `última coleta ${ha(a.coletado_em)}` : 'ainda não coletou na VPS',
+      trava: 'falta o 1º login: quando chegar o e-mail, digite o código na aba Operação (cartão Atlas).' },
+    { e: n.erro ? 'falha' : recente(a.coletado_em, 130) ? 'ok' : 'aviso', s: n.erro ? 'sem acesso' : recente(a.coletado_em, 130) ? 'gravando' : 'sem dados novos',
+      t: 'Gravar no banco', onde: 'neon.js · banco Neon (Postgres)',
+      faz: 'Grava cada pendência como uma linha. Linhas que já existem não perdem o estado que a próxima estação deu.',
+      entra: 'pendencias.json', sai: 'linhas na tabela documentos',
+      agora: n.erro ? esc(n.erro) : `${totalNeon} documento(s) no banco`, trava: 'o painel não alcança o banco (ROBO_DATABASE_URL).' },
+    { e: soma('LOCALIZADO', 'COMPOSTO', 'ENVIADO') ? 'ok' : 'nada', s: soma('LOCALIZADO', 'COMPOSTO', 'ENVIADO') ? 'achando' : 'parada',
+      t: 'Achar na Factorial', onde: 'serviço do Evilásio (sincronizacao_factorial.py) · roda fora da VPS por enquanto',
+      faz: 'Para cada linha, procura na Factorial o arquivo do funcionário ou da empresa, pela regra do tipo de documento.',
+      entra: 'linhas pendentes', sai: 'estado LOCALIZADO, NAO_ENCONTRADO ou DIVERGENTE',
+      agora: `${soma('LOCALIZADO')} achado(s) · ${soma('NAO_ENCONTRADO_FACTORIAL')} não encontrado(s) · ${soma('DIVERGENTE_FACTORIAL')} divergente(s)` },
+    { e: soma('COMPOSTO') ? 'ok' : gotOk ? 'nada' : 'falha', s: soma('COMPOSTO') ? 'unindo' : gotOk ? 'esperando' : 'Gotenberg fora',
+      t: 'Unir os PDFs', onde: 'serviço do Evilásio (pypdf) · reserva: Gotenberg 127.0.0.1:3010',
+      faz: 'Junta as partes de cada pendência (várias páginas ou arquivos) num PDF só, do jeito que o portal pede.',
+      entra: 'arquivos achados', sai: 'PDF único · estado COMPOSTO',
+      agora: `${soma('COMPOSTO')} composto(s) · Gotenberg ${esc(e.gotenberg)}`, trava: 'o Gotenberg (serviço de PDF) está fora do ar.' },
+    { e: soma('ENVIADO') ? 'ok' : 'nada', s: soma('ENVIADO') ? 'enviando' : 'só simulação',
+      t: 'Enviar ao Atlas', onde: 'enviar.js · hoje só simula',
+      faz: 'Sobe o PDF na pendência certa do Atlas. Falta descobrir a chamada de envio e testar 1 documento com aprovação.',
+      entra: 'PDF composto', sai: 'pendência entregue · estado ENVIADO',
+      agora: `${soma('PENDENTE_ENVIO')} esperando envio · ` + (a.simulacao ? `simulação: ${a.simulacao.itens} item(ns) ${ha(a.simulacao.gerado_em)}` : 'envio real não ligado') },
+  ];
+
+  const bernOk = recente(b.coletado_em, 70);
+  const bernEst = [
+    { e: bernOk ? 'ok' : 'falha', s: bernOk ? 'logado' : 'parado', t: 'Entrar no portal', onde: 'robô Bernhoeft · container pendencias-bernhoeft · a cada 30 min',
+      faz: 'Abre o ContractWeb num Chrome sem janela. O reCAPTCHA é resolvido pela Anti-Captcha (~45 s), porque o áudio grátis é bloqueado no IP da VPS.',
+      entra: 'usuário e senha do cofre', sai: 'sessão aberta',
+      agora: `última leitura ${ha(b.coletado_em)}`, trava: 'o robô não lê o portal há mais de 1 h (login ou captcha falhando: ver a aba Ao vivo).' },
+    { e: bernOk ? 'ok' : 'falha', s: bernOk ? 'lendo' : 'parado', t: 'Ler pendências', onde: 'pendencias.js',
+      faz: 'Lê as competências e o relatório 012 e separa o que está "Não Entregue". Avisa quando entra ou sai um documento da lista.',
+      entra: 'portal logado', sai: 'lista de pendentes (fica na VPS, não vai ao banco)',
+      agora: `${(b.pendentes || []).length} pendente(s) agora`, trava: 'sem leitura recente do portal.' },
+    { e: !A ? 'nada' : !A.tem_chave ? 'falha' : A.rodando ? 'aviso' : achou ? 'ok' : 'nada', s: !A ? '…' : !A.tem_chave ? 'sem chave' : A.rodando ? 'buscando' : achou ? `${achou} achada(s)` : 'esperando leitura',
+      t: 'Buscar na Factorial (sozinho)', onde: 'auto.js no painel · API da Factorial, só leitura · roda a cada leitura nova',
+      faz: 'Sem ninguém escolher: reconhece o tipo de cada pendência (Brigada, AET, PEC, AVCB…) e lista os arquivos desse tipo nas pastas HSEQ da Factorial.',
+      entra: 'pendências "Não Entregue"', sai: 'candidatos de cada pendência',
+      agora: itensAuto.length ? `${achou} de ${itensAuto.length} pendência(s) com arquivo achado` : 'ainda não rodou', trava: 'falta a chave da Factorial no cofre.' },
+    { e: achou ? 'ok' : 'nada', s: achou ? 'escolhendo' : 'esperando', t: 'Escolher os arquivos certos', onde: 'auto.js · regra contrato → estado → genérico',
+      faz: 'Fica com o que cita o contrato; senão, com o que é do estado (MA, RS, GO…); senão, o genérico mais novo (confiança baixa). Descarta o de outro contrato/estado e o que não está assinado.',
+      entra: 'candidatos', sai: 'arquivos escolhidos + confiança (alta, média, baixa)',
+      agora: itensAuto.length ? ['alta', 'média', 'baixa'].map((c) => `${itensAuto.filter((i) => i.confianca === c).length} ${c}`).join(' · ') : '—' },
+    { e: gotOk ? (prontos ? 'ok' : 'nada') : 'falha', s: gotOk ? (prontos ? `${prontos} PDF(s)` : 'esperando') : 'Gotenberg fora', t: 'Converter e unir', onde: 'Gotenberg (LibreOffice) · 127.0.0.1:3010',
+      faz: 'Baixa por links temporários, converte imagem e Word para PDF e une os arquivos de cada pendência num PDF só, na ordem das datas.',
+      entra: 'arquivos escolhidos', sai: 'um PDF por pendência',
+      agora: `${itensAuto.filter((i) => i.unidos > 1).length} pendência(s) com mais de um arquivo unido`, trava: 'o Gotenberg (serviço de PDF) está fora do ar.' },
+    { e: prontos ? 'ok' : 'nada', s: prontos ? 'prontos' : 'vazio', t: 'Pronto para subir', onde: 'abas Pendências e Documentos montados',
+      faz: 'Cada PDF fica guardado na VPS ligado à sua pendência (contrato + documento), para conferir e, quando liberar, subir.',
+      entra: 'PDF unido', sai: 'PDF aprovado',
+      agora: itensAuto.length ? `${prontos} de ${itensAuto.length} pronto(s) para subir` : 'nenhum ainda' },
+    { e: 'falha', s: 'bloqueado', t: 'Enviar ao Bernhoeft', onde: 'ainda não existe',
+      faz: 'Subir o PDF na pendência do ContractWeb. A conta atual é de contratante e o portal responde "Sem Permissão" no envio.',
+      entra: 'PDF aprovado', sai: 'pendência entregue',
+      agora: 'precisa de uma conta de prestador com permissão de upload', trava: 'a conta não tem permissão de envio no Bernhoeft.' },
+  ];
+
+  const desenhar = (lista) => lista.map((x, i) => `<div class="estacao ${x.e}"><div class="caixa">
+      <div class="n">ESTAÇÃO ${i + 1}</div><div class="t">${x.t}</div>${chip(x.e, x.s)}
+      <div class="faz">${x.faz}</div>
+      <dl><dt>entra</dt><dd>${x.entra}</dd><dt>sai</dt><dd>${x.sai}</dd></dl>
+      <div class="onde">${x.onde}</div>
+      <div class="agora">agora: ${x.agora}</div>
+    </div><div class="correia" title="${x.e === 'falha' ? 'parada' : 'andando'}"></div></div>`).join('');
+  const trava = (lista) => {
+    const i = lista.findIndex((x) => x.e === 'falha');
+    return i < 0 ? '' : `<div class="trava"><b>A esteira para na estação ${i + 1} (${lista[i].t}):</b> ${lista[i].trava}</div>`;
+  };
+  $('esteiraAtlas').innerHTML = desenhar(atlasEst); $('travaAtlas').innerHTML = trava(atlasEst);
+  $('esteiraBern').innerHTML = desenhar(bernEst); $('travaBern').innerHTML = trava(bernEst);
+  $('legenda').innerHTML = [chip('ok', 'funcionando'), chip('aviso', 'esperando alguém'), chip('falha', 'parada'), chip('nada', 'ainda não começou')].join(' ') +
+    '<span>A correia anda enquanto a estação funciona e fica vermelha onde a esteira para.</span>';
+}
+
+const ABAS = ['geral', 'esteira', 'pendencias', 'pdfs', 'vivo', 'operacao'];
+let abaAtual = 'geral';
+function trocarAba(aba) {
+  if (aba === 'painel') aba = 'geral';
+  if (!ABAS.includes(aba)) aba = 'geral';
+  abaAtual = aba;
+  for (const a of ABAS) $('aba-' + a).hidden = a !== aba;
+  document.querySelectorAll('.abas button').forEach((b) => b.classList.toggle('ativa', b.dataset.aba === aba));
+  history.replaceState(null, '', aba === 'geral' ? location.pathname : '#' + aba);
+  window.scrollTo(0, 0);
+  if (aba === 'pendencias') carregarPendencias();
+  if (aba === 'pdfs') carregarPdfs();
+  if (aba === 'vivo') desenharVivo(true);
+  if (aba === 'operacao' && !$('log').innerHTML) carregarLog();
+}
+document.querySelectorAll('.abas button').forEach((b) => b.onclick = () => trocarAba(b.dataset.aba));
+
+function atlas(a) {
+  let h = '';
+  if (a.login === 'aguardando_codigo') {
+    h += `<div class="alerta"><b>O Atlas mandou um código por e-mail.</b> Digite aqui até ${hora(a.codigo_ate)} (${falta(a.codigo_ate)}).</div>`;
+  } else if (a.login === 'falha') {
+    h += `<p>${chip('falha', 'sem login')} <span class="tinta2">${esc(a.motivo || '')}</span></p>`;
+    if (a.proxima) h += `<p class="tinta2">Próxima tentativa às <b>${hora(a.proxima)}</b> (${falta(a.proxima)}). Nessa hora chega um e-mail com o código: digite aqui.</p>`;
+  } else if (a.login === 'ok') {
+    h += `<p>${chip('ok', 'logado')} ${a.proxima ? `<span class="tinta2">próxima leitura às ${hora(a.proxima)}</span>` : ''}</p>`;
+  } else {
+    h += `<p>${chip('aviso', a.login === 'verificando' ? 'verificando código' : 'estado desconhecido')}</p>`;
+  }
+  h += `<div class="codigo"><input id="cod" maxlength="8" placeholder="código" autocomplete="off" spellcheck="false">
+    <button id="enviarCod">Gravar código</button><span id="codMsg" class="tinta2">${a.codigo_gravado ? 'código gravado, aguardando o robô ler' : ''}</span></div>`;
+  if (a.totais) {
+    h += `<p class="tinta2">Última coleta ${dataHora(a.coletado_em)}: ` + Object.entries(a.totais).map(([k, v]) => `${esc(k)} <b>${v}</b>`).join(' · ') + '</p>';
+  }
+  if (a.por_documento?.length) h += barras(a.por_documento.slice(0, 10).map(([k, v]) => ({ rot: k, n: v })));
+  if (a.ciclo) h += `<details><summary>ciclo.log (últimas linhas)</summary><div class="log">${a.ciclo.map(esc).join('\n')}</div></details>`;
+  h += `<p class="apagado">PDFs unidos na pasta do robô: ${a.pdfs_unidos}</p>`;
+  const foco = document.activeElement?.id === 'cod' ? $('cod').value : null;
+  $('atlas').innerHTML = h;
+  if (foco !== null) { $('cod').value = foco; $('cod').focus(); }
+  $('enviarCod').onclick = gravarCodigo;
+  $('cod').onkeydown = (ev) => { if (ev.key === 'Enter') gravarCodigo(); };
+}
+
+async function gravarCodigo() {
+  const codigo = $('cod').value.trim();
+  const r = await fetch('api/codigo', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ codigo }) });
+  const j = await r.json();
+  $('codMsg').textContent = j.ok ? 'Gravado. O robô lê em até 2 s.' : j.erro;
+  if (j.ok) { $('cod').value = ''; setTimeout(carregar, 4000); }
+}
+
+// Barras horizontais, uma série (contagem); o valor fica escrito ao lado.
+function barras(itens) {
+  const max = Math.max(1, ...itens.map((x) => x.n));
+  return `<div class="barras">` + itens.map((x) => `<span class="rot" title="${esc(x.rot)}">${esc(x.rot.length > 46 ? x.rot.slice(0, 45) + '…' : x.rot)}</span>
+    <div class="trilho" title="${esc(x.rot)}: ${x.n}"><div class="barra" style="width:${(x.n / max) * 100}%"></div></div>
+    <span class="val">${x.n}</span>`).join('') + `</div>`;
+}
+
+function neon(n) {
+  if (n.erro) { $('neon').innerHTML = `<p>${chip('falha', 'sem acesso ao banco')} <span class="tinta2">${esc(n.erro)}</span></p>`; return; }
+  const total = n.estados.reduce((s, x) => s + x.n, 0);
+  $('neon').innerHTML = barras(n.estados.map((x) => ({ rot: x.estado, n: x.n }))) + `<p class="apagado">${total} documento(s) no total</p>`;
+  $('recentes').innerHTML = `<table><tr><th>quando</th><th>documento</th><th>competência</th><th>unidade</th><th>funcionário</th><th>estado</th></tr>` +
+    n.recentes.map((r) => `<tr><td>${dataHora(r.atualizado_em)}</td><td>${esc(r.nome)}</td><td>${esc(r.competencia)}</td><td>${esc(r.unidade)}</td><td class="nomeP">${esc(r.funcionario)}</td><td><span class="tag">${esc(r.estado)}</span></td></tr>`).join('') + `</table>`;
+}
+
+function sparkline(pts, id = 'spark') {
+  if (pts.length < 2) return '<p class="apagado">histórico ainda curto</p>';
+  const W = 600, H = 70, P = 6, max = Math.max(1, ...pts.map((p) => p.pendentes));
+  const x = (i) => P + (i / (pts.length - 1)) * (W - 2 * P);
+  const y = (v) => H - P - (v / max) * (H - 2 * P);
+  const d = pts.map((p, i) => `${x(i).toFixed(1)},${y(p.pendentes).toFixed(1)}`).join(' ');
+  return `<div class="spark" id="${id}"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+    <line x1="${P}" x2="${W - P}" y1="${H - P}" y2="${H - P}" stroke="var(--linha)" />
+    <polyline points="${d}" fill="none" stroke="var(--serie)" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round" />
+    <line class="mira" y1="0" y2="${H}" stroke="var(--apagado)" stroke-width="1" vector-effect="non-scaling-stroke" visibility="hidden" />
+  </svg><div class="dica"></div></div>
+  <div class="apagado" style="display:flex;justify-content:space-between;font-size:12px"><span>${dataHora(pts[0].em)}</span><span>pendentes por leitura · máx. ${max}</span><span>${dataHora(pts.at(-1).em)}</span></div>`;
+}
+function ligarSpark(pts, id = 'spark') {
+  const el = $(id); if (!el) return;
+  const mira = el.querySelector('.mira'), dica = el.querySelector('.dica');
+  el.onmousemove = (ev) => {
+    const r = el.getBoundingClientRect();
+    const i = Math.round(((ev.clientX - r.left) / r.width) * (pts.length - 1));
+    const p = pts[Math.max(0, Math.min(pts.length - 1, i))];
+    const px = (Math.max(0, Math.min(pts.length - 1, i)) / (pts.length - 1)) * r.width;
+    mira.setAttribute('x1', (px / r.width) * 600); mira.setAttribute('x2', (px / r.width) * 600); mira.setAttribute('visibility', 'visible');
+    dica.style.display = 'block'; dica.style.left = px + 'px'; dica.style.top = '10px';
+    dica.textContent = `${dataHora(p.em)} · ${p.pendentes} pendente(s)`;
+  };
+  el.onmouseleave = () => { dica.style.display = 'none'; mira.setAttribute('visibility', 'hidden'); };
+}
+
+function bern(b) {
+  let h = `<p class="tinta2">Última leitura ${dataHora(b.coletado_em)} (${ha(b.coletado_em)}) · ${b.total ?? '—'} item(ns)` +
+    (b.por_status ? ' · ' + Object.entries(b.por_status).map(([k, v]) => `${esc(k)} <b>${v}</b>`).join(' · ') : '') + '</p>';
+  h += sparkline(b.historico || []);
+  h += `<h2 style="margin-top:12px">Pendentes agora <small>${(b.pendentes || []).length}</small></h2><div class="rolar"><table><tr><th>contrato</th><th>área</th><th>documento</th><th>status</th></tr>` +
+    (b.pendentes || []).map((p) => `<tr><td>${esc(p.contrato)}</td><td>${esc(p.area)}</td><td>${esc(p.descricao)}</td><td>${esc(p.status)}</td></tr>`).join('') + '</table></div>';
+  h += `<details><summary>Mudanças (entrou / saiu da lista): ${(b.mudancas || []).length}</summary><table>` +
+    (b.mudancas || []).map((m) => `<tr><td>${dataHora(m.em)}</td><td><span class="tag">${m.tipo}</span></td><td>${esc(m.texto)}</td></tr>`).join('') + '</table></details>';
+  $('bern').innerHTML = h;
+  ligarSpark(b.historico || []);
+}
+
+function servicos(e) {
+  if (e.containers.erro) { $('servicos').innerHTML = chip('falha', e.containers.erro); return; }
+  const tipo = (c) => c.estado !== 'running' ? 'falha' : /unhealthy|starting/.test(c.status) ? 'aviso' : 'ok';
+  $('servicos').innerHTML = `<table><tr><th>serviço</th><th>estado</th></tr>` +
+    e.containers.map((c) => `<tr><td title="${esc(c.nome)}">${esc(c.rotulo || c.nome)}</td><td>${chip(tipo(c), c.status)}</td></tr>`).join('') +
+    `</table><p class="tinta2">Gotenberg (PDF): ${esc(e.gotenberg)} · n8n: ${esc(e.n8n)} · uniões de PDF registradas: ${e.unioes.total ?? '—'}</p>
+    <p class="apagado">O n8n está no ar, mas nenhum robô manda nada para ele ainda (sem webhook configurado).</p>`;
+  const sel = $('container'), atual = sel.value;
+  sel.innerHTML = '<option value="">(robôs + PDF juntos)</option>' + e.containers.map((c) => `<option value="${esc(c.nome)}" ${c.nome === atual ? 'selected' : ''}>${esc(c.rotulo || c.nome)}</option>`).join('');
+}
+
+const IMPORTANTE = /ERRO|FALH|falhou|Sessão|login|Login|código|Código|PENDENTE|NOVA|SAIU|ALTERADA|gravad|Neon|Coletado|Relatório|unid|merge|Ciclo|reCAPTCHA|captcha|saída \d/;
+async function carregarLog() {
+  const c = $('container').value;
+  const linhas = await (await fetch(c ? `api/log?c=${encodeURIComponent(c)}&n=400` : 'api/linha?n=600')).json();
+  const so = $('soImportantes').checked, fonte = $('fonte').value;
+  const el = $('log'), noFim = el.scrollTop + el.clientHeight >= el.scrollHeight - 30;
+  el.innerHTML = (Array.isArray(linhas) ? linhas : [])
+    .filter((l) => (!fonte || c || l.fonte === fonte) && (!so || IMPORTANTE.test(l.texto)))
+    .map((l) => `<div><span class="h">${dataHora(l.em)}</span> ${l.fonte ? `<span class="f">${l.fonte}</span>` : ''}<span class="${/ERRO|FALH|falhou/.test(l.texto) ? 'erro' : /NOVA|SAIU|Código informado|gravadas/.test(l.texto) ? 'forte' : ''}">${esc(l.texto)}</span></div>`)
+    .join('') || '<span class="apagado">nada aqui</span>';
+  if (noFim) el.scrollTop = el.scrollHeight;
+}
+
+// ---------- Esteira automática Bernhoeft + Reiniciar ----------
+let A = null, vigiaAuto = null, autoAberto = null;
+const ROTULO = { pronto: ['ok', 'pronto para subir'], nao_encontrado: ['falha', 'não achado'], erro: ['falha', 'erro'], buscando: ['aviso', 'buscando…'] };
+async function carregarAuto() {
+  A = await (await fetch('api/auto')).json();
+  const itens = A.itens || [];
+  const prontos = itens.filter((i) => i.estado === 'pronto').length;
+  let h = !A.tem_chave ? `<div class="alerta">Falta a chave da Factorial no cofre: a esteira automática não roda.</div>` : '';
+  if (A.sinal?.bernhoeft || A.sinal?.atlas) {
+    h += `<div class="alerta">Leitura pedida, esperando o robô acordar (até 5 s), ler o portal e gravar:` +
+      (A.sinal.bernhoeft ? ' <b>Bernhoeft</b> (login + captcha, ~2 a 3 min)' : '') + (A.sinal.atlas ? ' <b>Atlas</b> (vai pedir o código do e-mail)' : '') + '.</div>';
+  } else if (A.reiniciado_em && !A.inicio) {
+    h += `<div class="alerta">Reiniciado às ${hora(A.reiniciado_em)}. O robô Bernhoeft já acordou; a esteira começa sozinha assim que ele gravar a leitura nova.</div>`;
+  }
+  if (A.inicio) {
+    h += `<p>${A.rodando ? chip('aviso', 'rodando') : A.erro ? chip('falha', 'falhou') : chip('ok', `${prontos} de ${itens.length} prontos para subir`)}
+      <span class="tinta2">começou ${dataHora(A.inicio)} (${esc(A.porque || '')}) · leitura do Bernhoeft de ${dataHora(A.coletado_em)}${A.fim ? ' · levou ' + Math.max(1, Math.round((new Date(A.fim) - new Date(A.inicio)) / 1000)) + ' s' : ''}</span></p>` +
+      (A.erro ? `<p class="tinta2">${esc(A.erro)}</p>` : '') +
+      `<details ${A.rodando ? 'open' : ''}><summary>passo a passo</summary><div class="log">${(A.log || []).map(esc).join('\n')}</div></details>`;
+  } else if (!A.reiniciado_em) {
+    h += '<p class="apagado">Ainda não rodou: começa sozinha na próxima leitura do Bernhoeft, ou clique em "Rodar a busca agora".</p>';
+  }
+  $('autoResumo').innerHTML = h;
+  $('autoTabela').innerHTML = itens.length ? `<table><tr><th>contrato</th><th>pendência no Bernhoeft</th><th>achado na Factorial</th><th>confiança</th><th>estado</th><th></th></tr>` +
+    itens.map((it, k) => {
+      const [tipo, txt] = ROTULO[it.estado] || ['nada', it.estado];
+      const conf = it.confianca ? chip(it.confianca === 'alta' ? 'ok' : it.confianca === 'média' ? 'aviso' : 'nada', it.confianca) : '';
+      return `<tr><td>${esc(it.pendencia.contrato)}</td><td>${esc(it.tipo || it.pendencia.descricao)}</td>
+        <td>${it.arquivos.length ? it.arquivos.map((a) => (a.erro ? '✕ ' : '') + esc(a.filename)).join('<br>') : `<span class="apagado">${esc(it.motivo)}</span>`}
+          ${it.deixados?.length ? `<br><span class="apagado">fora: ${it.deixados.map((d) => `${esc(d.filename)} (${esc(d.motivo)})`).join('; ')}</span>` : ''}</td>
+        <td>${conf}<br><span class="apagado" style="font-size:12px">${it.confianca ? esc(it.motivo) : ''}</span></td>
+        <td>${chip(tipo, txt)}${it.unidos > 1 ? `<br><span class="apagado" style="font-size:12px">${it.unidos} arquivos unidos</span>` : ''}</td>
+        <td>${it.pdf ? `<button class="sec" data-auto="${k}">ver PDF</button>` : ''}</td></tr>`;
+    }).join('') + '</table>' : '';
+  document.querySelectorAll('#autoTabela [data-auto]').forEach((b) => b.onclick = () => verAuto(Number(b.dataset.auto)));
+  if (autoAberto !== null && !itens[autoAberto]?.pdf) { autoAberto = null; $('autoVer').innerHTML = ''; }
+  // Botões (aparecem na aba Painel e na aba da esteira)
+  const ocupado = A.rodando;
+  document.querySelectorAll('.reiniciar').forEach((d) => {
+    d.innerHTML = `<button data-acao="rodar" ${ocupado || !A.tem_chave ? 'disabled' : ''}>Rodar a busca agora</button>
+      <button class="perigo" data-acao="bernhoeft" ${ocupado ? 'disabled' : ''}>Reiniciar Bernhoeft</button>
+      <button class="perigo" data-acao="atlas">Reiniciar Atlas</button>
+      <button class="perigo" data-acao="tudo" ${ocupado ? 'disabled' : ''}>Reiniciar tudo</button>
+      <span class="tinta2 msgReiniciar"></span>`;
+    d.querySelectorAll('button').forEach((b) => b.onclick = () => acaoAuto(b.dataset.acao));
+  });
+  const ativo = A.rodando || A.sinal?.bernhoeft || A.sinal?.atlas || (A.reiniciado_em && !A.inicio);
+  if (ativo && !vigiaAuto) vigiaAuto = setInterval(carregarAuto, 3000);
+  if (!ativo && vigiaAuto) { clearInterval(vigiaAuto); vigiaAuto = null; }
+  if (E) { esteiras(E); resumo(); }
+}
+function verAuto(k) {
+  const it = A.itens[k];
+  autoAberto = k;
+  $('autoVer').innerHTML = `<h2 style="margin-top:14px">${esc(it.pendencia.contrato)} · ${esc(it.tipo)} <small>${it.unidos} arquivo(s) unido(s) · ${it.kb} KB · pronto para subir</small></h2>
+    <p class="tinta2">${esc(it.pendencia.descricao)}</p>
+    <p><button class="sec" onclick="abrirNoVisor('pacotes/${esc(it.pdf)}')">abrir no visor grande (aba PDFs)</button>
+      <a href="pacotes/${it.pdf.split('/').map(encodeURIComponent).join('/')}" target="_blank">abrir o PDF em outra aba</a></p>
+    <iframe class="visor" src="pacotes/${it.pdf.split('/').map(encodeURIComponent).join('/')}"></iframe>`;
+}
+const AVISO_REINICIAR = {
+  bernhoeft: 'Reiniciar o Bernhoeft?\n\nApaga os PDFs que a esteira automática montou e pede ao robô uma leitura nova agora. Quando a leitura chegar (2 a 3 min), a esteira roda sozinha de novo. Nada é enviado.',
+  atlas: 'Reiniciar o Atlas?\n\nPede ao robô uma coleta nova agora. Ele vai mandar um código por e-mail: digite no cartão Atlas em até 30 min. Os estados no banco (Neon) não são apagados.',
+  tudo: 'Reiniciar tudo?\n\nBernhoeft: apaga os PDFs automáticos e lê o portal de novo; a esteira roda sozinha em seguida.\nAtlas: pede uma coleta nova (vai chegar um código por e-mail).\nOs estados no banco (Neon) não são apagados. Nada é enviado.',
+};
+async function acaoAuto(acao) {
+  if (acao !== 'rodar' && !confirm(AVISO_REINICIAR[acao])) return;
+  const r = await fetch(acao === 'rodar' ? 'api/auto/rodar' : 'api/reiniciar', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ alvo: acao }) });
+  const j = await r.json();
+  await carregarAuto();
+  document.querySelectorAll('.msgReiniciar').forEach((s) => s.textContent = j.ok ? (j.feito ? j.feito.join(' · ') : 'Rodando…') : j.erro);
+}
+
+// ---------- Pacotes Bernhoeft ----------
+let P = null, aberto = null, vigia = null;
+async function carregarPacotes() {
+  P = await (await fetch('api/pacotes')).json();
+  $('pacAviso').innerHTML = P.tem_chave ? ''
+    : `<div class="alerta"><b>Falta a chave da Factorial.</b> Quando o Evilásio mandar, ela entra no cofre da VPS como <code>FACTORIAL_API_KEY</code> e o painel é reiniciado. Até lá dá pra ver os pacotes já montados, mas não montar novos.</div>`;
+  const t = P.tarefa;
+  if (t) {
+    const estado = !t.fim ? chip('aviso', 'montando…') : t.erro ? chip('falha', 'não montou') : chip('ok', 'pronto');
+    $('pacTarefa').innerHTML = `<p>${estado} <span class="tinta2">"${esc(t.busca)}" · ${hora(t.inicio)}</span></p>` +
+      (t.erro ? `<p class="tinta2">${esc(t.erro)}</p>` : '') +
+      (t.candidatos ? '<p>' + t.candidatos.map((c) => `<button class="sec" data-nome="${esc(c.nome)}">${esc(c.nome)} · ${esc(c.cpf)}${c.ativo ? '' : ' · desligado'}</button>`).join(' ') + '</p>' : '') +
+      (t.log.length ? `<details ${t.fim ? '' : 'open'}><summary>passo a passo</summary><div class="log">${t.log.map(esc).join('\n')}</div></details>` : '');
+    document.querySelectorAll('#pacTarefa [data-nome]').forEach((b) => b.onclick = () => { $('pacBusca').value = b.dataset.nome; montarPacote(); });
+    if (t.fim && t.pasta && vigia) abrirPacote(t.pasta);
+    if (t.fim && vigia) { clearInterval(vigia); vigia = null; }
+  }
+  $('pacLista').innerHTML = P.pacotes.length
+    ? `<table><tr><th>funcionário / documento</th><th>CPF</th><th>achados</th><th>montado</th><th></th></tr>` + P.pacotes.map((p) =>
+      `<tr><td>${p.empresa ? `${esc(p.titulo)} <span class="tag">empresa</span>` : esc(p.funcionario.nome) + (p.funcionario.ativo ? '' : ' <span class="tag">desligado</span>')}</td><td>${p.empresa ? '' : esc(p.funcionario.cpf)}</td>
+       <td>${chip(p.achados === p.exigidos ? 'ok' : p.achados ? 'aviso' : 'falha', `${p.achados} de ${p.exigidos}`)}</td>
+       <td>${dataHora(p.gerado_em)}</td><td><button class="sec" data-pasta="${esc(p.pasta)}">abrir</button></td></tr>`).join('') + '</table>'
+    : '<p class="apagado">Nenhum pacote montado ainda.</p>';
+  document.querySelectorAll('#pacLista [data-pasta]').forEach((b) => b.onclick = () => abrirPacote(b.dataset.pasta));
+  if (E) esteiras(E);
+}
+function abrirPacote(pasta) {
+  const p = (P?.pacotes || []).find((x) => x.pasta === pasta);
+  if (!p) return;
+  aberto = pasta;
+  const base = 'pacotes/' + encodeURIComponent(pasta) + '/';
+  const docs = p.itens.map((it) => `<span><b>${it.doc_id}</b> ${esc(it.nome)}</span><span>` +
+    (it.arquivos.length ? it.arquivos.map((a) => a.arquivo ? `✓ <a href="${base}${a.arquivo.split('/').map(encodeURIComponent).join('/')}" target="_blank">${esc(a.filename)}</a>` : `✕ ${esc(a.filename)} (${esc(a.erro)})`).join(' · ')
+      : '<span style="color:var(--critico)">✕ não encontrado</span>') + '</span>').join('');
+  $('pacVer').innerHTML = `<h2 style="margin-top:14px">${esc(p.empresa ? p.titulo : p.funcionario.nome)} <small>${p.achados} de ${p.exigidos} documentos · montado ${dataHora(p.gerado_em)}</small></h2>
+    <div class="lista-docs">${docs}</div>
+    <p><a href="${base}pacote.pdf" target="_blank">abrir o PDF em outra aba</a></p>
+    <iframe class="visor" src="${base}pacote.pdf"></iframe>`;
+}
+async function montarPacote(empresa) {
+  const pedido = empresa === true ? { empresa: true, busca: $('empTitulo').value.trim(), ids: $('empIds').value } : { busca: $('pacBusca').value.trim() };
+  const r = await fetch('api/pacote', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(pedido) });
+  const j = await r.json();
+  $('pacMsg').textContent = j.ok ? 'Montando… (busca na Factorial, baixa e une)' : j.erro;
+  if (j.ok && !vigia) vigia = setInterval(carregarPacotes, 2000);
+  carregarPacotes();
+}
+$('pacMontar').onclick = () => montarPacote();
+$('empMontar').onclick = () => montarPacote(true);
+$('pacBusca').onkeydown = (ev) => { if (ev.key === 'Enter') montarPacote(); };
+
+async function carregar() {
+  try {
+    E = await (await fetch('api/estado')).json();
+    fluxo(E); esteiras(E); atlas(E.atlas); neon(E.neon); bern(E.bernhoeft); servicos(E);
+    $('hora').textContent = 'números de ' + new Date().toLocaleTimeString('pt-BR');
+    if (!vigia) await carregarPacotes();
+    if (!vigiaAuto) await carregarAuto();
+    resumo();
+  } catch (e) {
+    $('hora').textContent = 'erro ao atualizar: ' + e.message;
+  }
+}
+['soImportantes', 'fonte', 'container'].forEach((id) => $(id).onchange = carregarLog);
+$('logCarregar').onclick = carregarLog;
+
+// ---------- Visão geral (aba 1) ----------
+function kpi(rotulo, valor, sub, extra = '') {
+  return `<div class="kpi" ${extra}><div class="r">${rotulo}</div><div class="v">${valor}</div><div class="s">${sub || '&nbsp;'}</div></div>`;
+}
+// Número grande clicável: leva para a aba (e o filtro) que explica o número.
+function kpiIr(rotulo, valor, sub, ir, classe = '') {
+  const tag = ir ? 'button' : 'div';
+  return `<${tag} class="kpi ${classe}" ${ir ? `data-ir="${ir}"` : ''}><div class="r">${rotulo}</div><div class="v">${valor}</div><div class="s">${sub || '&nbsp;'}</div></${tag}>`;
+}
+function irPara(alvo) {
+  const [aba, filtro, origem] = alvo.split(':');
+  if (aba === 'pendencias') { pendFiltro = filtro || 'todos'; $('pendOrigem').value = origem || ''; }
+  trocarAba(aba);
+}
+const ESTADO_CURTO = {
+  PENDENTE_ENVIO: 'na fila da busca', LOCALIZADO: 'achado na Factorial', COMPOSTO: 'achado e PDF unido', NAO_ENCONTRADO_FACTORIAL: 'não achado',
+  DIVERGENTE_FACTORIAL: 'achado com divergência', AGUARDANDO_ASSINATURA: 'falta assinatura', ERRO_COMPOSICAO: 'erro ao unir', ENVIADO: 'enviado',
+};
+const sub16 = (t) => `<span class="apagado" style="font-size:16px">${t}</span>`;
+function resumo() {
+  if (!E) return;
+  const b = E.bernhoeft, a = E.atlas, n = E.neon;
+  const est = Object.fromEntries((n.estados || []).map((x) => [x.estado, x.n]));
+  const totalNeon = Object.values(est).reduce((s, x) => s + x, 0);
+  const recente = (iso, min) => iso && Date.now() - new Date(iso) < min * 60000;
+  const itens = A?.itens || [];
+  const prontos = itens.filter((i) => i.estado === 'pronto').length;
+  const achouB = itens.filter((i) => i.arquivos.length).length;
+  const naoB = itens.filter((i) => i.estado === 'nao_encontrado').length;
+  const pendB = (b.pendentes || []).length;
+  const pendA = n.erro ? 0 : totalNeon - (est.ENVIADO || 0);
+  const achouA = n.erro ? 0 : (est.LOCALIZADO || 0) + (est.COMPOSTO || 0) + (est.DIVERGENTE_FACTORIAL || 0) + (est.AGUARDANDO_ASSINATURA || 0);
+  const naoA = est.NAO_ENCONTRADO_FACTORIAL || 0;
+  const cs = Array.isArray(E.containers) ? E.containers : [];
+  const noAr = cs.filter((c) => c.estado === 'running' && !/unhealthy/.test(c.status)).length;
+
+  $('resumo').innerHTML = [
+    kpiIr('Pendências encontradas', pendB + pendA, `${pendB} Bernhoeft · ${pendA} Atlas`, 'pendencias:todos'),
+    kpiIr('Achadas na Factorial', achouB + achouA, 'já têm arquivo para entregar', 'pendencias:achados', 'destaque'),
+    kpiIr('PDFs prontos', prontos + (est.COMPOSTO || 0), `${prontos} Bernhoeft · ${est.COMPOSTO || 0} Atlas`, 'pdfs', 'destaque'),
+    kpiIr('Não achadas', naoB + naoA, 'sem arquivo na Factorial', 'pendencias:nao', 'atencao'),
+    kpiIr('Na fila', (est.PENDENTE_ENVIO || 0) + Math.max(0, pendB - itens.length), 'ainda não buscadas', 'pendencias:fila'),
+    kpiIr('Enviados aos portais', est.ENVIADO || 0, 'envio desligado (modo leitura)', null, 'parado'),
+  ].join('');
+
+  const login = a.login === 'ok' ? ['ok', 'logado'] : a.login === 'aguardando_codigo' ? ['aviso', 'esperando código'] : a.login === 'verificando' ? ['aviso', 'verificando código'] : ['falha', 'sem login'];
+  const saude = [
+    ['Robô Bernhoeft', recente(b.coletado_em, 70) ? chip('ok', 'lendo o portal') : chip('falha', 'parado'), `última leitura ${ha(b.coletado_em)}`],
+    ['Robô Atlas', chip(...login), a.coletado_em ? `última coleta ${ha(a.coletado_em)}` : 'falta o 1º login com o código do e-mail'],
+    ['Busca na Factorial', !A ? chip('nada', '…') : !A.tem_chave ? chip('falha', 'sem chave') : A.rodando ? chip('aviso', 'buscando agora') : chip('ok', 'pronta'), A?.fim ? `rodou ${ha(A.fim)}` : ''],
+    ['Banco de dados', n.erro ? chip('falha', 'sem acesso') : chip('ok', 'conectado'), n.erro ? '' : `${totalNeon} documento(s) do Atlas`],
+    ['Serviço de PDF', E.gotenberg === 'ok' ? chip('ok', 'no ar') : chip('falha', 'fora do ar'), 'converte e une os arquivos'],
+    ['Servidor', chip(noAr === cs.length && cs.length ? 'ok' : 'aviso', `${noAr} de ${cs.length} serviços no ar`), ''],
+  ];
+  $('saude').innerHTML = saude.map(([t, c, d]) => `<div class="item"><span class="nome">${t}</span>${c}<span class="det">${esc(d)}</span></div>`).join('');
+
+  // Cartão Bernhoeft
+  const ROT = { pronto: ['ok', 'PDF pronto'], nao_encontrado: ['falha', 'não achado'], erro: ['falha', 'erro'], buscando: ['aviso', 'buscando…'] };
+  $('geralBern').innerHTML = `<div class="mini"><div><b>${pendB}</b><span>pendentes no portal</span></div><div><b>${prontos}</b><span>PDFs prontos para subir</span></div><div><b>${naoB}</b><span>não achados</span></div></div>` +
+    (itens.length ? `<table><tr><th>contrato</th><th>documento</th><th>situação</th></tr>` + itens.slice(0, 8).map((it) => {
+      const [t, txt] = ROT[it.estado] || ['nada', it.estado];
+      return `<tr><td>${esc(it.pendencia.contrato)}</td><td>${esc(it.tipo || it.pendencia.descricao)}</td><td>${chip(t, txt)}</td></tr>`;
+    }).join('') + '</table>' : '<p class="apagado">A busca na Factorial ainda não rodou para a leitura de agora.</p>') +
+    `<p class="tinta2" style="margin:10px 0 0">Leitura automática a cada 30 min · última ${ha(b.coletado_em)} · <a href="#pendencias" data-ir="pendencias:todos:Bernhoeft">ver todas</a></p>` +
+    `<div style="margin-top:8px">${sparkline(b.historico || [], 'sparkGeral')}</div>`;
+  ligarSpark(b.historico || [], 'sparkGeral');
+
+  // Cartão Atlas
+  $('geralAtlas').innerHTML = `<p style="margin-top:0">${chip(...login)} <span class="tinta2">${a.login === 'aguardando_codigo' ? `código pedido, vale até ${hora(a.codigo_ate)}` : a.coletado_em ? `coleta automática a cada 60 min · última ${ha(a.coletado_em)}` : 'na VPS, ainda falta o 1º login'}</span></p>` +
+    `<div class="mini"><div><b>${n.erro ? '—' : pendA}</b><span>pendências no banco</span></div><div><b>${n.erro ? '—' : achouA}</b><span>achadas na Factorial</span></div><div><b>${n.erro ? '—' : naoA}</b><span>não achadas</span></div></div>` +
+    (n.erro ? `<p>${chip('falha', 'sem acesso ao banco')}</p>` : barras((n.estados || []).map((x) => ({ rot: ESTADO_CURTO[x.estado] || x.estado, n: x.n })))) +
+    `<p class="tinta2" style="margin:10px 0 0">A busca na Factorial do Atlas é feita pela sincronização · <a href="#pendencias" data-ir="pendencias:todos:Atlas">ver todas</a></p>`;
+
+  // Próximos passos (o que falta para a entrega sair sozinha)
+  const passos = [
+    ['Login do Atlas no servidor', a.login === 'ok' ? chip('ok', 'feito') : chip('aviso', 'esperando código'), 'Primeiro login com o código que chega por e-mail; depois o robô coleta sozinho.'],
+    ['Busca do Atlas no servidor', chip('nada', 'a fazer'), 'Instalar a sincronização com a Factorial no servidor (hoje roda fora dele).'],
+    ['Envio ao Atlas', chip('nada', 'a fazer'), 'Descobrir a chamada de envio e testar 1 documento com aprovação.'],
+    ['Envio ao Bernhoeft', chip('falha', 'bloqueado'), 'Precisa de uma conta de prestador com permissão de envio no ContractWeb.'],
+    ['Tipos sem par', chip('nada', 'a fazer'), 'Folha de Pagamento Analítica e Comprovante do TRCT ainda não têm regra na Factorial.'],
+  ];
+  $('proximos').innerHTML = `<ul class="proximos">${passos.map(([o, c, q]) => `<li><div><div class="o">${o}</div>${c}</div><div class="q">${q}</div></li>`).join('')}</ul>`;
+
+  // Faixa no topo quando o Atlas espera o código
+  $('faixa').innerHTML = a.login === 'aguardando_codigo'
+    ? `<div class="faixa"><b>O Atlas mandou um código por e-mail.</b><span class="tinta2">Digite até ${hora(a.codigo_ate)} (${falta(a.codigo_ate)}).</span><button id="faixaIr">Digitar o código</button></div>` : '';
+  if ($('faixaIr')) $('faixaIr').onclick = () => { trocarAba('operacao'); setTimeout(() => $('cod')?.focus(), 50); };
+
+  document.querySelectorAll('#aba-geral [data-ir]').forEach((el) => el.onclick = (ev) => { ev.preventDefault(); irPara(el.dataset.ir); });
+}
+
+// ---------- Pendências achadas (tabela única) ----------
+const CAT = {
+  pdf: ['ok', 'PDF pronto'], achado: ['ok', 'achado na Factorial'], atencao: ['aviso', 'achado, com ressalva'],
+  nao: ['falha', 'não achado'], fila: ['nada', 'na fila (não buscado)'],
+};
+const ROT_ESTADO = {
+  pronto: 'PDF unido, pronto para subir', nao_encontrado: 'nenhum arquivo deste tipo para o contrato/estado', erro: 'erro ao baixar/unir', buscando: 'buscando agora…', sem_busca: 'esteira ainda não rodou para esta leitura',
+  PENDENTE_ENVIO: 'na fila: a sincronização ainda não buscou', LOCALIZADO: 'arquivo achado na Factorial', COMPOSTO: 'achado e PDF unido',
+  NAO_ENCONTRADO_FACTORIAL: 'não achado na Factorial', DIVERGENTE_FACTORIAL: 'achado, mas com divergência (conferir)', AGUARDANDO_ASSINATURA: 'achado, falta assinatura',
+  ERRO_COMPOSICAO: 'erro ao unir o PDF', ENVIADO: 'enviado',
+};
+function categoria(l) {
+  if (l.origem === 'Bernhoeft') return { pronto: 'pdf', nao_encontrado: 'nao', erro: 'atencao' }[l.estado] || 'fila';
+  return { COMPOSTO: 'pdf', LOCALIZADO: 'achado', DIVERGENTE_FACTORIAL: 'atencao', AGUARDANDO_ASSINATURA: 'atencao', ERRO_COMPOSICAO: 'atencao', NAO_ENCONTRADO_FACTORIAL: 'nao' }[l.estado] || 'fila';
+}
+let PEND = null, pendFiltro = 'achados', pendOrd = { k: null, dir: 1 }, pendAbertas = new Set();
+const chaveLinha = (l) => l.origem === 'Bernhoeft' ? 'B|' + l.chave : 'A|' + (l.id ?? [l.doc_id, l.nome, l.competencia, l.unidade, l.numero_pedido, l.funcionario].join('|'));
+async function carregarPendencias() {
+  try { PEND = await (await fetch('api/pendencias')).json(); } catch (e) { $('pendTabela').innerHTML = `<p>${chip('falha', 'não carregou: ' + e.message)}</p>`; return; }
+  for (const l of PEND.linhas) l.cat = categoria(l);
+  desenharPendencias();
+}
+function pendVisiveis() {
+  const q = $('pendBusca').value.trim().toLowerCase(), o = $('pendOrigem').value;
+  let ls = PEND.linhas.filter((l) => (!o || l.origem === o)
+    && (pendFiltro === 'todos' || (pendFiltro === 'achados' ? ['pdf', 'achado', 'atencao'].includes(l.cat) : l.cat === pendFiltro))
+    && (!q || JSON.stringify(l).toLowerCase().includes(q)));
+  if (pendOrd.k) {
+    const v = (l) => String(colunaValor(l, pendOrd.k) ?? '').toLowerCase();
+    ls = ls.slice().sort((x, y) => v(x).localeCompare(v(y), 'pt-BR', { numeric: true }) * pendOrd.dir);
+  }
+  return ls;
+}
+function colunaValor(l, k) {
+  return {
+    origem: l.origem, ref: l.origem === 'Bernhoeft' ? l.contrato : (l.numero_pedido || l.cliente),
+    doc: l.documento, onde: l.origem === 'Bernhoeft' ? `${l.unidade} ${l.area}` : l.unidade, quem: l.origem === 'Bernhoeft' ? l.contratada : l.funcionario,
+    comp: l.competencia, quando: l.origem === 'Bernhoeft' ? l.pendente_desde : l.atualizado_em, achado: (l.arquivos || []).map((a) => a.filename).join(' ') || l.caminho_origem,
+    conf: l.confianca, sit: l.cat,
+  }[k];
+}
+function desenharPendencias() {
+  if (!PEND) return;
+  const L = PEND.linhas;
+  const conta = (f) => L.filter(f).length;
+  const filtros = [
+    ['todos', 'Todas as pendências', L.length, `${conta((l) => l.origem === 'Bernhoeft')} Bernhoeft · ${conta((l) => l.origem === 'Atlas')} Atlas`],
+    ['achados', 'Achadas na Factorial', conta((l) => ['pdf', 'achado', 'atencao'].includes(l.cat)), 'tem arquivo para entregar'],
+    ['pdf', 'PDF pronto', conta((l) => l.cat === 'pdf'), 'unido, pronto para subir'],
+    ['atencao', 'Achadas, com ressalva', conta((l) => l.cat === 'atencao'), 'divergência ou falta assinatura'],
+    ['nao', 'Não achadas', conta((l) => l.cat === 'nao'), 'sem arquivo na Factorial'],
+    ['fila', 'Na fila', conta((l) => l.cat === 'fila'), 'ainda não buscadas'],
+  ];
+  $('pendKpis').innerHTML = filtros.map(([k, r, v, s]) => `<button class="kpi ${pendFiltro === k ? 'ativa' : ''}" data-f="${k}"><div class="r">${r}</div><div class="v">${v}</div><div class="s">${s}</div></button>`).join('');
+  document.querySelectorAll('#pendKpis [data-f]').forEach((b) => b.onclick = () => { pendFiltro = b.dataset.f; desenharPendencias(); });
+
+  const ls = pendVisiveis();
+  const B = PEND.bernhoeft;
+  $('pendConta').innerHTML = `${ls.length} linha(s) · Bernhoeft lido ${ha(B.coletado_em)}, esteira ${B.esteira.rodando ? 'rodando agora' : B.esteira.fim ? 'rodou ' + ha(B.esteira.fim) : 'ainda não rodou'}` +
+    (PEND.atlas.erro ? ` · <span style="color:var(--critico)">Atlas/Neon: ${esc(PEND.atlas.erro)}</span>` : '') + ` · dados de ${hora(PEND.agora)}`;
+  const cab = [['origem', 'origem'], ['ref', 'contrato / pedido'], ['doc', 'documento exigido'], ['onde', 'unidade · área'], ['quem', 'empresa / funcionário'],
+    ['comp', 'competência'], ['quando', 'pendente desde / atualizado'], ['achado', 'achado na Factorial'], ['conf', 'confiança'], ['sit', 'situação'], [null, 'PDF']];
+  const seta = (k) => k && pendOrd.k === k ? (pendOrd.dir > 0 ? ' ▲' : ' ▼') : '';
+  let h = `<table class="pend"><thead><tr>${cab.map(([k, t]) => `<th ${k ? `data-ord="${k}"` : ''}>${t}${seta(k)}</th>`).join('')}</tr></thead><tbody>`;
+  for (const l of ls) {
+    const id = chaveLinha(l), aberta = pendAbertas.has(id);
+    const [ct, ctxt] = CAT[l.cat];
+    const corOrigem = l.origem === 'Bernhoeft' ? 'var(--f-bern)' : 'var(--f-atlas)';
+    const achado = l.origem === 'Bernhoeft'
+      ? (l.arquivos.length ? l.arquivos.map((a) => `<div class="arq">${a.erro ? '✕' : '✓'} ${esc(a.filename)} <span class="apagado">· ${esc((a.created_at || '').slice(0, 10))}${a.paginas ? ` · ${a.paginas} pág.` : ''}</span></div>`).join('') : `<span class="apagado">${esc(l.motivo || ROT_ESTADO[l.estado] || '')}</span>`)
+      : (l.caminho_origem ? `<div class="arq">✓ ${esc(String(l.caminho_origem).split(/[\\/]/).pop())}</div>` : `<span class="apagado">${esc(ROT_ESTADO[l.estado] || l.estado)}</span>`);
+    const conf = l.confianca ? chip(l.confianca === 'alta' ? 'ok' : l.confianca === 'média' ? 'aviso' : 'nada', l.confianca) : '<span class="apagado">—</span>';
+    const pdf = l.pdf ? `<button class="sec" data-pdf="pacotes/${esc(l.pdf)}">ver PDF</button>`
+      : l.origem === 'Atlas' && l.estado === 'COMPOSTO' ? '<span class="apagado" style="font-size:12px">na máquina do Evilásio</span>' : '';
+    h += `<tr class="linha ${aberta ? 'aberta' : ''}" data-id="${esc(id)}">
+      <td><span class="origem" style="--cor:${corOrigem}">${l.origem}</span></td>
+      <td>${esc(colunaValor(l, 'ref') || '—')}</td>
+      <td>${esc(l.tipo_reconhecido || l.documento)}${l.tipo_reconhecido ? `<div class="apagado" style="font-size:12px">${esc(l.documento)}</div>` : ''}</td>
+      <td>${esc(l.unidade || '')}${l.area ? `<div class="apagado" style="font-size:12px">${esc(l.area)}</div>` : ''}</td>
+      <td class="${l.origem === 'Atlas' ? 'nomeP' : ''}">${esc(colunaValor(l, 'quem') || '—')}</td>
+      <td>${esc(l.competencia || '—')}</td>
+      <td>${l.origem === 'Bernhoeft' ? `${dataHora(l.pendente_desde)}<div class="apagado" style="font-size:12px">em ${l.leituras || 1} leitura(s)</div>` : dataHora(l.atualizado_em)}</td>
+      <td>${achado}</td>
+      <td>${conf}</td>
+      <td>${chip(ct, ctxt)}</td>
+      <td>${pdf}</td></tr>`;
+    if (aberta) h += `<tr><td class="det" colspan="11">${detalhe(l)}</td></tr>`;
+  }
+  h += '</tbody></table>';
+  if (!ls.length) h += '<p class="apagado">Nada com esse filtro.</p>';
+  const el = $('pendTabela'), topo = el.scrollTop;
+  el.innerHTML = h;
+  el.scrollTop = topo;
+  el.querySelectorAll('th[data-ord]').forEach((th) => th.onclick = () => {
+    const k = th.dataset.ord; pendOrd = { k, dir: pendOrd.k === k ? -pendOrd.dir : 1 }; desenharPendencias();
+  });
+  el.querySelectorAll('tr.linha').forEach((tr) => tr.onclick = (ev) => {
+    if (ev.target.closest('button, a')) return;
+    const id = tr.dataset.id; pendAbertas.has(id) ? pendAbertas.delete(id) : pendAbertas.add(id); desenharPendencias();
+  });
+  el.querySelectorAll('[data-pdf]').forEach((b) => b.onclick = () => abrirNoVisor(b.dataset.pdf));
+}
+const ROT_CAMPO = {
+  contrato: 'contrato', contratada: 'contratada', risco: 'risco', competencia: 'competência', area: 'área', unidade: 'unidade', tipo: 'tipo', status: 'status no portal',
+  colaboradores: 'colaboradores', chave: 'chave da pendência', pendente_desde: 'pendente desde', leituras: 'leituras em que aparece', tipo_reconhecido: 'tipo reconhecido',
+  estado: 'estado', motivo: 'por que este arquivo', kb: 'tamanho do PDF (KB)', unidos: 'arquivos unidos', paginas: 'páginas', buscado_em: 'buscado na Factorial em', erro: 'erro',
+  nome: 'documento', doc_id: 'doc_id', funcionario: 'funcionário', categoria: 'categoria', aba: 'aba do Atlas', situacao: 'situação no Atlas', grupo: 'grupo',
+  numero_pedido: 'pedido', qtd_docs: 'qtd. de documentos', prazo_envio: 'prazo de envio', validade: 'validade', critico: 'crítico', atualizado_em: 'atualizado no banco',
+  enviado_em: 'enviado em', validado_em: 'validado em', cliente: 'cliente', caminho_origem: 'arquivo de origem',
+};
+const FORA_DET = new Set(['origem', 'arquivos', 'deixados', 'pdf', 'cat', 'documento', 'descricao', 'confianca']);
+function detalhe(l) {
+  const campos = Object.entries(l).filter(([k, v]) => !FORA_DET.has(k) && v !== null && v !== '' && v !== undefined && typeof v !== 'object');
+  const val = (k, v) => /(_em|_desde|^prazo_envio$|^validade$)/.test(k) && !isNaN(Date.parse(v)) ? `${dataHora(v)} <span class="apagado">(${ha(v)})</span>` : esc(v);
+  let h = `<div style="font-weight:600;margin-bottom:8px">${esc(l.documento)}</div><dl>` +
+    campos.map(([k, v]) => `<div><dt>${esc(ROT_CAMPO[k] || k.replace(/_/g, ' '))}</dt><dd class="${k === 'funcionario' ? 'nomeP' : ''}">${val(k, v)}</dd></div>`).join('') +
+    `<div><dt>situação</dt><dd>${esc(ROT_ESTADO[l.estado] || l.estado)}</dd></div></dl>`;
+  if (l.arquivos?.length) {
+    h += `<b>Arquivos escolhidos na Factorial</b> <span class="apagado">(nesta ordem no PDF unido)</span><table><tr><th>ID Factorial</th><th>arquivo</th><th>pasta</th><th>criado em</th><th>assinatura</th><th>páginas</th><th>por quê</th><th></th></tr>` +
+      l.arquivos.map((a) => `<tr><td>${esc(a.id)}</td><td>${a.erro ? '✕ ' : '✓ '}${esc(a.filename)}${a.erro ? `<div style="color:var(--critico)">${esc(a.erro)}</div>` : ''}</td><td>${esc(a.pasta || '—')}</td>
+        <td>${dataHora(a.created_at)}</td><td>${esc(a.assinatura || '—')}</td><td>${a.paginas ?? '—'}</td><td>${esc(a.motivo || '')}</td>
+        <td>${a.parte ? `<button class="sec" data-pdf="pacotes/${esc(a.parte)}">ver esta parte</button>` : ''}</td></tr>`).join('') + '</table>';
+  }
+  if (l.deixados?.length) {
+    h += `<p style="margin-top:10px"><b>Deixados de fora:</b> ` + l.deixados.map((d) => `${esc(d.filename)} <span class="apagado">(${esc(d.motivo)})</span>`).join(' · ') + '</p>';
+  }
+  if (l.pdf) h += `<p style="margin-top:10px"><button data-pdf="pacotes/${esc(l.pdf)}">Abrir o PDF unido no visor</button> <span class="tinta2">${l.unidos || 1} arquivo(s) · ${l.paginas ? l.paginas + ' página(s) · ' : ''}${l.kb} KB</span></p>`;
+  return h;
+}
+function nomeCsv(s) { return $('ocultar').checked ? String(s || '').split(/\s+/).filter(Boolean).map((p) => p[0] + '.').join(' ') : s; }
+$('pendCsv').onclick = () => {
+  if (!PEND) return;
+  const cols = [['origem', (l) => l.origem], ['contrato/pedido', (l) => colunaValor(l, 'ref')], ['documento exigido', (l) => l.documento], ['tipo reconhecido', (l) => l.tipo_reconhecido],
+    ['unidade', (l) => l.unidade], ['área', (l) => l.area], ['empresa/funcionário', (l) => l.origem === 'Atlas' ? nomeCsv(l.funcionario) : l.contratada], ['competência', (l) => l.competencia],
+    ['pendente desde/atualizado', (l) => l.origem === 'Bernhoeft' ? l.pendente_desde : l.atualizado_em], ['situação', (l) => CAT[l.cat][1]], ['estado', (l) => l.estado],
+    ['confiança', (l) => l.confianca], ['arquivos na Factorial', (l) => (l.arquivos || []).map((a) => `${a.filename} [${a.id}]`).join(' | ')],
+    ['ids Factorial', (l) => (l.arquivos || []).map((a) => a.id).join(' ')], ['páginas', (l) => l.paginas], ['KB', (l) => l.kb], ['motivo', (l) => l.motivo]];
+  const cel = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const txt = '﻿' + [cols.map(([t]) => cel(t)).join(';'), ...pendVisiveis().map((l) => cols.map(([, f]) => cel(f(l))).join(';'))].join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([txt], { type: 'text/csv;charset=utf-8' }));
+  a.download = `pendencias-${new Date().toISOString().slice(0, 16).replace(/[T:]/g, '-')}.csv`;
+  a.click();
+};
+$('pendBusca').oninput = desenharPendencias;
+$('pendOrigem').onchange = desenharPendencias;
+setInterval(() => { if (abaAtual === 'pendencias') carregarPendencias(); }, 30000);
+
+// ---------- PDFs: lista + visor grande ----------
+let PDFS = [], pdfAtual = null, parteAtual = null;
+async function carregarPdfs() {
+  try { PDFS = await (await fetch('api/pdfs')).json(); } catch (e) { $('pdfLista').innerHTML = chip('falha', e.message); return; }
+  desenharListaPdfs();
+  if (!pdfAtual && PDFS.length) verPdf(PDFS[0].url);
+}
+const pdfFiltrados = () => { const q = $('pdfBusca').value.trim().toLowerCase(); return PDFS.filter((p) => !q || JSON.stringify(p).toLowerCase().includes(q)); };
+function desenharListaPdfs() {
+  const ls = pdfFiltrados();
+  $('pdfConta').textContent = `${PDFS.length} montado(s)`;
+  let grupo = null, h = '';
+  for (const p of ls) {
+    if (p.grupo !== grupo) { grupo = p.grupo; h += `<h3>${esc(grupo)}</h3>`; }
+    h += `<button class="pdfItem ${pdfAtual === p.url ? 'ativo' : ''}" data-url="${esc(p.url)}">
+      <div class="t">${esc(p.titulo)}</div><div class="s">${esc(p.sub || '')}</div>
+      <div class="m">${p.paginas ? p.paginas + ' pág. · ' : ''}${p.kb} KB · ${dataHora(p.em)}${p.partes?.length > 1 ? ` · ${p.partes.length} arquivos unidos` : ''}${p.confianca ? ` · confiança ${esc(p.confianca)}` : ''}</div></button>`;
+  }
+  $('pdfLista').innerHTML = h || '<p class="apagado">Nenhum PDF montado ainda. A esteira automática monta os do Bernhoeft a cada leitura nova.</p>';
+  $('pdfLista').querySelectorAll('[data-url]').forEach((b) => b.onclick = () => verPdf(b.dataset.url));
+}
+const urlPdf = (u) => u.split('/').map(encodeURIComponent).join('/');
+function verPdf(url, parte) {
+  const p = PDFS.find((x) => x.url === url) || PDFS.find((x) => x.partes?.some((y) => y.url === url));
+  if (!p) return;
+  pdfAtual = p.url;
+  parteAtual = parte || (url !== p.url ? url : null);
+  const alvo = parteAtual || p.url;
+  const pt = p.partes?.find((y) => y.url === parteAtual);
+  const i = PDFS.indexOf(p);
+  $('pdfCab').innerHTML = `<div class="pdfCab">
+      <button class="sec" id="pdfAnt" ${i <= 0 ? 'disabled' : ''} title="anterior (←)">◀</button>
+      <div class="grow"><div style="font-weight:600;font-size:16px">${esc(p.titulo)}</div>
+        <div class="tinta2" style="font-size:13px">${esc(p.sub || '')}</div>
+        <div class="apagado" style="font-size:12px">${esc(p.grupo)} · ${p.paginas ? p.paginas + ' página(s) · ' : ''}${p.kb} KB · montado ${dataHora(p.em)}${p.confianca ? ` · confiança ${esc(p.confianca)} (${esc(p.motivo || '')})` : ''}</div></div>
+      <a class="botao" href="${urlPdf(alvo)}" target="_blank">abrir em outra aba</a>
+      <a class="botao" href="${urlPdf(alvo)}?baixar=1">baixar</a>
+      <button class="sec" id="pdfProx" ${i >= PDFS.length - 1 ? 'disabled' : ''} title="próximo (→)">▶</button>
+    </div>
+    ${p.partes?.length ? `<div class="pdfPartes"><button class="${!parteAtual ? 'ativa' : ''}" data-parte="">PDF unido (o que vai para o portal)</button>` +
+      p.partes.map((y, k) => `<button class="${parteAtual === y.url ? 'ativa' : ''}" data-parte="${esc(y.url)}" title="${esc(y.nome)}">parte ${k + 1}: ${esc(y.nome.length > 48 ? y.nome.slice(0, 47) + '…' : y.nome)}</button>`).join('') + '</div>' : ''}
+    ${pt ? `<div class="apagado" style="font-size:12px;margin-top:6px">ID Factorial ${esc(pt.id)} · ${esc(pt.pasta || '')} · criado ${dataHora(pt.created_at)} · assinatura ${esc(pt.assinatura || '—')}${pt.paginas ? ` · ${pt.paginas} pág.` : ''}</div>` : ''}`;
+  $('pdfFrame').src = urlPdf(alvo) + '#view=FitH';
+  $('pdfAnt').onclick = () => irPdf(-1);
+  $('pdfProx').onclick = () => irPdf(1);
+  $('pdfCab').querySelectorAll('[data-parte]').forEach((b) => b.onclick = () => verPdf(p.url, b.dataset.parte || null));
+  desenharListaPdfs();
+}
+function irPdf(d) { const i = PDFS.findIndex((x) => x.url === pdfAtual); const p = PDFS[i + d]; if (p) verPdf(p.url); }
+async function abrirNoVisor(url) {
+  trocarAba('pdfs');
+  if (!PDFS.length) await carregarPdfs();
+  verPdf(url);
+}
+$('pdfBusca').oninput = desenharListaPdfs;
+document.addEventListener('keydown', (ev) => {
+  if (abaAtual !== 'pdfs' || /INPUT|SELECT|TEXTAREA/.test(document.activeElement?.tagName)) return;
+  if (ev.key === 'ArrowLeft') irPdf(-1);
+  if (ev.key === 'ArrowRight') irPdf(1);
+});
+
+// ---------- Ao vivo (Server-Sent Events) ----------
+const FONTES = { Atlas: '--f-atlas', Bernhoeft: '--f-bern', Esteira: '--f-esteira', PDF: '--f-pdf', Neon: '--f-neon', Pacotes: '--f-pacotes', Docker: '--f-infra', 'Navegação': '--f-infra', Painel: '--f-infra' };
+const VIVO = [];
+let vivoPausado = false, vivoFila = [], vivoFora = new Set(), vivoUltimo = null, vivoConectado = false;
+const corFonte = (f) => `var(${FONTES[f] || '--f-infra'})`;
+const horaSeg = (iso) => new Date(iso).toLocaleTimeString('pt-BR');
+function linhaVivo(ev, novo) {
+  return `<div class="ln ${ev.nivel} ${novo ? 'novo' : ''}"><span class="h" title="${esc(new Date(ev.em).toLocaleString('pt-BR'))}">${horaSeg(ev.em)}</span><span class="fn" style="--cor:${corFonte(ev.fonte)}">${esc(ev.fonte)}</span><span class="tx">${esc(ev.texto)}</span></div>`;
+}
+function passaVivo(ev) {
+  const nv = $('vivoNivel').value, q = $('vivoBusca').value.trim().toLowerCase();
+  return !vivoFora.has(ev.fonte) && (!nv || ev.nivel === 'erro' || (nv === 'aviso' && ev.nivel === 'aviso'))
+    && (!q || ev.texto.toLowerCase().includes(q) || ev.fonte.toLowerCase().includes(q));
+}
+function desenharVivo(tudo) {
+  const el = $('vivoLog');
+  if (tudo) {
+    el.innerHTML = VIVO.filter(passaVivo).slice(-1500).map((ev) => linhaVivo(ev)).join('') || '<span class="apagado">esperando eventos…</span>';
+    if ($('vivoRolar').checked) el.scrollTop = el.scrollHeight;
+  }
+  // Fontes (botões liga/desliga com contagem)
+  const cont = {};
+  for (const ev of VIVO) cont[ev.fonte] = (cont[ev.fonte] || 0) + 1;
+  const nomes = [...new Set([...Object.keys(FONTES), ...Object.keys(cont)])];
+  $('vivoFontes').innerHTML = nomes.map((f) => `<button class="${vivoFora.has(f) ? 'fora' : ''}" style="--cor:${corFonte(f)}" data-f="${esc(f)}">${esc(f)} <span class="apagado">${cont[f] || 0}</span></button>`).join('');
+  $('vivoFontes').querySelectorAll('[data-f]').forEach((b) => b.onclick = () => { const f = b.dataset.f; vivoFora.has(f) ? vivoFora.delete(f) : vivoFora.add(f); desenharVivo(true); });
+  $('vivoPorFonte').innerHTML = barras(nomes.filter((f) => cont[f]).map((f) => ({ rot: f, n: cont[f] })).sort((x, y) => y.n - x.n)) || '<p class="apagado">nada ainda</p>';
+  const erros = VIVO.filter((ev) => ev.nivel === 'erro' || ev.nivel === 'aviso').slice(-40).reverse();
+  $('vivoErros').innerHTML = erros.length ? `<div class="log vivo curto" style="max-height:none">${erros.map((ev) => linhaVivo(ev)).join('')}</div>` : '<p class="apagado">nenhum aviso ou erro</p>';
+  desenharMini();
+}
+function desenharMini() {
+  const ult = VIVO.slice(-14);
+  $('vivoMini').innerHTML = ult.map((ev, i) => linhaVivo(ev, i === ult.length - 1 && Date.now() - new Date(ev.em) < 5000)).join('') || '<span class="apagado">esperando eventos…</span>';
+  $('vivoMini').scrollTop = $('vivoMini').scrollHeight;
+}
+function chegou(ev) {
+  VIVO.push(ev);
+  if (VIVO.length > 5000) VIVO.splice(0, VIVO.length - 5000);
+  vivoUltimo = Date.now();
+  if (vivoPausado) { vivoFila.push(ev); return; }
+  agendarVivo(ev);
+}
+// Junta as linhas que chegam no mesmo instante (o histórico chega de uma vez ao conectar).
+let pendVivo = [], timerVivo = null;
+function agendarVivo(ev) {
+  pendVivo.push(ev);
+  if (timerVivo) return;
+  timerVivo = setTimeout(() => {
+    const el = $('vivoLog'), noFim = el.scrollTop + el.clientHeight >= el.scrollHeight - 40;
+    if (el.querySelector('.apagado')) el.innerHTML = '';
+    const lote = pendVivo.filter(passaVivo);
+    el.insertAdjacentHTML('beforeend', lote.map((e) => linhaVivo(e, pendVivo.length < 30)).join(''));
+    while (el.childElementCount > 1500) el.firstElementChild.remove();
+    if ($('vivoRolar').checked && (noFim || pendVivo.length > 30)) el.scrollTop = el.scrollHeight;
+    // Algo mudou nos dados: atualiza as outras abas sem esperar o relógio.
+    if (pendVivo.some((e) => /PDF pronto|Fim:|Leitura nova|Coleta nova|→ [A-Z_]+ \(gravado/.test(e.texto))) {
+      setTimeout(() => { carregar(); if (abaAtual === 'pendencias') carregarPendencias(); if (abaAtual === 'pdfs') carregarPdfs(); }, 1500);
+    }
+    pendVivo = []; timerVivo = null;
+    desenharVivo(false);
+  }, 150);
+}
+function estadoVivo() {
+  const seg = vivoUltimo ? Math.round((Date.now() - vivoUltimo) / 1000) : null;
+  $('vivoEstado').innerHTML = `<span class="ponto ${vivoConectado ? 'on' : 'off'}"></span>${vivoConectado ? 'ao vivo' : 'reconectando…'}` +
+    (seg !== null ? ` · último evento há ${seg < 60 ? seg + ' s' : Math.round(seg / 60) + ' min'}` : '');
+  $('pontoMini').className = 'ponto ' + (vivoConectado ? 'on' : 'off');
+  $('vivoConta').textContent = `${VIVO.length} evento(s) recebidos${vivoPausado ? ` · PAUSADO (${vivoFila.length} esperando)` : ''}`;
+}
+function conectarVivo() {
+  const es = new EventSource('api/ao-vivo');
+  es.onopen = () => { vivoConectado = true; estadoVivo(); };
+  es.onmessage = (m) => { try { chegou(JSON.parse(m.data)); } catch {} };
+  es.addEventListener('pulso', () => { vivoConectado = true; estadoVivo(); });
+  es.onerror = () => { vivoConectado = false; estadoVivo(); };
+}
+setInterval(estadoVivo, 1000);
+$('vivoPausar').onclick = () => {
+  vivoPausado = !vivoPausado;
+  $('vivoPausar').textContent = vivoPausado ? 'Continuar' : 'Pausar';
+  if (!vivoPausado) { vivoFila = []; desenharVivo(true); }
+  estadoVivo();
+};
+['vivoNivel'].forEach((id) => $(id).onchange = () => desenharVivo(true));
+$('vivoBusca').oninput = () => desenharVivo(true);
+$('vivoBaixar').onclick = () => {
+  const txt = VIVO.map((ev) => `${new Date(ev.em).toLocaleString('pt-BR')}\t${ev.fonte}\t${ev.nivel}\t${ev.texto}`).join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([txt], { type: 'text/plain;charset=utf-8' }));
+  a.download = `ao-vivo-${new Date().toISOString().slice(0, 16).replace(/[T:]/g, '-')}.txt`;
+  a.click();
+};
+$('irVivo').onclick = (ev) => { ev.preventDefault(); trocarAba('vivo'); };
+$('telaCheia').onclick = () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
+
+// Ocultar nomes (para apresentar): só borra na tela; o CSV sai com iniciais.
+$('ocultar').checked = localStorage.getItem('painel-ocultar') === '1';
+document.body.classList.toggle('ocultar', $('ocultar').checked);
+$('ocultar').onchange = () => { localStorage.setItem('painel-ocultar', $('ocultar').checked ? '1' : '0'); document.body.classList.toggle('ocultar', $('ocultar').checked); };
+
+conectarVivo();
+carregar();
+setInterval(carregar, 15000);
+trocarAba(location.hash.slice(1) || 'geral');
+</script>
+</body>
+</html>
