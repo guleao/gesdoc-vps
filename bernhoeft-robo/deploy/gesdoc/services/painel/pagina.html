@@ -240,6 +240,73 @@
   .fluxo .etapa .n { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--neutro); font-weight: 600; color: var(--tinta2); }
   .fluxo .etapa .t { font-size: 14px; }
   :fullscreen body, body:fullscreen { overflow: auto; }
+
+  /* Envio ao Atlas: modo (manual/automático) + números no topo; lista em linhas com uma ação principal por linha */
+  .envTopo { display: grid; grid-template-columns: minmax(320px, 1.1fr) 1fr; gap: 20px; align-items: stretch; }
+  @media (max-width: 1100px) { .envTopo { grid-template-columns: 1fr; } }
+  .modo { display: flex; gap: 16px; align-items: center; padding: 16px 18px; border-radius: 12px; background: var(--fundo); border: 1px solid var(--linha); height: 100%; }
+  .modo.ligado { background: color-mix(in srgb, var(--bom) 10%, var(--fundo)); border-color: color-mix(in srgb, var(--bom) 45%, var(--linha)); }
+  .modo .txt { flex: 1; min-width: 0; }
+  .modo .rot { font-size: 12px; color: var(--apagado); text-transform: uppercase; letter-spacing: .04em; font-weight: 600; }
+  .modo .tit { font-size: 20px; font-weight: 700; margin: 2px 0 4px; }
+  .modo .exp { color: var(--tinta2); font-size: 13px; }
+  .modo .robo { margin-top: 10px; font-size: 12px; color: var(--tinta2); display: flex; gap: 6px 14px; flex-wrap: wrap; align-items: center; }
+  .interruptor { position: relative; width: 62px; height: 34px; border-radius: 17px; border: 0; padding: 0; background: var(--apagado); cursor: pointer; flex: none; transition: background .2s; }
+  .interruptor::after { content: ''; position: absolute; top: 4px; left: 4px; width: 26px; height: 26px; border-radius: 50%; background: #fff; transition: left .2s; box-shadow: 0 1px 3px rgba(0,0,0,.25); }
+  .interruptor.ligado { background: var(--bom); }
+  .interruptor.ligado::after { left: 32px; }
+  .envNums { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  @media (max-width: 700px) { .envNums { grid-template-columns: repeat(2, 1fr); } }
+  .envNums .n { border-radius: 12px; padding: 14px 16px; background: var(--fundo); border: 1px solid var(--linha); display: flex; flex-direction: column; justify-content: center; gap: 4px; }
+  .envNums .n b { font-size: 34px; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .envNums .n span { font-size: 13px; color: var(--tinta2); }
+  .envNums .n.verde b { color: var(--bom); }
+  .envNums .n.vermelho b { color: var(--critico); }
+  .envNums .n.azul b { color: var(--serie); }
+
+  .envBarra { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
+  .envBarra .grow { flex: 1; }
+  .envBarra input.busca { min-width: 280px; }
+  .segmento { display: inline-flex; padding: 3px; gap: 2px; border-radius: 9px; background: var(--neutro); }
+  .segmento button { background: transparent; color: var(--tinta2); border: 0; border-radius: 7px; padding: 6px 14px; font-weight: 500; }
+  .segmento button.ativa { background: var(--cartao); color: var(--tinta); font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+  .segmento button span { font-size: 12px; color: var(--apagado); margin-left: 4px; font-variant-numeric: tabular-nums; }
+
+  .envLista { display: flex; flex-direction: column; gap: 8px; max-height: calc(100vh - 360px); min-height: 120px; overflow: auto; padding-right: 2px; }
+  .envItem { display: grid; grid-template-columns: 6px minmax(0, 1fr) auto; gap: 0 16px; align-items: center; border: 1px solid var(--linha); border-radius: 10px;
+    background: var(--cartao); padding: 12px 16px 12px 0; transition: border-color .15s, box-shadow .15s; }
+  .envItem:hover { border-color: color-mix(in srgb, var(--serie) 40%, var(--linha)); box-shadow: 0 2px 8px rgba(0,0,0,.05); }
+  .envItem .faixaCor { align-self: stretch; border-radius: 10px 0 0 10px; margin: -12px 0; background: var(--apagado); }
+  .envItem.pronta .faixaCor { background: var(--bom); }
+  .envItem.problema .faixaCor { background: var(--critico); }
+  .envItem.fila .faixaCor { background: var(--serie); }
+  .envItem .doc { font-weight: 600; font-size: 14px; }
+  .envItem .doc small { font-weight: 400; color: var(--apagado); margin-left: 6px; }
+  .envItem .meta { color: var(--tinta2); font-size: 13px; margin-top: 2px; display: flex; gap: 4px 14px; flex-wrap: wrap; }
+  .envItem .motivo { margin-top: 6px; font-size: 13px; color: var(--critico); }
+  .envItem .ultima { margin-top: 6px; font-size: 12px; color: var(--tinta2); }
+  .envItem .ultima.ok::before { content: '✓ '; color: var(--bom); font-weight: 700; }
+  .envItem .ultima.falha::before { content: '✕ '; color: var(--critico); font-weight: 700; }
+  .envItem .acoes { display: flex; gap: 6px; align-items: center; white-space: nowrap; }
+  .envItem .acoes button { padding: 7px 14px; }
+  .envItem .acoes button.enviar { font-weight: 600; padding: 7px 18px; }
+  button.link { background: transparent; border: 0; color: var(--serie); padding: 7px 8px; }
+  button.link:hover { text-decoration: underline; }
+  .girando { display: inline-block; width: 12px; height: 12px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: gira .8s linear infinite; vertical-align: -2px; margin-right: 6px; }
+  @keyframes gira { to { transform: rotate(360deg); } }
+  .vazio { text-align: center; padding: 48px 16px; color: var(--tinta2); }
+  .vazio b { display: block; font-size: 16px; color: var(--tinta); margin-bottom: 4px; }
+  .envMais summary { cursor: pointer; font-weight: 600; font-size: 15px; list-style: none; display: flex; align-items: center; gap: 8px; }
+  .envMais summary::-webkit-details-marker { display: none; }
+  .envMais summary::before { content: '›'; display: inline-block; font-size: 18px; color: var(--apagado); transition: transform .15s; }
+  .envMais[open] summary::before { transform: rotate(90deg); }
+  .envMais[open] summary { margin-bottom: 10px; }
+  .res { font-size: 12px; }
+  .res.ok { color: var(--bom); }
+  .res.falha { color: var(--critico); }
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 50; background: var(--tinta); color: var(--cartao);
+    padding: 10px 18px; border-radius: 10px; font-size: 14px; box-shadow: 0 6px 24px rgba(0,0,0,.25); max-width: 90vw; }
+  .toast.falha { background: var(--critico); color: #fff; }
 </style>
 </head>
 <body>
@@ -263,6 +330,7 @@
   <button data-aba="pendencias"><b>3</b>Pendências</button>
   <button data-aba="pdfs"><b>4</b>Documentos montados</button>
   <button data-aba="vivo"><b>5</b>Ao vivo</button>
+  <button data-aba="envio"><b>6</b>Envio ao Atlas</button>
   <button data-aba="operacao" class="tecnica">Operação</button>
 </nav>
 <div id="faixa"></div>
@@ -330,7 +398,7 @@
     <h2>Regras que valem em todas as estações</h2>
     <ul class="regras">
       <li><b>Acesso restrito:</b> o painel só abre pela VPN da equipe (Tailscale); fora dela não existe.</li>
-      <li><b>Nada é enviado sozinho:</b> os robôs só leem os portais. O envio só liga depois de aprovado.</li>
+      <li><b>Nada é enviado sem alguém mandar:</b> o envio ao Atlas é um por um na aba 6, ou automático só com o botão ligado (começa desligado). Cada envio é conferido no Atlas antes.</li>
       <li><b>Factorial só leitura:</b> os arquivos são baixados por links temporários, sem mandar a chave junto.</li>
       <li><b>Segredos no cofre:</b> senhas e chaves ficam num cofre criptografado no servidor, nunca no código nem nesta página.</li>
       <li><b>Documentos de funcionário (LGPD):</b> os PDFs montados ficam numa pasta fechada do servidor e só aparecem aqui; CPF aparece sempre mascarado.</li>
@@ -396,6 +464,42 @@
     <div id="vivoErros" class="rolar"></div>
   </section>
 </main>
+
+<!-- 6 · Envio ao Atlas -->
+<main id="aba-envio" hidden>
+  <!-- Topo: modo (manual/automático) + robô + números. A pessoa entende em 3 segundos o que vai acontecer. -->
+  <section class="cartao largo envTopo">
+    <div id="envioModo"></div>
+    <div id="envioNumeros" class="envNums"></div>
+  </section>
+
+  <section class="cartao largo">
+    <div class="envBarra">
+      <div class="segmento" id="envioFiltro">
+        <button data-f="prontas" class="ativa">Prontas <span></span></button>
+        <button data-f="atencao">Com problema <span></span></button>
+        <button data-f="todas">Todas <span></span></button>
+      </div>
+      <input class="busca" id="envioBuscaTxt" placeholder="buscar documento ou funcionário…">
+      <span class="grow"></span>
+      <span id="envioConta" class="apagado"></span>
+      <button class="sec" id="envioBuscar" title="O robô procura agora na Factorial os documentos que faltam">↻ Buscar na Factorial</button>
+      <button class="sec" id="envioAtualizar" title="O robô refaz a lista (confere de novo o que está pronto)">↻ Atualizar lista</button>
+    </div>
+    <div id="envioLista" class="envLista"></div>
+  </section>
+
+  <details class="cartao largo envMais">
+    <summary>Histórico de envios <span id="envioFeitosN" class="apagado"></span></summary>
+    <div id="envioFeitos"></div>
+  </details>
+  <details class="cartao largo envMais">
+    <summary>Última busca na Factorial <span id="envioBuscaN" class="apagado"></span></summary>
+    <p class="apagado" style="margin:8px 0 0">Documentos de arquivo único: ASO demissional, baixa na CTPS/e-Social e pedido de demissão.</p>
+    <div id="envioBusca"></div>
+  </details>
+</main>
+<div id="aviso" class="toast" hidden></div>
 
 <!-- Operação: bastidores (controles, código do Atlas, serviços, pacotes manuais) -->
 <main id="aba-operacao" hidden>
@@ -513,8 +617,9 @@ function fluxo(e) {
       s: e.gotenberg !== 'ok' ? chip('falha', 'Gotenberg fora') : e.unioes.total ? chip('ok', `${e.unioes.total} união(ões)`) : chip('nada', 'nenhuma união'),
       d: `Gotenberg ${esc(e.gotenberg)} · ${soma('COMPOSTO')} composto(s) no banco${e.unioes.ultima ? ' · última ' + ha(e.unioes.ultima) : ''}` },
     { t: 'Enviar ao portal',
-      s: soma('ENVIADO') ? chip('ok', `${soma('ENVIADO')} enviado(s)`) : chip('nada', 'ainda não existe'),
-      d: a.simulacao ? `simulação: ${a.simulacao.itens} item(ns) ${ha(a.simulacao.gerado_em)}` : 'envio real não implementado (só simulação)' },
+      s: soma('ENVIADO') ? chip('ok', `${soma('ENVIADO')} enviado(s)`) : a.envio_automatico ? chip('aviso', 'automático ligado') : chip('nada', 'um por um (aba 6)'),
+      d: (a.simulacao ? `lista: ${a.simulacao.prontas ?? 0} pronta(s) de ${a.simulacao.itens} · ${ha(a.simulacao.gerado_em)}` : 'lista de envio ainda não gerada') +
+        ` · envio automático ${a.envio_automatico ? 'LIGADO' : 'desligado'}` },
   ];
   $('fluxo').innerHTML = etapas.map((x, i) => `<div class="etapa ${(x.s.match(/chip (\w+)/) || [])[1] || ''}"><div class="n">${i + 1}</div><div class="t">${x.t}</div>${x.s}<div class="d">${x.d}</div></div>`).join('');
 }
@@ -555,11 +660,11 @@ function esteiras(e) {
       faz: 'Junta as partes de cada pendência (várias páginas ou arquivos) num PDF só, do jeito que o portal pede.',
       entra: 'arquivos achados', sai: 'PDF único · estado COMPOSTO',
       agora: `${soma('COMPOSTO')} composto(s) · Gotenberg ${esc(e.gotenberg)}`, trava: 'o Gotenberg (serviço de PDF) está fora do ar.' },
-    { e: soma('ENVIADO') ? 'ok' : 'nada', s: soma('ENVIADO') ? 'enviando' : 'só simulação',
-      t: 'Enviar ao Atlas', onde: 'enviar.js · hoje só simula',
-      faz: 'Sobe o PDF na pendência certa do Atlas. Falta descobrir a chamada de envio e testar 1 documento com aprovação.',
-      entra: 'PDF composto', sai: 'pendência entregue · estado ENVIADO',
-      agora: `${soma('PENDENTE_ENVIO')} esperando envio · ` + (a.simulacao ? `simulação: ${a.simulacao.itens} item(ns) ${ha(a.simulacao.gerado_em)}` : 'envio real não ligado') },
+    { e: soma('ENVIADO') ? 'ok' : a.envio_automatico ? 'aviso' : 'nada', s: soma('ENVIADO') ? 'enviando' : a.envio_automatico ? 'automático ligado' : 'um por um',
+      t: 'Enviar ao Atlas', onde: 'enviar.js · aba 6 Envio ao Atlas',
+      faz: 'Sobe o PDF na pendência certa do Atlas (mesma chamada do botão "Salvar e enviar"), conferindo antes nome, status e formato no Atlas. Automático só com o botão ligado; senão, um por um.',
+      entra: 'PDF composto ou achado', sai: 'pendência entregue · estado ENVIADO',
+      agora: `${soma('PENDENTE_ENVIO')} esperando busca · ` + (a.simulacao ? `${a.simulacao.prontas ?? 0} pronta(s) para enviar` : 'lista de envio ainda não gerada') + ` · automático ${a.envio_automatico ? 'LIGADO' : 'desligado'}` },
   ];
 
   const bernOk = recente(b.coletado_em, 70);
@@ -612,7 +717,7 @@ function esteiras(e) {
     '<span>A correia anda enquanto a estação funciona e fica vermelha onde a esteira para.</span>';
 }
 
-const ABAS = ['geral', 'esteira', 'pendencias', 'pdfs', 'vivo', 'operacao'];
+const ABAS = ['geral', 'esteira', 'pendencias', 'pdfs', 'vivo', 'envio', 'operacao'];
 let abaAtual = 'geral';
 function trocarAba(aba) {
   if (aba === 'painel') aba = 'geral';
@@ -625,6 +730,7 @@ function trocarAba(aba) {
   if (aba === 'pendencias') carregarPendencias();
   if (aba === 'pdfs') carregarPdfs();
   if (aba === 'vivo') desenharVivo(true);
+  if (aba === 'envio') carregarEnvio();
   if (aba === 'operacao' && !$('log').innerHTML) carregarLog();
 }
 document.querySelectorAll('.abas button').forEach((b) => b.onclick = () => trocarAba(b.dataset.aba));
@@ -925,7 +1031,7 @@ function resumo() {
     kpiIr('PDFs prontos', prontos + (est.COMPOSTO || 0), `${prontos} Bernhoeft · ${est.COMPOSTO || 0} Atlas`, 'pdfs', 'destaque'),
     kpiIr('Não achadas', naoB + naoA, 'sem arquivo na Factorial', 'pendencias:nao', 'atencao'),
     kpiIr('Na fila', (est.PENDENTE_ENVIO || 0) + Math.max(0, pendB - itens.length), 'ainda não buscadas', 'pendencias:fila'),
-    kpiIr('Enviados aos portais', est.ENVIADO || 0, 'envio desligado (modo leitura)', null, 'parado'),
+    kpiIr('Enviados aos portais', est.ENVIADO || 0, a.envio_automatico ? 'envio automático LIGADO' : 'envio automático desligado', 'envio', a.envio_automatico ? 'destaque' : 'parado'),
   ].join('');
 
   const login = a.login === 'ok' ? ['ok', 'logado'] : a.login === 'aguardando_codigo' ? ['aviso', 'esperando código'] : a.login === 'verificando' ? ['aviso', 'verificando código'] : ['falha', 'sem login'];
@@ -960,7 +1066,7 @@ function resumo() {
   const passos = [
     ['Login do Atlas no servidor', a.login === 'ok' ? chip('ok', 'feito') : chip('aviso', 'esperando código'), 'Primeiro login com o código que chega por e-mail; depois o robô coleta sozinho.'],
     ['Busca do Atlas no servidor', chip('nada', 'a fazer'), 'Instalar a sincronização com a Factorial no servidor (hoje roda fora dele).'],
-    ['Envio ao Atlas', chip('nada', 'a fazer'), 'Descobrir a chamada de envio e testar 1 documento com aprovação.'],
+    ['Envio ao Atlas', est.ENVIADO ? chip('ok', 'funcionando') : chip('aviso', 'pronto, sem envio ainda'), 'Pronto na aba 6: testar o 1º documento com "Verificar" e "Enviar"; depois decidir se liga o automático.'],
     ['Envio ao Bernhoeft', chip('falha', 'bloqueado'), 'Precisa de uma conta de prestador com permissão de envio no ContractWeb.'],
     ['Tipos sem par', chip('nada', 'a fazer'), 'Folha de Pagamento Analítica e Comprovante do TRCT ainda não têm regra na Factorial.'],
   ];
@@ -987,7 +1093,8 @@ const ROT_ESTADO = {
 };
 function categoria(l) {
   if (l.origem === 'Bernhoeft') return { pronto: 'pdf', nao_encontrado: 'nao', erro: 'atencao' }[l.estado] || 'fila';
-  return { COMPOSTO: 'pdf', LOCALIZADO: 'achado', DIVERGENTE_FACTORIAL: 'atencao', AGUARDANDO_ASSINATURA: 'atencao', ERRO_COMPOSICAO: 'atencao', NAO_ENCONTRADO_FACTORIAL: 'nao' }[l.estado] || 'fila';
+  if (l.pdf_atlas && ['COMPOSTO', 'LOCALIZADO'].includes(l.estado)) return 'pdf';
+  return { COMPOSTO: 'atencao', LOCALIZADO: 'achado', DIVERGENTE_FACTORIAL: 'atencao', AGUARDANDO_ASSINATURA: 'atencao', ERRO_COMPOSICAO: 'atencao', NAO_ENCONTRADO_FACTORIAL: 'nao' }[l.estado] || 'fila';
 }
 let PEND = null, pendFiltro = 'achados', pendOrd = { k: null, dir: 1 }, pendAbertas = new Set();
 const chaveLinha = (l) => l.origem === 'Bernhoeft' ? 'B|' + l.chave : 'A|' + (l.id ?? [l.doc_id, l.nome, l.competencia, l.unidade, l.numero_pedido, l.funcionario].join('|'));
@@ -1047,7 +1154,8 @@ function desenharPendencias() {
       : (l.caminho_origem ? `<div class="arq">✓ ${esc(String(l.caminho_origem).split(/[\\/]/).pop())}</div>` : `<span class="apagado">${esc(ROT_ESTADO[l.estado] || l.estado)}</span>`);
     const conf = l.confianca ? chip(l.confianca === 'alta' ? 'ok' : l.confianca === 'média' ? 'aviso' : 'nada', l.confianca) : '<span class="apagado">—</span>';
     const pdf = l.pdf ? `<button class="sec" data-pdf="pacotes/${esc(l.pdf)}">ver PDF</button>`
-      : l.origem === 'Atlas' && l.estado === 'COMPOSTO' ? '<span class="apagado" style="font-size:12px">na máquina do Evilásio</span>' : '';
+      : l.pdf_atlas ? `<button class="sec" data-pdf="${esc(l.pdf_atlas)}">ver PDF</button>`
+      : l.origem === 'Atlas' && l.estado === 'COMPOSTO' ? '<span class="apagado" style="font-size:12px">PDF ainda não está na VPS</span>' : '';
     h += `<tr class="linha ${aberta ? 'aberta' : ''}" data-id="${esc(id)}">
       <td><span class="origem" style="--cor:${corOrigem}">${l.origem}</span></td>
       <td>${esc(colunaValor(l, 'ref') || '—')}</td>
@@ -1084,7 +1192,7 @@ const ROT_CAMPO = {
   numero_pedido: 'pedido', qtd_docs: 'qtd. de documentos', prazo_envio: 'prazo de envio', validade: 'validade', critico: 'crítico', atualizado_em: 'atualizado no banco',
   enviado_em: 'enviado em', validado_em: 'validado em', cliente: 'cliente', caminho_origem: 'arquivo de origem',
 };
-const FORA_DET = new Set(['origem', 'arquivos', 'deixados', 'pdf', 'cat', 'documento', 'descricao', 'confianca']);
+const FORA_DET = new Set(['origem', 'arquivos', 'deixados', 'pdf', 'pdf_atlas', 'pdf_kb', 'cat', 'documento', 'descricao', 'confianca']);
 function detalhe(l) {
   const campos = Object.entries(l).filter(([k, v]) => !FORA_DET.has(k) && v !== null && v !== '' && v !== undefined && typeof v !== 'object');
   const val = (k, v) => /(_em|_desde|^prazo_envio$|^validade$)/.test(k) && !isNaN(Date.parse(v)) ? `${dataHora(v)} <span class="apagado">(${ha(v)})</span>` : esc(v);
@@ -1101,6 +1209,7 @@ function detalhe(l) {
     h += `<p style="margin-top:10px"><b>Deixados de fora:</b> ` + l.deixados.map((d) => `${esc(d.filename)} <span class="apagado">(${esc(d.motivo)})</span>`).join(' · ') + '</p>';
   }
   if (l.pdf) h += `<p style="margin-top:10px"><button data-pdf="pacotes/${esc(l.pdf)}">Abrir o PDF unido no visor</button> <span class="tinta2">${l.unidos || 1} arquivo(s) · ${l.paginas ? l.paginas + ' página(s) · ' : ''}${l.kb} KB</span></p>`;
+  if (l.pdf_atlas) h += `<p style="margin-top:10px"><button data-pdf="${esc(l.pdf_atlas)}">Abrir no visor o PDF que vai para o Atlas</button> <span class="tinta2">${l.pdf_kb ?? '?'} KB</span></p>`;
   return h;
 }
 function nomeCsv(s) { return $('ocultar').checked ? String(s || '').split(/\s+/).filter(Boolean).map((p) => p[0] + '.').join(' ') : s; }
@@ -1121,6 +1230,147 @@ $('pendCsv').onclick = () => {
 $('pendBusca').oninput = desenharPendencias;
 $('pendOrigem').onchange = desenharPendencias;
 setInterval(() => { if (abaAtual === 'pendencias') carregarPendencias(); }, 30000);
+
+// ---------- Envio ao Atlas: modo (manual/automático) + números + lista em linhas ----------
+let ENVIO = null, envioFiltro = 'prontas', avisoTempo = null;
+async function carregarEnvio() {
+  try { ENVIO = await (await fetch('api/envio')).json(); } catch (e) { $('envioLista').innerHTML = chip('falha', 'não carregou: ' + e.message); return; }
+  desenharEnvio();
+}
+function avisar(texto, falha = false) {
+  const a = $('aviso');
+  a.textContent = texto; a.className = 'toast' + (falha ? ' falha' : ''); a.hidden = false;
+  clearTimeout(avisoTempo); avisoTempo = setTimeout(() => { a.hidden = true; }, falha ? 7000 : 3500);
+}
+async function pedirEnvio(corpo, url = 'api/envio/pedido', ok = 'Pedido entregue ao robô Atlas') {
+  const r = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(corpo) });
+  const j = await r.json().catch(() => ({}));
+  avisar(r.ok ? ok : (j.erro || `erro ${r.status}`), !r.ok);
+  await carregarEnvio();
+  return r.ok;
+}
+const ACAO_ENVIO = { verificar: 'Verificação', enviar: 'Envio', buscar: 'Busca na Factorial', atualizar: 'Atualizar a lista' };
+// A API do Atlas devolve o status em inglês; na tela vai em português (mesmos nomes do neon.js/planilha.js).
+const STATUS_ATLAS = {
+  Delay: 'atrasado', DelayNotSent: 'não enviado no prazo', DelayRejected: 'reprovado (atrasado)', Pending: 'a enviar', PendingNotSent: 'a enviar',
+  ToValidate: 'em validação', Validating: 'em validação', Rejected: 'reprovado', Approved: 'aprovado', Valid: 'aprovado', Validated: 'aprovado',
+  Expired: 'vencido', Sent: 'enviado', NotSent: 'não enviado',
+};
+const statusPt = (s) => STATUS_ATLAS[s] || s || '?';
+// Mensagens do enviar.js são escritas para o técnico (e vão assim para o log); aqui viram frase para o cliente.
+function msgPt(s) {
+  return String(s || '')
+    .replace(/^ENVIADO( \(automático\))?; status no Atlas agora: (\w+|\?)/, (_, a, st) => `enviado${a ? ' automaticamente' : ''}; no Atlas agora: ${statusPt(st)}`)
+    .replace(/^pode enviar: Atlas "[^"]*", status (\w+)/, (_, st) => `tudo certo para enviar; no Atlas: ${statusPt(st)}`)
+    .replace(/status no Atlas "(\w+)" \(só envio atrasada\/pendente\)/g, (_, st) => `no Atlas está "${statusPt(st)}" (só dá para enviar atrasado ou a enviar)`)
+    .replace(/\bstatus (\w+)/g, (m, st) => STATUS_ATLAS[st] ? `situação ${statusPt(st)}` : m)
+    .replace(/tipo de envio no Atlas "\w+" \(só envio manual pelo fornecedor\)/g, 'o Atlas não aceita envio do fornecedor nesta pendência')
+    .replace(/o Atlas não permite upload nesta pendência/g, 'o Atlas não aceita envio nesta pendência')
+    .replace(/sem document_schedule_id na coleta \d+ \(pendência não aparece mais ou mudou\)/g, 'a pendência não aparece mais no Atlas (sumiu ou mudou na última leitura)')
+    .replace(/mais de uma pendência do Atlas com a mesma chave \(ambígua\)/g, 'há mais de uma pendência igual no Atlas; não dá para saber qual é')
+    .replace(/ainda não baixado da Factorial \(\d+\)/g, 'documento ainda não baixado da Factorial')
+    .replace(/sem arquivo para enviar/g, 'falta o arquivo')
+    .replace(/não está COMPOSTO\/LOCALIZADO no Neon/g, 'o documento ainda não foi achado na Factorial')
+    .replace(/SHA-256 difere do Neon/g, 'o arquivo mudou desde que foi achado')
+    .replace(/tamanho difere do Neon \([^)]*\)/g, 'o arquivo mudou desde que foi achado')
+    .replace(/nome no Atlas "([^"]*)" diferente do Neon "[^"]*"/g, 'o nome do documento no Atlas é outro ("$1")')
+    .replace(/Atlas recusou o envio: HTTP \d+/g, 'o Atlas recusou o envio');
+}
+
+function desenharEnvio() {
+  const E = ENVIO, ligado = E.modo.automatico === true, R = E.robo;
+  const naFila = (acao, id) => E.pedidos.some((p) => p.acao === acao && String(p.id) === String(id));
+  const prontas = E.itens.filter((i) => i.pronta), problema = E.itens.filter((i) => !i.pronta);
+
+  // Modo + estado do robô
+  let rob;
+  if (!R) rob = `<span><span class="ponto off"></span>robô Atlas ainda sem a versão de envio (falta atualizar a imagem na VPS)</span>`;
+  else if (!E.robo_ok) rob = `<span><span class="ponto off"></span>robô Atlas sem sinal desde ${dataHora(R.agora)}</span>`;
+  else rob = `<span><span class="ponto on"></span>${R.fazendo ? `robô: ${esc(R.fazendo)} (desde ${hora(R.desde)})` : 'robô Atlas no ar, esperando'}</span>` +
+    (R.proxima ? `<span>próxima leitura às <b>${hora(R.proxima)}</b> (${falta(R.proxima)})</span>` : '');
+  if (E.modo.alterado_em) rob += `<span class="apagado">${ligado ? 'ligado' : 'desligado'} em ${dataHora(E.modo.alterado_em)}</span>`;
+  $('envioModo').innerHTML = `<div class="modo ${ligado ? 'ligado' : ''}">
+      <button class="interruptor ${ligado ? 'ligado' : ''}" id="envioInterruptor" role="switch" aria-checked="${ligado}" title="${ligado ? 'voltar para o manual' : 'ligar o envio automático'}"></button>
+      <div class="txt">
+        <div class="rot">Modo de envio</div>
+        <div class="tit">${ligado ? 'Automático' : 'Manual'}</div>
+        <div class="exp">${ligado
+          ? 'O robô envia sozinho as pendências prontas a cada leitura, conferindo cada uma no Atlas antes. Para na primeira recusa.'
+          : 'Nada sai sozinho. Envie um por um pela lista abaixo.'}</div>
+        <div class="robo">${rob}</div>
+      </div>
+    </div>`;
+  $('envioInterruptor').onclick = async () => {
+    if (!ligado && !confirm(`Ligar o envio AUTOMÁTICO?\n\nA partir de agora o robô envia ao Atlas, sozinho, tudo o que estiver pronto.\n${prontas.length} documento(s) prontos saem já na próxima rodada.\n\nDá para voltar ao manual a qualquer momento.`)) return;
+    await pedirEnvio({ automatico: !ligado }, 'api/envio/modo', ligado ? 'Envio automático desligado' : 'Envio automático ligado');
+  };
+
+  // Números
+  const num = (v, rot, cor) => `<div class="n ${cor}"><b>${v}</b><span>${rot}</span></div>`;
+  $('envioNumeros').innerHTML = num(prontas.length, 'prontas para enviar', 'verde') + num(problema.length, 'com problema', problema.length ? 'vermelho' : '') +
+    num(E.enviados.length, 'já enviadas', 'azul') + num(E.pedidos.length, 'na fila do robô', '');
+
+  // Filtro + lista
+  const cont = { prontas: prontas.length, atencao: problema.length, todas: E.itens.length };
+  $('envioFiltro').querySelectorAll('button').forEach((b) => { b.classList.toggle('ativa', b.dataset.f === envioFiltro); b.querySelector('span').textContent = cont[b.dataset.f]; });
+  $('envioConta').textContent = E.lista_em ? `lista de ${dataHora(E.lista_em)}` : '';
+  const q = $('envioBuscaTxt').value.trim().toLowerCase();
+  const itens = (envioFiltro === 'prontas' ? prontas : envioFiltro === 'atencao' ? problema : E.itens)
+    .filter((i) => !q || [i.id, i.nome, i.funcionario, i.competencia].join(' ').toLowerCase().includes(q))
+    .sort((a, b) => (b.pronta - a.pronta) || a.id - b.id);
+
+  let h = itens.map((i) => {
+    const r = i.resultado, filaE = naFila('enviar', i.id), filaV = naFila('verificar', i.id);
+    const classe = filaE || filaV ? 'fila' : i.pronta ? 'pronta' : 'problema';
+    const acoes = filaE || filaV
+      ? `<span class="tinta2"><span class="girando"></span>${filaE ? 'enviando…' : 'verificando…'}</span>`
+      : (i.pdf ? `<button class="link" data-pdf="${esc(i.pdf)}">Ver PDF</button>` : '') +
+        (i.schedule_id ? `<button class="sec" data-verificar="${i.id}" title="Consulta o Atlas agora, sem enviar nada">Verificar</button>` : '') +
+        (i.pronta ? `<button class="enviar" data-enviar="${i.id}">Enviar</button>` : '');
+    return `<div class="envItem ${classe}">
+      <div class="faixaCor"></div>
+      <div>
+        <div class="doc" title="situação: ${esc(ROT_ESTADO[i.estado] || i.estado)}${i.schedule_id ? ' · local no Atlas: ' + esc(i.schedule_id) : ''}">${esc(i.nome)}<small>#${i.id}</small></div>
+        <div class="meta"><span class="nomeP">${esc(i.funcionario || 'sem funcionário')}</span><span>competência ${esc(i.competencia || '—')}</span>${i.kb != null ? `<span>PDF ${i.kb} KB</span>` : ''}${i.montado_aqui ? '<span>montado na VPS</span>' : ''}</div>
+        ${i.pronta ? '' : `<div class="motivo">${esc(i.motivos.map(msgPt).join(' · ') || 'não está pronta')}</div>`}
+        ${r ? `<div class="ultima ${r.ok ? 'ok' : 'falha'}">${esc(ACAO_ENVIO[r.acao] || r.acao)}${r.auto ? ' automática' : ''} ${ha(r.em)}: ${esc(msgPt(r.msg))}</div>` : ''}
+      </div>
+      <div class="acoes">${acoes}</div>
+    </div>`;
+  }).join('');
+  if (!E.itens.length) h = '<div class="vazio"><b>A lista ainda não foi montada</b>Clique em "Atualizar lista": o robô Atlas monta em alguns segundos.</div>';
+  else if (!itens.length) h = q ? '<div class="vazio"><b>Nada encontrado</b>Nenhum documento bate com a busca.</div>'
+    : envioFiltro === 'prontas' ? '<div class="vazio"><b>Nenhum documento pronto agora</b>Veja em "Com problema" o que falta em cada um.</div>'
+    : '<div class="vazio"><b>Nenhum problema</b>Tudo o que está na lista pode ser enviado.</div>';
+  $('envioLista').innerHTML = h;
+  $('envioLista').querySelectorAll('[data-pdf]').forEach((b) => b.onclick = () => abrirNoVisor(b.dataset.pdf));
+  $('envioLista').querySelectorAll('[data-verificar]').forEach((b) => b.onclick = () => {
+    b.disabled = true;
+    pedirEnvio({ acao: 'verificar', id: Number(b.dataset.verificar) }, undefined, `Verificando #${b.dataset.verificar} no Atlas…`);
+  });
+  $('envioLista').querySelectorAll('[data-enviar]').forEach((b) => b.onclick = () => {
+    const i = E.itens.find((x) => String(x.id) === b.dataset.enviar);
+    if (!confirm(`Enviar este documento ao Atlas?\n\n${i.nome}\n${i.funcionario || ''}${i.competencia ? ' · competência ' + i.competencia : ''}\n\nO robô confere de novo no Atlas (nome, status e formato) antes de anexar. Este envio é de verdade.`)) return;
+    b.disabled = true;
+    pedirEnvio({ acao: 'enviar', id: i.id, confirmo: i.schedule_id }, undefined, `Enviando #${i.id} ao Atlas…`);
+  });
+
+  // Histórico e busca (recolhidos)
+  $('envioFeitosN').textContent = E.enviados.length ? `· ${E.enviados.length}` : '· nenhum ainda';
+  $('envioFeitos').innerHTML = E.enviados.length ? '<table><tr><th>#</th><th>quando</th><th>como</th><th>situação no Atlas</th></tr>' +
+    E.enviados.map((x) => `<tr><td>${esc(x.id)}</td><td>${dataHora(x.em)}</td><td>${x.auto ? 'automático' : 'pelo painel'}</td><td>${esc(statusPt(x.status_atlas))}</td></tr>`).join('') + '</table>'
+    : '<p class="apagado">Nenhum envio ainda.</p>';
+  const B = E.busca;
+  $('envioBuscaN').textContent = B ? `· ${B.itens.filter((x) => x.achou).length} de ${B.itens.length} achados · ${ha(B.em)}` : '';
+  $('envioBusca').innerHTML = !B ? '<p class="apagado">A busca ainda não rodou nesta versão do robô.</p>'
+    : B.itens.length ? '<table><tr><th>#</th><th>documento</th><th>competência</th><th>resultado</th></tr>' +
+      B.itens.map((x) => `<tr><td>${x.id}</td><td>${esc(x.nome)}</td><td>${esc(x.competencia || '')}</td><td>${x.achou ? chip('ok', `achado (Factorial ${esc(x.factorial_id)})`) : `<span class="res falha">${esc(msgPt(x.motivo))}</span>`}</td></tr>`).join('') + '</table>' : '';
+}
+$('envioFiltro').querySelectorAll('button').forEach((b) => b.onclick = () => { envioFiltro = b.dataset.f; if (ENVIO) desenharEnvio(); });
+$('envioBuscaTxt').oninput = () => { if (ENVIO) desenharEnvio(); };
+$('envioAtualizar').onclick = () => pedirEnvio({ acao: 'atualizar' }, undefined, 'O robô vai refazer a lista em alguns segundos');
+$('envioBuscar').onclick = () => pedirEnvio({ acao: 'buscar' }, undefined, 'O robô vai buscar na Factorial agora');
+setInterval(() => { if (abaAtual === 'envio') carregarEnvio(); }, 5000);
 
 // ---------- PDFs: lista + visor grande ----------
 let PDFS = [], pdfAtual = null, parteAtual = null;

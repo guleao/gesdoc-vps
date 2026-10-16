@@ -1,5 +1,6 @@
 # Leitores de pendências (homologação): robô Bernhoeft e robô Atlas rodando sozinhos, em loop.
-# Somente leitura nos portais. As imagens são construídas pelo instalar-hml.sh.
+# Somente leitura nos portais, exceto o envio ao Atlas comandado pelo painel (aba Envio: botão automático ou "Enviar" um por um).
+# As imagens são construídas pelo instalar-hml.sh.
 # Credenciais e a conexão do Neon vêm do cofre: subir sempre com
 #   sops exec-env infra/secrets/hml.enc.env 'docker compose -f services/pendencias/compose.hml.yml up -d [serviço...]'
 # (as variáveis listadas sem valor em "environment" são lidas do ambiente nessa hora).
@@ -40,6 +41,11 @@ services:
       ATLAS_USER:
       ATLAS_PASSWORD:
       ROBO_DATABASE_URL:
+      # Busca dos documentos de arquivo único (factorial.js, só leitura na Factorial). Sem a chave, a busca é pulada.
+      FACTORIAL_API_KEY:
+      FACTORIAL_API_URL:
+      # Envio ao Atlas só acontece com o botão "envio automático" ligado no painel ou num "Enviar" da aba Envio (robo.js).
+      ENVIO_MAX_POR_RODADA: "30"
     volumes:
       - atlas-data:/data
       # Para o código de 8 dígitos do e-mail: gravar em /opt/gesdoc/data/hml/pendencias-atlas/codigo.txt

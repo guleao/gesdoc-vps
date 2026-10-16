@@ -72,7 +72,7 @@ mkdir -p "$PEND/bernhoeft" "$PEND/atlas"
 cp "$ROBO"/{pendencias.js,login.js,login_auto.py,requirements-captcha.txt,package.json,package-lock.json,Dockerfile,.dockerignore} "$PEND/bernhoeft/"
 docker build -q -t gesdoc/pendencias-bernhoeft:hml "$PEND/bernhoeft"
 log "Copiando e construindo o robô Atlas (gesdoc/pendencias-atlas:hml)"
-cp "$ATLAS"/{comum.js,login.js,pendencias.js,planilha.js,neon.js,unir-pdfs.js,package.json,package-lock.json,Dockerfile,.dockerignore} "$PEND/atlas/"
+cp "$ATLAS"/{comum.js,login.js,pendencias.js,planilha.js,neon.js,unir-pdfs.js,enviar.js,factorial.js,robo.js,package.json,package-lock.json,Dockerfile,.dockerignore} "$PEND/atlas/"
 docker build -q -t gesdoc/pendencias-atlas:hml "$PEND/atlas"
 cp "$PACOTE/services/pendencias/compose.hml.yml" "$PEND/"
 

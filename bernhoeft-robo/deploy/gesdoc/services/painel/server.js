@@ -1,7 +1,8 @@
 // Painel da automação de documentos (homologação): mostra o que os robôs estão fazendo, de ponta a ponta.
 // Só leitura nos portais e na Factorial. Escreve apenas: o código de 2FA do Atlas (8 letras/números) em codigo.txt,
 // que o robô lê e apaga, o sinal "rodar-agora" dos robôs (botão Reiniciar) e os pacotes Bernhoeft em PACOTES
-// (manuais: pacote.js; automáticos, a cada leitura nova do Bernhoeft: auto.js).
+// (manuais: pacote.js; automáticos, a cada leitura nova do Bernhoeft: auto.js), e, na aba Envio, o botão do envio automático
+// e os pedidos verificar/enviar em /codigo/envio, que o robo.js do Atlas executa (o painel em si não fala com o Atlas).
 // Fontes: Docker (estado e logs, via docker-socket-proxy só leitura), arquivos de saída dos robôs (/dados),
 //         Neon (contagem por estado na tabela documentos, via HTTPS), Gotenberg e n8n (health).
 // Sem dependências: node server.js. Acesso só pela rede do Tailscale (ESCUTAR = IP do Tailscale).
@@ -149,7 +150,9 @@ async function estadoAtlas() {
   const ciclo = ler(path.join(out, 'ciclo.log'));
   if (ciclo) r.ciclo = ciclo.trim().split('\n').slice(-40).map(limpar);
   const sim = lerJson(path.join(out, 'enviar-simulacao.json'));
-  if (sim) r.simulacao = { gerado_em: sim.gerado_em, itens: (sim.itens || []).length };
+  if (sim) r.simulacao = { gerado_em: sim.gerado_em, itens: (sim.itens || []).length, prontas: (sim.itens || []).filter((i) => i.pronta).length };
+  // Botão do envio automático (aba Envio): sem o arquivo = desligado.
+  r.envio_automatico = (lerJson(path.join(out, 'envio', 'modo.json')) || {}).automatico === true;
   try { r.pdfs_unidos = fs.readdirSync(path.join(out, 'unidos'), { recursive: true }).filter((f) => /\.pdf$/i.test(f)).length; } catch { r.pdfs_unidos = 0; }
   return r;
 }
@@ -231,6 +234,21 @@ async function estadoNeon() {
   return cacheNeon.dados;
 }
 
+// PDF de uma pendência do Atlas aqui na VPS (mesma regra do acharArquivo do enviar.js), na pasta downloads do robô:
+//   "factorial:<id Factorial>" (LOCALIZADO) -> downloads/factorial-docs/<id>.pdf
+//   caminho de outra máquina ("downloads\factorial\120\doc9_...pdf", COMPOSTO) -> downloads/factorial/<id Neon>/*.pdf
+const ATLAS_DOWNLOADS = path.join(DADOS, 'pendencias-atlas', 'downloads');
+function pdfAtlas(l) {
+  const pdfEm = (dir, filtro) => { try { const f = fs.readdirSync(dir).find((x) => /\.pdf$/i.test(x) && filtro(x)); return f ? path.join(dir, f) : null; } catch { return null; } };
+  const fid = /^factorial:(\d+)$/i.exec(l.caminho_origem || '');
+  if (fid) return pdfEm(path.join(ATLAS_DOWNLOADS, 'factorial-docs'), (x) => x.startsWith(fid[1] + '.'));
+  if (!l.caminho_origem && l.estado !== 'COMPOSTO') return null;
+  const nome = path.basename(String(l.caminho_origem || '').replace(/\\/g, '/'));
+  return pdfEm(path.join(ATLAS_DOWNLOADS, 'factorial', String(l.id)), (x) => !nome || x === nome)
+    || pdfEm(path.join(ATLAS_DOWNLOADS, 'factorial', String(l.id)), () => true);
+}
+const arquivosAtlas = new Map(); // id Neon -> caminho do PDF (o caminho tem CPF: nunca vai para a página)
+
 // Pendências do Atlas no Neon (tudo que não foi enviado), com todas as colunas menos as de identificação.
 const COLUNAS_FORA = /^(cpf|colaborador_id|cnpj|cnpj_filial|rg|senha|token)$/i;
 let cacheDocsNeon = { em: 0, dados: null };
@@ -240,6 +258,11 @@ async function documentosNeon() {
   try {
     const linhas = await sql(`SELECT * FROM documentos WHERE coalesce(estado, '') <> 'ENVIADO'
       ORDER BY atualizado_em DESC NULLS LAST LIMIT 2000`);
+    arquivosAtlas.clear();
+    for (const x of linhas) {
+      const arq = pdfAtlas(x);
+      if (arq) { arquivosAtlas.set(String(x.id), arq); x.pdf_atlas = `atlas-doc/${x.id}`; x.pdf_kb = tamanho(arq)?.kb ?? null; }
+    }
     cacheDocsNeon = { em: Date.now(), dados: { linhas: linhas.map((x) => Object.fromEntries(Object.entries(x)
       .filter(([k]) => !COLUNAS_FORA.test(k))
       .map(([k, v]) => [k, v == null ? null : limpar(v)]))) } };
@@ -285,8 +308,16 @@ async function pendencias() {
 // ---------- Todos os PDFs que o painel pode mostrar (aba PDFs) ----------
 const ATLAS_UNIDOS = path.join(DADOS, 'pendencias-atlas', 'unidos');
 function tamanho(arq) { try { const s = fs.statSync(arq); return { kb: Math.round(s.size / 1024), em: s.mtime.toISOString() }; } catch { return null; } }
-function listarPdfs() {
+async function listarPdfs() {
   const lista = [];
+  // Atlas: o arquivo exato que o enviar.js manda para cada pendência (o mesmo que aparece na aba Pendências).
+  const n = await documentosNeon();
+  for (const l of n.linhas || []) {
+    const t = l.pdf_atlas && tamanho(arquivosAtlas.get(String(l.id)) || '');
+    if (!t) continue;
+    lista.push({ grupo: 'Robô Atlas · o que vai para o portal', titulo: `#${l.id} · ${l.nome}`, sub: `${l.funcionario || '—'} · ${l.competencia || ''} · ${l.estado}`,
+      url: l.pdf_atlas, ...t, paginas: paginasPdf(arquivosAtlas.get(String(l.id))), partes: [] });
+  }
   const st = auto.estado();
   for (const it of st.itens || []) {
     if (!it.pdf) continue;
@@ -312,13 +343,16 @@ function listarPdfs() {
         id: a.id, created_at: a.created_at, assinatura: a.signature_status || null, pasta: a.pasta || null, doc: a.doc })),
     });
   }
-  let unidos = [];
-  try { unidos = fs.readdirSync(ATLAS_UNIDOS, { recursive: true }).filter((f) => /\.pdf$/i.test(f)); } catch {}
-  for (const f of unidos) {
-    const t = tamanho(path.join(ATLAS_UNIDOS, f));
-    if (t) lista.push({ grupo: 'Robô Atlas · PDFs unidos', titulo: limpar(path.basename(f)), sub: limpar(path.dirname(f)), url: `pdf-atlas/${f.split(path.sep).join('/')}`, ...t, partes: [] });
-  }
   return lista;
+}
+// Páginas de um PDF sem biblioteca (conta os objetos /Type /Page); null se não der para ler.
+const cachePaginas = new Map();
+function paginasPdf(arq) {
+  try {
+    const k = `${arq}|${fs.statSync(arq).mtimeMs}`;
+    if (!cachePaginas.has(k)) cachePaginas.set(k, (fs.readFileSync(arq).toString('latin1').match(/\/Type\s*\/Page[^s]/g) || []).length || null);
+    return cachePaginas.get(k);
+  } catch { return null; }
 }
 
 // ---------- Saúde de serviços HTTP ----------
@@ -525,13 +559,13 @@ function listarPacotes() {
   }).filter(Boolean).sort((a, b) => b.gerado_em.localeCompare(a.gerado_em));
 }
 // ?baixar=1 = download com o nome do arquivo; sem isso abre no visor do navegador.
-function servirPdf(res, base, rel, baixar) {
+function servirPdf(res, base, rel, baixar, nomeBaixar) {
   const arq = path.resolve(base, rel);
   if (!arq.startsWith(path.resolve(base) + path.sep) || !/\.pdf$/i.test(arq) || !fs.existsSync(arq)) {
     return json(res, 404, { erro: 'arquivo não encontrado' });
   }
   // pacote.pdf baixa com o nome da pasta (ex.: 3562026-ma-brigada-de-incendio.pdf).
-  const nome = path.basename(arq) === 'pacote.pdf' ? `${path.basename(path.dirname(arq))}.pdf` : path.basename(arq);
+  const nome = nomeBaixar || (path.basename(arq) === 'pacote.pdf' ? `${path.basename(path.dirname(arq))}.pdf` : path.basename(arq));
   res.writeHead(200, {
     'content-type': 'application/pdf', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff',
     'content-length': fs.statSync(arq).size,
@@ -576,6 +610,44 @@ function reiniciar(alvo) {
 function estadoAuto() {
   return { ...auto.estado(), tem_chave: pacote.temChave(), reiniciado_em: reiniciadoEm,
     sinal: { bernhoeft: fs.existsSync(SINAL_BERNHOEFT), atlas: fs.existsSync(SINAL_ATLAS) } };
+}
+
+// ---------- Envio ao Atlas (aba Envio) ----------
+// O painel NÃO envia nada: grava a escolha e os pedidos em /codigo/envio (= out/envio do robô Atlas) e o robo.js,
+// dentro do container do Atlas, executa em fila. modo.json = botão automático; pedidos/*.json = verificar/enviar um por um.
+const DIR_ENVIO = path.join(path.dirname(ARQ_CODIGO), 'envio');
+const PEDIDOS_ENVIO = path.join(DIR_ENVIO, 'pedidos');
+const SIM_ATLAS = path.join(path.dirname(ARQ_CODIGO), 'enviar-simulacao.json');
+const lerModo = () => ({ automatico: false, ...(lerJson(path.join(DIR_ENVIO, 'modo.json')) || {}) });
+function pedidosPendentes() {
+  try { return fs.readdirSync(PEDIDOS_ENVIO).filter((f) => f.endsWith('.json')).sort().map((f) => lerJson(path.join(PEDIDOS_ENVIO, f))).filter(Boolean); } catch { return []; }
+}
+async function estadoEnvio() {
+  const sim = lerJson(SIM_ATLAS) || {};
+  const res = lerJson(path.join(DIR_ENVIO, 'resultados.json')) || {};
+  const robo = lerJson(path.join(DIR_ENVIO, 'robo.json'));
+  const busca = lerJson(path.join(DIR_ENVIO, 'busca.json'));
+  const n = await documentosNeon();
+  const porId = new Map((n.linhas || []).map((l) => [String(l.id), l]));
+  const itens = (sim.itens || []).map((i) => ({
+    id: i.id, doc_id: i.doc_id, nome: i.nome, competencia: i.competencia, estado: i.estado, schedule_id: i.schedule_id, pronta: i.pronta,
+    motivos: (i.motivos || []).map(limpar), kb: i.tamanho ? Math.round(i.tamanho / 1024) : null, montado_aqui: !!i.montado_aqui,
+    funcionario: porId.get(String(i.id))?.funcionario || null, pdf: arquivosAtlas.has(String(i.id)) ? `atlas-doc/${i.id}` : null,
+    resultado: res[i.id] ? { ...res[i.id], msg: limpar(res[i.id].msg || '') } : null,
+  }));
+  // Enviadas saem da lista (estado ENVIADO no Neon); o resultado delas continua aqui.
+  const enviados = Object.entries(res).filter(([, r]) => r.acao === 'enviar' && r.ok).map(([id, r]) => ({ id, ...r, msg: limpar(r.msg || '') }))
+    .sort((a, b) => b.em.localeCompare(a.em)).slice(0, 50);
+  // robo.json é regravado a cada 5 s; parado há mais de 2 min sem estar ocupado = robô antigo ou fora do ar.
+  const vivo = robo && (robo.fazendo || Date.now() - new Date(robo.agora) < 120000);
+  return { agora: new Date().toISOString(), modo: lerModo(), robo, robo_ok: !!vivo, lista_em: sim.gerado_em || null, itens, enviados, pedidos: pedidosPendentes(),
+    busca: busca ? { em: busca.em, itens: (busca.itens || []).map((x) => ({ ...x, motivo: limpar(x.motivo || '') })) } : null };
+}
+function gravarNoEnvio(nome, obj) {
+  fs.mkdirSync(PEDIDOS_ENVIO, { recursive: true });
+  const tmp = path.join(DIR_ENVIO, `.${nome.replace(/\//g, '_')}.tmp`);
+  fs.writeFileSync(tmp, JSON.stringify(obj, null, 2));
+  fs.renameSync(tmp, path.join(DIR_ENVIO, nome)); // troca inteira: o robô nunca lê um arquivo pela metade
 }
 
 // POST só da própria página (evita que outro site acione pelo navegador).
@@ -623,9 +695,17 @@ const servidor = http.createServer(async (req, res) => {
     if (req.method === 'GET' && url.pathname.startsWith('/pdf-atlas/')) {
       return servirPdf(res, ATLAS_UNIDOS, decodeURIComponent(url.pathname.slice('/pdf-atlas/'.length)), url.searchParams.has('baixar'));
     }
+    // PDF de uma pendência do Atlas pelo id do Neon (o nome do arquivo tem CPF: não aparece na URL nem no download).
+    const doc = req.method === 'GET' && /^\/atlas-doc\/(\d+)$/.exec(url.pathname);
+    if (doc) {
+      if (!arquivosAtlas.has(doc[1])) await documentosNeon();
+      const arq = arquivosAtlas.get(doc[1]);
+      if (!arq) return json(res, 404, { erro: 'PDF desta pendência não está na VPS' });
+      return servirPdf(res, ATLAS_DOWNLOADS, path.relative(ATLAS_DOWNLOADS, arq), url.searchParams.has('baixar'), `atlas-${doc[1]}.pdf`);
+    }
     if (req.method === 'GET' && url.pathname === '/api/ao-vivo') return aoVivo(req, res, url);
     if (req.method === 'GET' && url.pathname === '/api/pendencias') return json(res, 200, await pendencias());
-    if (req.method === 'GET' && url.pathname === '/api/pdfs') return json(res, 200, listarPdfs());
+    if (req.method === 'GET' && url.pathname === '/api/pdfs') return json(res, 200, await listarPdfs());
     if (req.method === 'POST' && url.pathname === '/api/pacote') {
       if (!origemOk(req)) return json(res, 403, { erro: 'origem não permitida' });
       if (!pacote.temChave()) return json(res, 400, { erro: 'Falta a chave da Factorial (FACTORIAL_API_KEY) no cofre.' });
@@ -660,6 +740,38 @@ const servidor = http.createServer(async (req, res) => {
       if (!['bernhoeft', 'atlas', 'tudo'].includes(alvo)) return json(res, 400, { erro: 'alvo inválido' });
       if (auto.estado().rodando && alvo !== 'atlas') return json(res, 409, { erro: 'Espere a esteira terminar (leva uns minutos).' });
       return json(res, 200, { ok: true, feito: reiniciar(alvo) });
+    }
+    if (req.method === 'GET' && url.pathname === '/api/envio') return json(res, 200, await estadoEnvio());
+    if (req.method === 'POST' && url.pathname === '/api/envio/modo') {
+      if (!origemOk(req)) return json(res, 403, { erro: 'origem não permitida' });
+      const automatico = JSON.parse((await corpo(req)) || '{}').automatico === true;
+      gravarNoEnvio('modo.json', { automatico, alterado_em: new Date().toISOString() });
+      console.log(`[${new Date().toISOString()}] envio automático ${automatico ? 'LIGADO' : 'desligado'} pelo painel`);
+      evento('Painel', automatico ? 'Envio automático LIGADO: o robô Atlas busca na Factorial e envia sozinho as prontas' : 'Envio automático DESLIGADO: nada sai sozinho; envio só um por um', automatico ? 'aviso' : 'ok');
+      return json(res, 200, { ok: true, automatico });
+    }
+    if (req.method === 'POST' && url.pathname === '/api/envio/pedido') {
+      if (!origemOk(req)) return json(res, 403, { erro: 'origem não permitida' });
+      const p = JSON.parse((await corpo(req)) || '{}');
+      const acao = String(p.acao || '');
+      if (!['verificar', 'enviar', 'buscar', 'atualizar'].includes(acao)) return json(res, 400, { erro: 'ação inválida' });
+      const pedido = { acao, pedido_em: new Date().toISOString() };
+      if (acao === 'verificar' || acao === 'enviar') {
+        const id = String(p.id || '');
+        const item = ((lerJson(SIM_ATLAS) || {}).itens || []).find((i) => String(i.id) === id);
+        if (!item) return json(res, 404, { erro: `#${id} não está na lista de envio.` });
+        if (acao === 'enviar') {
+          // Mesma trava do enviar.js: só a pronta, e o local tem que ser o que a pessoa viu na tela.
+          if (!item.pronta) return json(res, 400, { erro: `#${id} não está pronta: ${limpar((item.motivos || []).join('; '))}` });
+          if (String(p.confirmo || '') !== item.schedule_id) return json(res, 400, { erro: 'O local no Atlas mudou desde que a lista foi carregada: atualize a página.' });
+          pedido.confirmo = item.schedule_id;
+        }
+        pedido.id = item.id;
+      }
+      if (pedidosPendentes().some((x) => x.acao === acao && String(x.id ?? '') === String(pedido.id ?? ''))) return json(res, 409, { erro: 'Esse pedido já está na fila do robô.' });
+      gravarNoEnvio(`pedidos/${Date.now()}-${acao}${pedido.id ? '-' + pedido.id : ''}.json`, pedido);
+      evento('Painel', `Pedido ao robô Atlas: ${{ verificar: 'verificar', enviar: 'ENVIAR', buscar: 'buscar na Factorial', atualizar: 'atualizar a lista' }[acao]}${pedido.id ? ` #${pedido.id}` : ''}`, acao === 'enviar' ? 'aviso' : 'info');
+      return json(res, 200, { ok: true });
     }
     if (req.method === 'POST' && url.pathname === '/api/codigo') {
       if (!origemOk(req)) return json(res, 403, { erro: 'origem não permitida' });

@@ -145,7 +145,7 @@ async function enviarNeon({ simular = false, log = console.log } = {}) {
       // Não toca em estado: quem avança a pendência (COMPOSTO, LOCALIZADO, DIVERGENTE_FACTORIAL...) é o serviço de sincronização.
       const campos = CAMPOS.filter((c) => c !== 'estado');
       const valsUp = campos.map((c) => r[c] ?? null);
-      consultas.push(sql.query(`update documentos set ${campos.map((c, i) => `${c} = ${i + 1}`).join(', ')}, atualizado_em = now() where id = ${campos.length + 1}`, [...valsUp, id]));
+      consultas.push(sql.query(`update documentos set ${campos.map((c, i) => `${c} = $${i + 1}`).join(', ')}, atualizado_em = now() where id = $${campos.length + 1}`, [...valsUp, id]));
     } else {
       novos++;
       consultas.push(sql.query(`insert into documentos (${CAMPOS.join(', ')}) values (${CAMPOS.map((_, i) => `$${i + 1}`).join(', ')})`, vals));
