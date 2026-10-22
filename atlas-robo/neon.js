@@ -9,7 +9,10 @@
 //     REGRAS abaixo. Nome sem tradução = linha pulada e listada no log.
 //   - Reprovados não são gravados à parte: já estão em Atrasados (situação "Reprovado (atrasado)").
 //   - Linhas do robô são as que têm "aba" preenchida. As outras (cadastradas por outros processos) nunca são tocadas.
-//   - Mesma pendência (mesma chave) em coletas seguintes = UPDATE da linha; nova = INSERT.
+//   - Mesma pendência (mesma chave) em coletas seguintes = UPDATE da linha; nova = INSERT. Se a chave já existir no banco
+//     (linha de outro processo), o INSERT é pulado (on conflict do nothing) em vez de derrubar a gravação.
+//   - Reprovado depois de LOCALIZADO/COMPOSTO/ENVIADO: o trigger documentos_rejeicao do Neon muda o estado para REJEITADO
+//     quando este UPDATE troca a situação; o robô não precisa fazer nada.
 //   - estado = PENDENTE_ENVIO só na linha NOVA; no UPDATE o estado nunca é alterado (o serviço do Evilásio avança o estado).
 // Uso: node neon.js            grava
 //      node neon.js --simular  só mostra o que faria
@@ -23,7 +26,8 @@ const ESTADO = 'PENDENTE_ENVIO';
 const SITUACAO = { DelayNotSent: 'Não enviado no prazo', DelayRejected: 'Reprovado (atrasado)', PendingNotSent: 'A enviar', Rejected: 'Reprovado' };
 
 // Nome do documento no Atlas (normalizado) -> doc_id em documento_regras.
-// Sem par seguro (pulados até alguém confirmar): "Folha de Pagamento Mensal Analítica", "Comprovante de Pagamento do TRCT".
+// Pares de 19/10 pelo discovery da Milena (v2): "Comprovante de Pagamento do TRCT" -> 9 (ela pega um arquivo só, o comprovante
+// do TRCT, em Offboarding) e "Folha de Pagamento Mensal Analítica" -> 63 (extrato mensal da folha, pasta FOPAG do SharePoint).
 const REGRAS = {
   'vale alimentacao (relacao de beneficiarios + boleto + comprovante)': 2,
   'vale transporte (relacao de beneficiarios + boleto + comprovante)': 3,
@@ -34,12 +38,14 @@ const REGRAS = {
   'aviso + recibo de ferias + comprovante de pagamento': 8,
   'termo de rescisao do contrato de trabalho - trct': 9,
   'termo de rescisao contrato de trabalho (tcrt) com comprovante de pagamento': 9,
+  'comprovante de pagamento do trct': 9,
   'guia do fgts digital rescisoria (gfd rescisoria) + comprovante de pagamento': 10,
   'fgts - guia de recolhimento (boleto)': 24,
   'fgts - re - relacao de empregados/trabalhadores': 25,
   'fgts - comprovante de pagamento': 26,
   'comprovante bancario de pagamento de salarios': 56,
   'comprovante de recolhimento': 59,
+  'folha de pagamento mensal analitica': 63,
   'recibo de entrega da declaracao de debitos e creditos tributarios federais previdenciarios - dctfweb': 60,
   'relatorio da declaracao completa - dctfweb': 61,
   'certidao de regularidade do fgts ou cnd do fgts': 64,
@@ -65,9 +71,11 @@ function conexao() {
 }
 const temConexao = () => !!conexao();
 
-// Mesma pendência entre coletas: documento + quem (CPF ou CNPJ) + pedido + unidade + competência + prazo.
-const chave = (r) => [r.doc_id, r.nome, r.cpf, r.cnpj_filial, r.numero_pedido, r.unidade, r.competencia, r.prazo_envio]
-  .map((v) => (v == null ? '' : String(v))).join('|');
+// Mesma pendência entre coletas = a chave única do Neon (índice documentos_chave_natural, NULLS NOT DISTINCT, 19/10):
+// cliente + documento + quem (CPF ou CNPJ) + competência + nome + pedido + prazo. Tem que ser IGUAL à do banco: se o robô
+// achar que é nova e o banco não, o INSERT bate na chave.
+const CHAVE = ['cliente', 'doc_id', 'cpf', 'cnpj_filial', 'competencia', 'nome', 'numero_pedido', 'prazo_envio'];
+const chave = (r) => CHAVE.map((c) => (r[c] == null ? '' : String(r[c]))).join('|');
 const dia = (d) => (d == null ? null : d instanceof Date ? d.toISOString().slice(0, 10) : String(d).slice(0, 10));
 
 // Colunas gravadas em documentos (na ordem dos parâmetros).
@@ -127,11 +135,12 @@ async function enviarNeon({ simular = false, log = console.log } = {}) {
 
   // Linhas já gravadas pelo robô (aba preenchida), para atualizar em vez de duplicar.
   const existentes = new Map();
-  for (const r of await sql.query(`select id, doc_id, nome, cpf, cnpj_filial, numero_pedido, unidade, competencia, prazo_envio from documentos where aba is not null`)) {
+  for (const r of await sql.query(`select id, ${CHAVE.join(', ')} from documentos where aba is not null`)) {
     existentes.set(chave({ ...r, prazo_envio: dia(r.prazo_envio) }), r.id);
   }
   const vistos = new Set();
   const consultas = [];
+  const inserts = []; // posição de cada INSERT em consultas
   let novos = 0;
   let atualizados = 0;
   for (const r of registros) {
@@ -148,19 +157,26 @@ async function enviarNeon({ simular = false, log = console.log } = {}) {
       consultas.push(sql.query(`update documentos set ${campos.map((c, i) => `${c} = $${i + 1}`).join(', ')}, atualizado_em = now() where id = $${campos.length + 1}`, [...valsUp, id]));
     } else {
       novos++;
-      consultas.push(sql.query(`insert into documentos (${CAMPOS.join(', ')}) values (${CAMPOS.map((_, i) => `$${i + 1}`).join(', ')})`, vals));
+      // Já existe no banco com a mesma chave (linha de outro processo, sem aba): não duplica nem derruba a transação inteira.
+      inserts.push(consultas.length);
+      consultas.push(sql.query(`insert into documentos (${CAMPOS.join(', ')}) values (${CAMPOS.map((_, i) => `$${i + 1}`).join(', ')})
+        on conflict (${CHAVE.join(', ')}) do nothing returning id`, vals));
     }
   }
 
   log(`Neon: ${linhas.length} pendência(s) na coleta ${coleta.id}; ${novos} nova(s), ${atualizados} atualizada(s), ${registros.length - vistos.size} repetida(s), ${linhas.length - registros.length} sem regra.`);
   for (const [nome, n] of semRegra) log(`  sem regra (pulado): ${n}x ${nome}`);
+  let jaExistiam = 0;
   if (simular) {
     log('Neon: simulação, nada gravado.');
   } else if (consultas.length) {
-    await sql.transaction(consultas);
+    const res = await sql.transaction(consultas);
+    // INSERT que voltou sem id = já existia no banco.
+    jaExistiam = inserts.filter((i) => !res[i].length).length;
+    if (jaExistiam) log(`Neon: ${jaExistiam} nova(s) já existiam no banco com a mesma chave (de outro processo): puladas.`);
     log('Neon: gravado.');
   }
-  return { novos, atualizados, semRegra: [...semRegra] };
+  return { novos: novos - jaExistiam, atualizados, jaExistiam, semRegra: [...semRegra] };
 }
 
 module.exports = { enviarNeon, temConexao, conexao };

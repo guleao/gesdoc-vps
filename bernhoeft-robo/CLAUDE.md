@@ -13,6 +13,7 @@ Robô em Node + Playwright que lê o portal Bernhoeft (`https://newcontract.cont
 ## Arquivos
 - `pendencias.js`: leitura principal (competências, relatório 012, xlsx, comparação com a leitura anterior). Flags: `--loop`, `--concluidos`.
 - `login_auto.py`: login automático (reCAPTCHA v2 resolvido primeiro pelo áudio com `playwright-recaptcha`, grátis; se falhar, pelos serviços pagos que tiverem chave). O `pendencias.js` chama quando a sessão expira (fecha o contexto, roda o Python, reabre). Código de saída 3 = falhou.
+- `mobilizacao.js` (22/10, **NUNCA TESTADO**, teste com o time Bernhoeft em 23/10): faz o fluxo do vídeo (Factorial → Nova Mobilização → etapa 2 cadastro → etapa 5 arquivo ou comentário de `comentarios.json` → etapa 8 com `--concluir`). Padrão = ensaio (não grava); `--descobrir` salva HTML+XHR de cada tela para acertar seletores; `--executar [--passo]` grava. Entrada `plano.json` (fora do repo, tem CPF). Saída `out/mobilizacao/<data>/`.
 - `login.js`: login manual (fallback) para renovar a sessão.
 - `requirements-captcha.txt` + `.venv-captcha/`: dependências Python do login automático (o venv não é versionado).
 - `captcha_test_audio.py`, `captcha_test_portal.py`: testes do solver (página demo do Google e login real).
@@ -33,6 +34,12 @@ Robô em Node + Playwright que lê o portal Bernhoeft (`https://newcontract.cont
 ## Cuidados
 - reCAPTCHA no login: a empresa autorizou automatizar (usuário, 07/10/2026). Resolvido em 08/10/2026 pelo áudio (`login_auto.py`), grátis. Regras: o Chrome precisa de `locale='en-US'` (em português o desafio não mostra o link do MP3 e dá timeout; vale para `pendencias.js` e `login_auto.py`); depende do endpoint de voz do Google, então é intermitente (por isso 4 tentativas com pausa) e pode ser recusado em IP de datacenter (testar na VPS). Se o áudio falhar, `login_auto.py` tenta os serviços pagos que tiverem chave em variável (`TWOCAPTCHA_API_KEY`, `ANTICAPTCHA_API_KEY`, `CAPMONSTER_API_KEY`, `CAPSOLVER_API_KEY`; ordem em `CAPTCHA_FALLBACK`), todos pelo mesmo protocolo createTask/getTaskResult; sem chave, o serviço é pulado. Na VPS (IP da Hostinger) o áudio sempre dá `RecaptchaRateLimitError`; a Anti-Captcha (chave no cofre hml) resolveu em ~45s e logou em 14/10/2026. `AUTO_LOGIN=0` desliga e volta ao manual. CapSolver foi abandonado (a chave dava ERROR_KEY_DENIED_ACCESS). Python 3.13+ precisa dos pacotes `standard-aifc` etc. (já em `requirements-captcha.txt`).
 - Antes de rodar no Windows: `[bool]$env:BERNHOEFT_USER` (sem imprimir valores).
-- O usuário atual (contratante) não tem permissão de upload (`/LinksContratante/CriarLink` dá "Sem Permissão") e as telas de Carregamento estão vazias. Upload ainda não implementado: precisa de conta com acesso ou do fluxo gravado.
+- O usuário atual é da **NIP (contratada)**, operador 83205, e não envia por dois motivos (confirmado em 19/10 pelo `GetUserInfo`):
+  - O perfil dele só tem `CARREGAMENTO_MENSAL_PESQUISAR` (sem criar/editar) e nenhuma permissão de Carregamento Mobilização, por onde entra o documento de empresa.
+  - Nenhum contrato está vinculado a ele: o `ListarCompetenciasAjax` volta com 0 registros em qualquer filtro.
+
+  **22/10:** na reunião gravada, este MESMO usuário criou mobilização e subiu arquivo (fluxo em `../docs/bernhoeft-mobilizacao-video-2026-10-22.md`). A leitura de 19/10 olhou o Carregamento Mensal, não a Mobilização: reconferir antes de concluir que falta permissão.
+
+  O `CriarLink` "Sem Permissão" é de outra função (publicar link, coisa da contratante). Upload ainda não implementado: falta o vínculo e o perfil, ou o login de quem já envia.
 - Chaves de API coladas no chat (Factorial) devem ser trocadas; não usar em arquivos.
 - Não usar o MCP plane-uxnaut neste projeto.

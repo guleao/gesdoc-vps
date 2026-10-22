@@ -65,6 +65,15 @@
     border: 1px solid var(--linha); border-radius: 6px; background: var(--fundo); color: var(--tinta); }
   button { font: inherit; padding: 6px 14px; border-radius: 6px; border: 1px solid var(--linha); background: var(--serie); color: #fff; cursor: pointer; }
   button.sec { background: transparent; color: var(--tinta); }
+  .docsFiltros { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+  .docsFiltros button.ativa { border-color: var(--serie); color: var(--serie); }
+  .sitDoc { border-top: 1px solid var(--linha); padding: 10px 0; }
+  .sitDoc > summary { cursor: pointer; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; list-style: none; }
+  .sitDoc > summary b { min-width: 260px; }
+  .sitDoc .diag { margin: 8px 0 6px; padding-left: 18px; }
+  .sitDoc .diag li { margin: 3px 0; }
+  .sitDoc .diag .n { font-variant-numeric: tabular-nums; font-weight: 600; margin-right: 4px; }
+  .sitDoc .prob { font-size: 12px; color: var(--critico); }
   .alerta { border-left: 4px solid var(--aviso); padding: 8px 12px; background: var(--neutro); border-radius: 4px; margin: 8px 0; }
 
   /* Sparkline */
@@ -129,6 +138,9 @@
   /* Fontes do Ao vivo: cor = identidade (ordem fixa da paleta categórica); infraestrutura em cinza. O nome vai sempre escrito. */
   :root { --f-atlas: #2a78d6; --f-bern: #eb6834; --f-esteira: #1baf7a; --f-pdf: #eda100; --f-neon: #e87ba4; --f-pacotes: #008300; --f-infra: #898781; }
   @media (prefers-color-scheme: dark) { :root { --f-atlas: #3987e5; --f-bern: #d95926; --f-esteira: #199e70; --f-pdf: #c98500; --f-neon: #d55181; --f-pacotes: #008300; } }
+  /* De onde vem o documento (documento_regras.origem) */
+  :root { --f-factorial: #7c4dce; --f-sharepoint: #0b8a8f; }
+  @media (prefers-color-scheme: dark) { :root { --f-factorial: #9a72e0; --f-sharepoint: #22a3a8; } }
 
   /* Números do topo (stat tiles) */
   .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 12px; }
@@ -171,6 +183,7 @@
   .pend tr.aberta td { background: var(--neutro); }
   .pend td.det { background: var(--fundo); padding: 12px 14px; }
   .pend .arq { font-size: 12px; }
+  .pend .motivoSinc { font-size: 12px; color: var(--critico); margin-top: 3px; }
   .pend td { font-size: 13px; }
   .det dl { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 6px 18px; margin: 0 0 10px; }
   .det dl div { min-width: 0; }
@@ -191,6 +204,9 @@
   .pdfItem .t { font-weight: 600; }
   .pdfItem .s { color: var(--tinta2); font-size: 12px; margin-top: 2px; }
   .pdfItem .m { color: var(--apagado); font-size: 12px; margin-top: 4px; }
+  .pdfItem .e, .pdfPartes button .e { color: var(--critico); font-size: 12px; margin-top: 3px; }
+  .pdfFalha { border: 1px solid var(--critico); border-radius: 6px; padding: 16px 18px; margin-top: 8px; }
+  .pdfFalha b { color: var(--critico); }
   .pdfCab { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
   .pdfCab .grow { flex: 1; min-width: 200px; }
   .pdfPartes { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
@@ -254,6 +270,7 @@
   .interruptor { position: relative; width: 62px; height: 34px; border-radius: 17px; border: 0; padding: 0; background: var(--apagado); cursor: pointer; flex: none; transition: background .2s; }
   .interruptor::after { content: ''; position: absolute; top: 4px; left: 4px; width: 26px; height: 26px; border-radius: 50%; background: #fff; transition: left .2s; box-shadow: 0 1px 3px rgba(0,0,0,.25); }
   .interruptor.ligado { background: var(--bom); }
+  .interruptor:disabled, .envItem .acoes button:disabled { cursor: not-allowed; }
   .interruptor.ligado::after { left: 32px; }
   .envNums { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
   @media (max-width: 700px) { .envNums { grid-template-columns: repeat(2, 1fr); } }
@@ -284,9 +301,18 @@
   .envItem .doc small { font-weight: 400; color: var(--apagado); margin-left: 6px; }
   .envItem .meta { color: var(--tinta2); font-size: 13px; margin-top: 2px; display: flex; gap: 4px 14px; flex-wrap: wrap; }
   .envItem .motivo { margin-top: 6px; font-size: 13px; color: var(--critico); }
+  .comentBern { margin-top: 6px; font-size: 13px; } .comentBern summary { cursor: pointer; color: var(--texto-2, #888); } .comentBern div { margin: 6px 0 0 14px; } .comentBern code { white-space: normal; }
   .envItem .ultima { margin-top: 6px; font-size: 12px; color: var(--tinta2); }
   .envItem .ultima.ok::before { content: '✓ '; color: var(--bom); font-weight: 700; }
   .envItem .ultima.falha::before { content: '✕ '; color: var(--critico); font-weight: 700; }
+  .envItem .ficha { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--linha); font-size: 12.5px; }
+  .envItem .ficha dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 12px; margin: 0; }
+  .envItem .ficha dt { color: var(--apagado); }
+  .envItem .ficha dd { margin: 0; color: var(--tinta2); word-break: break-word; }
+  .envItem .ficha ol { margin: 0; padding-left: 18px; }
+  .envItem .ficha li { margin: 1px 0; }
+  .envItem .ficha .papel { font-weight: 600; color: var(--tinta); }
+  .envItem .ficha .falta { color: var(--critico); }
   .envItem .acoes { display: flex; gap: 6px; align-items: center; white-space: nowrap; }
   .envItem .acoes button { padding: 7px 14px; }
   .envItem .acoes button.enviar { font-weight: 600; padding: 7px 18px; }
@@ -304,6 +330,33 @@
   .res { font-size: 12px; }
   .res.ok { color: var(--bom); }
   .res.falha { color: var(--critico); }
+
+  /* Ajuda: índice fixo à esquerda, uma seção por tela à direita */
+  .abas button.ajudaAba { font-size: 13px; color: var(--apagado); }
+  #aba-ajuda { grid-template-columns: 230px minmax(0, 1fr); align-items: start; }
+  @media (max-width: 1000px) { #aba-ajuda { grid-template-columns: 1fr; } }
+  .ajIndice { position: sticky; top: 56px; padding: 12px; display: flex; flex-direction: column; gap: 2px; }
+  @media (max-width: 1000px) { .ajIndice { position: static; } }
+  .ajIndice .rot { font-size: 12px; color: var(--apagado); font-weight: 600; margin: 8px 10px 4px; }
+  .ajIndice .rot:first-child { margin-top: 0; }
+  .ajIndice button { background: transparent; color: var(--tinta2); border: 0; text-align: left; padding: 5px 10px; border-radius: 6px; }
+  .ajIndice button:hover { background: var(--neutro); color: var(--tinta); }
+  .ajuda { display: grid; gap: 16px; min-width: 0; }
+  .ajuda > section { scroll-margin-top: 60px; }
+  .ajuda h2 .ir { margin-left: auto; font-size: 13px; padding: 4px 12px; }
+  .ajuda h3 { font-size: 14px; margin: 16px 0 6px; }
+  .ajuda p, .ajuda li { max-width: 92ch; }
+  .ajuda p { margin: 0 0 8px; }
+  .ajuda ul, .ajuda ol { margin: 0 0 8px; padding-left: 20px; }
+  .ajuda li { margin: 3px 0; }
+  .ajuda .itens { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; margin: 0 0 8px; }
+  .ajuda .itens dt { font-weight: 600; }
+  .ajuda .itens dd { margin: 0; color: var(--tinta2); }
+  @media (max-width: 700px) { .ajuda .itens { grid-template-columns: 1fr; } .ajuda .itens dd { margin-bottom: 6px; } }
+  .ajuda .nota { border-left: 4px solid var(--serie); padding: 8px 12px; background: var(--neutro); border-radius: 4px; margin: 10px 0; }
+  .ajuda .nota.cuidado { border-left-color: var(--critico); }
+  .ajuda kbd { font: 12px ui-monospace, monospace; padding: 1px 6px; border: 1px solid var(--linha); border-bottom-width: 2px; border-radius: 4px; background: var(--fundo); }
+  .ajuda code { font: 12px ui-monospace, monospace; padding: 1px 5px; border-radius: 4px; background: var(--neutro); }
   .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 50; background: var(--tinta); color: var(--cartao);
     padding: 10px 18px; border-radius: 10px; font-size: 14px; box-shadow: 0 6px 24px rgba(0,0,0,.25); max-width: 90vw; }
   .toast.falha { background: var(--critico); color: #fff; }
@@ -322,6 +375,7 @@
   <div class="acoesTopo">
     <label title="Borra os nomes de funcionários na tela (e no CSV usa só as iniciais)"><input type="checkbox" id="ocultar"> ocultar nomes</label>
     <button class="sec" id="telaCheia" title="tela cheia (F11)">⛶ tela cheia</button>
+    <button class="sec" id="ajudaTopo" title="explica a tela aberta agora (tecla ?)">Ajuda desta tela</button>
   </div>
 </header>
 <nav class="abas">
@@ -331,7 +385,10 @@
   <button data-aba="pdfs"><b>4</b>Documentos montados</button>
   <button data-aba="vivo"><b>5</b>Ao vivo</button>
   <button data-aba="envio"><b>6</b>Envio ao Atlas</button>
+  <button data-aba="enviobern"><b>7</b>Envio ao Bernhoeft</button>
+  <button data-aba="docs"><b>8</b>Os 36 documentos</button>
   <button data-aba="operacao" class="tecnica">Operação</button>
+  <button data-aba="ajuda" class="ajudaAba">Ajuda</button>
 </nav>
 <div id="faixa"></div>
 
@@ -395,10 +452,23 @@
     <div id="travaAtlas"></div>
   </section>
   <section class="cartao largo">
+    <h2>De onde vem cada documento <small>cada tipo de documento tem um lugar certo para ser buscado: Factorial (RH) ou SharePoint · regra do banco</small></h2>
+    <div class="kpis" id="fontesKpis"></div>
+    <div id="fontesAviso"></div>
+  </section>
+  <section class="cartao">
+    <h2><span class="origem" style="--cor:var(--f-factorial)">Factorial</span> vêm do sistema de RH <small id="fontesFacN"></small></h2>
+    <div id="fontesFactorial" class="rolar"></div>
+  </section>
+  <section class="cartao">
+    <h2><span class="origem" style="--cor:var(--f-sharepoint)">SharePoint</span> vêm das pastas da empresa <small id="fontesShpN"></small></h2>
+    <div id="fontesSharepoint" class="rolar"></div>
+  </section>
+  <section class="cartao largo">
     <h2>Regras que valem em todas as estações</h2>
     <ul class="regras">
       <li><b>Acesso restrito:</b> o painel só abre pela VPN da equipe (Tailscale); fora dela não existe.</li>
-      <li><b>Nada é enviado sem alguém mandar:</b> o envio ao Atlas é um por um na aba 6, ou automático só com o botão ligado (começa desligado). Cada envio é conferido no Atlas antes.</li>
+      <li><b>Nada é enviado sem alguém mandar:</b> o envio ao Atlas é um por um na aba 6, ou automático só com o botão ligado (começa desligado). Cada envio é conferido no Atlas antes. O envio ao Bernhoeft (aba 7) está desativado.</li>
       <li><b>Factorial só leitura:</b> os arquivos são baixados por links temporários, sem mandar a chave junto.</li>
       <li><b>Segredos no cofre:</b> senhas e chaves ficam num cofre criptografado no servidor, nunca no código nem nesta página.</li>
       <li><b>Documentos de funcionário (LGPD):</b> os PDFs montados ficam numa pasta fechada do servidor e só aparecem aqui; CPF aparece sempre mascarado.</li>
@@ -409,11 +479,12 @@
 <!-- 3 · Pendências -->
 <main id="aba-pendencias" hidden>
   <section class="cartao largo">
-    <h2>Pendências e o que foi achado na Factorial <small>Bernhoeft (portal ContractWeb, pela esteira automática) e Atlas (banco, pela sincronização) · clique numa linha para ver tudo · atualiza a cada 30 s</small></h2>
+    <h2>Pendências e o que foi achado <small>Bernhoeft (portal ContractWeb, pela esteira automática) e Atlas (banco, pela sincronização) · "vem de" = onde o documento é buscado: Factorial ou SharePoint · clique numa linha para ver tudo · atualiza a cada 30 s</small></h2>
     <div class="kpis" id="pendKpis"></div>
     <div class="filtros">
       <input id="pendBusca" class="busca" placeholder="buscar: contrato, documento, arquivo, unidade, funcionário…">
       <label>origem <select id="pendOrigem"><option value="">Bernhoeft + Atlas</option><option>Bernhoeft</option><option>Atlas</option></select></label>
+      <label>vem de <select id="pendFonte"><option value="">Factorial + SharePoint</option><option>Factorial</option><option>SharePoint</option><option value="-">sem regra</option></select></label>
       <button class="sec" id="pendCsv">Exportar CSV</button>
       <span id="pendConta" class="tinta2"></span>
     </div>
@@ -432,6 +503,7 @@
       </div>
       <div>
         <div id="pdfCab"></div>
+        <div id="pdfFalha" class="pdfFalha" hidden></div>
         <iframe id="pdfFrame" class="visor grande" title="visor de PDF"></iframe>
       </div>
     </div>
@@ -499,9 +571,60 @@
     <div id="envioBusca"></div>
   </details>
 </main>
+
+<!-- 7 · Envio ao Bernhoeft: mesma tela do Atlas, com o envio DESATIVADO (a conta é de contratante: o portal responde "Sem Permissão").
+     A lista vem da esteira automática (api/auto); "Verificar" confere na última leitura do portal, sem entrar nele. -->
+<main id="aba-enviobern" hidden>
+  <section class="cartao largo envTopo">
+    <div id="ebModo"></div>
+    <div id="ebNumeros" class="envNums"></div>
+  </section>
+
+  <section class="cartao largo">
+    <div class="envBarra">
+      <div class="segmento" id="ebFiltro">
+        <button data-f="prontas" class="ativa">Prontas <span></span></button>
+        <button data-f="atencao">Com problema <span></span></button>
+        <button data-f="todas">Todas <span></span></button>
+      </div>
+      <input class="busca" id="ebBuscaTxt" placeholder="buscar contrato, documento ou empresa…">
+      <span class="grow"></span>
+      <span id="ebConta" class="apagado"></span>
+      <button class="sec" id="ebBuscar" title="A esteira procura agora na Factorial e monta os PDFs de novo">↻ Buscar na Factorial</button>
+      <button class="sec" id="ebAtualizar" title="Recarrega a lista com a última leitura do portal">↻ Atualizar lista</button>
+    </div>
+    <div id="ebLista" class="envLista"></div>
+  </section>
+
+  <details class="cartao largo envMais">
+    <summary>Histórico de envios <span class="apagado">· nenhum ainda</span></summary>
+    <p class="apagado">Nenhum envio ao Bernhoeft: o envio está desativado.</p>
+  </details>
+  <details class="cartao largo envMais">
+    <summary>Última busca na Factorial <span id="ebBuscaN" class="apagado"></span></summary>
+    <p class="apagado" style="margin:8px 0 0">Documentos de empresa, nas pastas HSEQ da Factorial (Brigada, PAE, AVCB, AET, PCMSO, CIPA…).</p>
+    <div id="ebBusca"></div>
+  </details>
+</main>
 <div id="aviso" class="toast" hidden></div>
 
 <!-- Operação: bastidores (controles, código do Atlas, serviços, pacotes manuais) -->
+<!-- 8 · Os 36 documentos: como cada um é tratado HOJE (não o plano) -->
+<main id="aba-docs" hidden>
+  <section class="cartao largo">
+    <h2>Situação de cada documento agora <small id="sitDocsHora">o que foi achado, o que travou e por quê, tipo por tipo</small></h2>
+    <div class="docsFiltros" id="sitDocsFiltros"></div>
+    <div id="sitDocs"><p class="apagado">Carregando…</p></div>
+  </section>
+  <section class="cartao largo">
+    <h2>Os 36 documentos, como estão hoje <small>quem busca cada um, de onde, como o PDF é montado, para onde vai e o que trava · situação de 20/10</small></h2>
+    <div class="kpis" id="docsKpis"></div>
+    <p class="tinta2">Nenhum documento é enviado pela automação: o envio ao Atlas está proibido até o Augusto liberar e o do Bernhoeft não tem permissão na conta. "Na planilha da Milena" é só referência de como a equipe faz à mão.</p>
+    <div class="docsFiltros" id="docsFiltros"></div>
+    <div id="docsTabela"></div>
+  </section>
+</main>
+
 <main id="aba-operacao" hidden>
   <section class="cartao largo">
     <h2>Controles <small>leituras novas e reinícios · nada aqui envia documento</small></h2>
@@ -569,11 +692,310 @@
     <div class="log" id="log"></div>
   </section>
 </main>
+
+<!-- Ajuda: guia de cada tela. O botão "Ajuda desta tela" (e a tecla ?) abre na seção da aba que estava aberta. -->
+<main id="aba-ajuda" hidden>
+  <nav class="cartao ajIndice" aria-label="índice da ajuda">
+    <div class="rot">Começo</div>
+    <button data-aj="inicio">Em 1 minuto</button>
+    <button data-aj="topo">Topo da tela</button>
+    <div class="rot">Telas</div>
+    <button data-aj="geral">1 · Visão geral</button>
+    <button data-aj="esteira">2 · Como funciona</button>
+    <button data-aj="pendencias">3 · Pendências</button>
+    <button data-aj="pdfs">4 · Documentos montados</button>
+    <button data-aj="vivo">5 · Ao vivo</button>
+    <button data-aj="envio">6 · Envio ao Atlas</button>
+    <button data-aj="enviobern">7 · Envio ao Bernhoeft</button>
+    <button data-aj="operacao">Operação</button>
+    <div class="rot">Consulta</div>
+    <button data-aj="cores">Cores e sinais</button>
+    <button data-aj="estados">Situação de cada documento</button>
+    <button data-aj="problemas">O que fazer quando…</button>
+    <button data-aj="glossario">Palavras usadas</button>
+  </nav>
+
+  <div class="ajuda">
+    <section class="cartao" id="aj-inicio">
+      <h2 class="grande">Guia do painel</h2>
+      <p>Este painel mostra, ao vivo, o trabalho dos robôs que cuidam dos documentos dos fornecedores da Equatorial.</p>
+      <ol>
+        <li>Os robôs entram nos portais <b>Bernhoeft</b> (ContractWeb) e <b>Atlas</b> (AFM) e leem quais documentos estão pendentes.</li>
+        <li>Para cada pendência, procuram o arquivo certo na <b>Factorial</b> (sistema de RH). Alguns tipos de documento ficam no <b>SharePoint</b>.</li>
+        <li>Juntam os arquivos de cada pendência num PDF só, do jeito que o portal pede.</li>
+        <li>O PDF fica guardado no servidor para conferir. O envio ao portal só acontece quando alguém manda (aba 6).</li>
+      </ol>
+      <p>As abas estão na ordem de uma apresentação: comece pela <b>1 · Visão geral</b> e siga até a <b>7</b>. A aba <b>Operação</b> é para quem cuida do sistema.</p>
+      <div class="nota">O painel só abre pela VPN da equipe (Tailscale). Os números se renovam sozinhos: não é preciso recarregar a página.</div>
+    </section>
+
+    <section class="cartao" id="aj-topo">
+      <h2>Topo da tela</h2>
+      <dl class="itens">
+        <dt>Ponto verde "ao vivo"</dt><dd>A página está recebendo os acontecimentos na hora. Mostra também há quanto tempo chegou o último. Ponto vermelho "reconectando…" = a ligação caiu e a página tenta voltar sozinha.</dd>
+        <dt>"números de 10:42:05"</dt><dd>Hora da última atualização dos números (a cada 15 s).</dd>
+        <dt>Ocultar nomes</dt><dd>Borra os nomes de funcionários na tela, para apresentar ou compartilhar a tela. No CSV exportado, os nomes saem só com as iniciais. Fica lembrado neste navegador.</dd>
+        <dt>Tela cheia</dt><dd>Ocupa a tela toda (o mesmo que <kbd>F11</kbd>). Aperte de novo ou <kbd>Esc</kbd> para sair.</dd>
+        <dt>Ajuda desta tela</dt><dd>Abre este guia na parte da aba em que você estava. A tecla <kbd>?</kbd> faz o mesmo.</dd>
+        <dt>Faixa amarela</dt><dd>Aparece quando o Atlas mandou um código por e-mail e está esperando. O botão "Digitar o código" leva direto para o campo certo (aba Operação). Veja <a href="#" data-aj="problemas">O que fazer quando…</a></dd>
+      </dl>
+    </section>
+
+    <section class="cartao" id="aj-geral">
+      <h2>1 · Visão geral <button class="sec ir" data-ir-aba="geral">abrir esta tela</button></h2>
+      <p>O resumo de tudo numa página. É a tela para mostrar primeiro.</p>
+      <dl class="itens">
+        <dt>O que a automação faz</dt><dd>Explicação curta e, ao lado, a <b>saúde</b> de cada peça: robô Bernhoeft, robô Atlas, busca na Factorial, busca no SharePoint, banco de dados, serviço de PDF e servidor. Verde = funcionando; vermelho = parado.</dd>
+        <dt>Números de agora</dt><dd>Seis números: pendências encontradas, achadas (na Factorial ou no SharePoint), PDFs prontos, não achadas, na fila (ainda não buscadas) e enviados aos portais. <b>Clique num número</b> para abrir a lista já filtrada (aba 3, 4 ou 6).</dd>
+        <dt>Caminho do documento</dt><dd>As 6 etapas, do portal até a entrega: ler pendências (Bernhoeft e Atlas), gravar no banco, achar na Factorial, unir PDFs, enviar ao portal. A cor no topo de cada etapa mostra como ela está agora.</dd>
+        <dt>Cartões Bernhoeft e Atlas</dt><dd>Quantas pendências cada portal tem, quantas viraram PDF e quantas não foram achadas, com as primeiras da lista.</dd>
+        <dt>Acontecendo agora</dt><dd>As últimas linhas do que os robôs fizeram. O link "abrir o Ao vivo completo" leva à aba 5.</dd>
+        <dt>Próximos passos</dt><dd>O que ainda falta para a automação entregar tudo sozinha.</dd>
+      </dl>
+    </section>
+
+    <section class="cartao" id="aj-esteira">
+      <h2>2 · Como funciona <button class="sec ir" data-ir-aba="esteira">abrir esta tela</button></h2>
+      <p>Mostra o caminho de cada documento como uma <b>esteira</b>: cada caixa é uma estação, da leitura do portal até o envio.</p>
+      <dl class="itens">
+        <dt>Legenda</dt><dd>As cores das estações (veja <a href="#" data-aj="cores">Cores e sinais</a>). A faixa listrada embaixo de cada estação anda enquanto ela funciona e fica vermelha onde a esteira parou.</dd>
+        <dt>Esteira 1 · Bernhoeft</dt><dd>Sete estações, todas automáticas: entrar no portal, ler pendências, buscar na Factorial, escolher os arquivos certos, converter e unir, pronto para subir e enviar ao Bernhoeft. A última está bloqueada: a conta atual não tem permissão de envio no portal.</dd>
+        <dt>Esteira 2 · Atlas</dt><dd>Cinco estações: coletar pendências, gravar no banco, achar na Factorial, unir os PDFs e enviar ao Atlas.</dd>
+        <dt>Cada estação mostra</dt><dd>O que ela faz, o que <b>entra</b> e o que <b>sai</b>, onde roda e o número de <b>agora</b>.</dd>
+        <dt>Caixa vermelha embaixo</dt><dd>"A esteira para na estação N": diz onde e por que parou, e o que fazer.</dd>
+        <dt>De onde vem cada documento</dt><dd>Cada tipo de documento tem um lugar certo para ser buscado: <b>Factorial</b> (RH) ou <b>SharePoint</b> (pastas da empresa). As duas listas mostram quais tipos vão para cada lado.</dd>
+        <dt>Regras</dt><dd>As regras de segurança que valem em todas as estações (acesso só pela VPN, nada sai sem alguém mandar, Factorial só leitura, senhas em cofre, CPF sempre mascarado).</dd>
+      </dl>
+    </section>
+
+    <section class="cartao" id="aj-pendencias">
+      <h2>3 · Pendências <button class="sec ir" data-ir-aba="pendencias">abrir esta tela</button></h2>
+      <p>A lista completa: tudo o que os portais pedem e o que foi achado para cada pedido. Atualiza sozinha a cada 30 s.</p>
+      <h3>Os quadros de cima são filtros</h3>
+      <dl class="itens">
+        <dt>Todas as pendências</dt><dd>Tudo, dos dois portais.</dd>
+        <dt>Achadas</dt><dd>Já têm arquivo para entregar.</dd>
+        <dt>PDF pronto</dt><dd>Arquivo achado e PDF unido, pronto para subir.</dd>
+        <dt>Achadas, com ressalva</dt><dd>Tem algo para conferir: divergência entre Atlas e Factorial, falta de assinatura, erro ao unir ou documento rejeitado.</dd>
+        <dt>Achadas no SharePoint</dt><dd>O robô achou o arquivo nas pastas do RH no SharePoint (ou, nos benefícios e comprovantes de salário, uniu as partes num PDF só). <b>Só para conferir:</b> nada disso foi gravado no banco, a pendência continua "na fila" para a sincronização.</dd>
+        <dt>Não achadas</dt><dd>Não existe arquivo desse tipo na origem (Factorial ou SharePoint) para esse contrato, funcionário ou mês. O motivo aparece na linha: no SharePoint (pasta do mês não existe, mais de um arquivo possível, tipo sem regra…) e na busca do robô Atlas na Factorial (nenhum arquivo, mais de um possível, arquivo sem assinatura ou que não é PDF).</dd>
+        <dt>Na fila</dt><dd>Ninguém buscou ainda. O quadro diz quantas esperam cada busca, e cada linha diz o porquê:
+          <b>sincronização do Evilásio</b> = documentos da Factorial que juntam vários arquivos (TRCT, férias, GFD rescisória, cartão de ponto…), que só a sincronização dele busca, e ela não roda na VPS;
+          <b>robô Atlas</b> = ASO demissional, baixa na CTPS/e-Social e pedido de demissão, buscados a cada leitura;
+          <b>busca no SharePoint</b> = documentos de empresa, buscados a cada leitura;
+          <b>sem regra de origem</b> = o banco não sabe onde buscar.</dd>
+        <dt>Enviadas</dt><dd>Já entregues ao portal (estado ENVIADO). Ficam fora de "Todas as pendências"; clique na linha para ver para onde foram.</dd>
+      </dl>
+      <h3>Busca e filtros</h3>
+      <ul>
+        <li><b>Buscar:</b> qualquer texto (contrato, documento, arquivo, unidade, funcionário).</li>
+        <li><b>Origem:</b> só Bernhoeft, só Atlas ou os dois.</li>
+        <li><b>Vem de:</b> Factorial, SharePoint ou "sem regra" (o portal pede um documento que ainda não tem lugar definido para ser buscado).</li>
+        <li><b>Exportar CSV:</b> baixa uma planilha só com as linhas que estão na tela, com os filtros aplicados. Abre no Excel. Inclui as colunas "arquivos usados no PDF" e "vai/foi para".</li>
+      </ul>
+      <h3>A tabela</h3>
+      <ul>
+        <li><b>Clique no título de uma coluna</b> para ordenar; clique de novo para inverter.</li>
+        <li><b>Clique numa linha</b> para ver tudo dela: todos os campos, os arquivos escolhidos na Factorial (na ordem em que entram no PDF) e <b>por que</b> cada um foi escolhido, os arquivos deixados de fora e o motivo.</li>
+        <li><b>Arquivos usados para montar o PDF</b> (no detalhe da linha do Atlas): de onde veio cada arquivo (Factorial ou SharePoint), nome, pasta, id na origem, data e assinatura. Arquivo único = o PDF é o próprio arquivo; PDF unido = as partes na ordem, quando a sincronização registra quais usou (se não registrou, aparece o aviso). Embaixo do arquivo, na tabela, aparece a pasta da Factorial ou "unido de N arquivo(s)".</li>
+        <li><b>Para onde vai / Para onde foi</b> (no detalhe da linha): o portal de destino pela regra do documento, a situação em cada portal, o protocolo, o envio feito pelo robô na aba 6 (com o status que o Atlas devolveu) e o histórico de etapas da sincronização. Linha já enviada mostra "→ enviado ao …" na tabela. Se o painel ainda não puder ler as tabelas de destino, o detalhe diz quais faltam.</li>
+        <li><b>Confiança:</b> alta = o arquivo cita o contrato; média = é do mesmo estado (MA, RS, GO…); baixa = é o genérico mais novo. Vale conferir as de confiança baixa.</li>
+        <li><b>Frase em vermelho</b> embaixo do arquivo: o motivo exato que a sincronização registrou quando o documento parou (divergência, não achado, falta de assinatura, erro ao unir). Também aparece no detalhe da linha e no CSV.</li>
+        <li><b>Ver PDF:</b> abre o PDF montado na aba 4.</li>
+        <li>"PDF ainda não está na VPS": o PDF foi unido em outra máquina e ainda não chegou ao servidor.</li>
+        <li><b>SharePoint:</b> o robô Atlas procura nas pastas do RH a cada leitura (só lê, não grava no banco). Linha achada mostra o arquivo e a pasta; benefícios e comprovantes de salário saem unidos num PDF só ("PDF unido de N partes"); quando não dá para unir, a linha mostra as partes ("ver partes"). No detalhe da linha aparecem a pasta, o arquivo, os parecidos, cada parte com o que ela é (relação, boleto, comprovante, complementar), o que ficou de fora (nota fiscal, planilha) e o aviso quando o tipo já sobe por outra automação.</li>
+        <li>"vem do SharePoint: a busca ainda não passou por esta pendência": pendência nova, que entra na próxima leitura.</li>
+      </ul>
+    </section>
+
+    <section class="cartao" id="aj-pdfs">
+      <h2>4 · Documentos montados <button class="sec ir" data-ir-aba="pdfs">abrir esta tela</button></h2>
+      <p>Visor dos PDFs prontos, para conferir antes de entregar.</p>
+      <dl class="itens">
+        <dt>Lista à esquerda</dt><dd>Todos os PDFs montados, separados por grupo (robô Atlas, SharePoint, esteira automática Bernhoeft, montados à mão). O campo de cima filtra a lista.</dd>
+        <dt>Visor à direita</dt><dd>Mostra o PDF escolhido. Dá para rolar, aproximar e baixar pelos botões do próprio visor.</dd>
+        <dt>Anterior / próximo</dt><dd>As setas no topo do visor, ou as teclas <kbd>←</kbd> e <kbd>→</kbd>, passam de um PDF para o outro.</dd>
+        <dt>Partes</dt><dd>Quando o PDF foi feito com vários arquivos, aparecem botões: "PDF unido" é o que vai para o portal; "parte 1, 2…" mostra cada arquivo original separado.</dd>
+        <dt>Grupos do SharePoint</dt><dd>"Achados" = o arquivo que o robô achou para a pendência. Nos benefícios (vale-transporte, alimentação, seguro, plano de saúde) e nos comprovantes de salário o robô une as partes num PDF só (relação → boleto → comprovante, complementar logo depois da sua parte, nota fiscal fora) e ele aparece em "Achados" com as partes ao lado. "Várias partes (não deu para unir)" = pasta em que faltou parte, sobrou parte repetida ou há arquivo que o robô não sabe onde entra: uma entrada por pasta do mês, com cada parte separada e a lista de pendências que ela atende. Nenhum deles foi gravado no banco nem vai para o portal.</dd>
+        <dt>"Não abre" em vermelho</dt><dd>O painel confere cada PDF antes de mostrar. Se um não vai abrir, a lista diz o motivo (sem permissão de leitura na VPS, arquivo vazio, não é PDF, arquivo cortado) e o visor mostra esse motivo no lugar do documento. A mesma frase aparece no detalhe da linha, na aba Pendências.</dd>
+      </dl>
+    </section>
+
+    <section class="cartao" id="aj-vivo">
+      <h2>5 · Ao vivo <button class="sec ir" data-ir-aba="vivo">abrir esta tela</button></h2>
+      <p>Cada coisa que acontece aparece aqui na hora: robôs, esteira, PDF, banco, servidor e o próprio painel.</p>
+      <dl class="itens">
+        <dt>Botões coloridos</dt><dd>Uma cor por fonte (Atlas, Bernhoeft, Esteira, PDF, Neon…), com quantos eventos cada uma teve. Clique para esconder ou mostrar aquela fonte.</dd>
+        <dt>Filtrar texto</dt><dd>Mostra só as linhas com a palavra digitada.</dd>
+        <dt>Mostrar</dt><dd>Tudo, só avisos e erros, ou só erros.</dd>
+        <dt>Rolar sozinho</dt><dd>Desmarque para ler com calma sem a lista pular.</dd>
+        <dt>Pausar</dt><dd>Congela a lista. Os eventos continuam chegando por trás e aparecem ao clicar em "Continuar".</dd>
+        <dt>Baixar log (.txt)</dt><dd>Salva tudo o que chegou num arquivo de texto (útil para mandar ao suporte).</dd>
+        <dt>Sinais nas linhas</dt><dd><b>✓</b> deu certo · <b>!</b> aviso · <b>✕</b> erro (em vermelho).</dd>
+        <dt>Cartões de baixo</dt><dd>"Eventos por fonte" conta quanto cada fonte falou desde que o painel ligou; "Últimos avisos e erros" junta só o que precisa de atenção.</dd>
+      </dl>
+    </section>
+
+    <section class="cartao" id="aj-envio">
+      <h2>6 · Envio ao Atlas <button class="sec ir" data-ir-aba="envio">abrir esta tela</button></h2>
+      <p>Onde se entrega o documento pronto ao portal Atlas.</p>
+      <div class="nota cuidado"><b>O envio ao Atlas está suspenso até nova liberação.</b> Por enquanto, use só <b>Ver PDF</b> e <b>Verificar</b>. Não clique em <b>Enviar</b> e não ligue o modo automático.</div>
+      <dl class="itens">
+        <dt>Modo de envio</dt><dd>O interruptor escolhe entre <b>Manual</b> (nada sai sozinho; envio um por um) e <b>Automático</b> (o robô envia sozinho tudo o que estiver pronto, a cada leitura, e para na primeira recusa). Começa em Manual e pede confirmação para ligar.</dd>
+        <dt>Situação do robô</dt><dd>Embaixo do modo: o que o robô Atlas está fazendo agora e a hora da próxima leitura.</dd>
+        <dt>Quatro números</dt><dd>Prontas para enviar (verde), com problema (vermelho), já enviadas (azul) e pedidos na fila do robô.</dd>
+        <dt>Prontas / Com problema / Todas</dt><dd>Troca a lista. Em "Com problema", a frase em vermelho diz o que falta em cada documento. A pendência que não aparece mais no Atlas (resolvida ou retirada na última leitura) não é problema: sai da lista, e ao lado da hora da lista aparece quantas saíram.</dd>
+        <dt>Buscar na Factorial</dt><dd>Pede ao robô que procure agora os documentos que faltam.</dd>
+        <dt>Atualizar lista</dt><dd>Pede ao robô que confira de novo o que está pronto. A lista mostra a hora em que foi montada.</dd>
+      </dl>
+      <h3>Cada linha da lista</h3>
+      <ul>
+        <li>A faixa colorida à esquerda: <b>verde</b> = pronta, <b>vermelha</b> = com problema, <b>azul</b> = o robô está cuidando dela agora.</li>
+        <li><b>Ficha do PDF</b> (embaixo do documento, antes de enviar):
+          <b>Vai para</b> = o documento no Atlas, a unidade, a competência, o prazo, o pedido e o local no Atlas, com o link "abrir no Atlas" (só abre a tela, não envia).
+          <b>Vem de</b> = a origem (Factorial ou SharePoint), a pasta de onde o arquivo saiu e a regra do documento.
+          <b>Como foi montado</b> = arquivo único (vai como está) ou PDF unido (por quem e em que ordem), com o número de páginas, o tamanho e o começo do SHA-256.
+          <b>Leva dentro</b> = cada arquivo que está no PDF, na ordem, com o papel (relação, boleto, comprovante), as páginas, a data e o botão "ver".
+          Em vermelho no topo, <b>Atenção</b>: por exemplo, o mesmo arquivo na pendência de outro funcionário. Embaixo, os arquivos deixados de fora (ex.: nota fiscal). A mesma ficha aparece na confirmação do botão Enviar.</li>
+        <li><b>Ver PDF:</b> abre o arquivo que iria para o portal.</li>
+        <li><b>Verificar:</b> consulta o Atlas agora, <b>sem enviar nada</b>, e mostra se a pendência ainda está lá e aceita o envio.</li>
+        <li><b>Enviar:</b> pede confirmação; o robô confere de novo no Atlas (nome, situação e formato) antes de subir.</li>
+        <li>A última linha cinza mostra o resultado da última ação (verificação ou envio) e quando foi.</li>
+      </ul>
+      <p>Embaixo, abrindo os títulos: <b>Histórico de envios</b> e <b>Última busca na Factorial</b> (documentos de arquivo único: ASO demissional, baixa na CTPS/e-Social e pedido de demissão).</p>
+    </section>
+
+    <section class="cartao" id="aj-enviobern">
+      <h2>7 · Envio ao Bernhoeft <button class="sec ir" data-ir-aba="enviobern">abrir esta tela</button></h2>
+      <p>A mesma tela do envio ao Atlas, para o portal Bernhoeft (ContractWeb). Mostra cada pendência do portal e o PDF que a automação montou para ela.</p>
+      <div class="nota cuidado"><b>O envio ao Bernhoeft está desativado.</b> O botão <b>Enviar</b> e o interruptor de modo ficam travados. A conta que os robôs usam é de contratante, e o portal responde "Sem Permissão" quando ela tenta enviar. Para ligar, é preciso uma conta de prestador com permissão de envio.</div>
+      <dl class="itens">
+        <dt>Modo de envio</dt><dd>Mostra "Desativado". Embaixo, quando o robô leu o portal pela última vez e quando a busca na Factorial rodou.</dd>
+        <dt>Quatro números</dt><dd>Prontas para enviar (com PDF montado), com problema, já enviadas (zero, porque o envio está desativado) e pendentes no portal.</dd>
+        <dt>Prontas / Com problema / Todas</dt><dd>Troca a lista. Em "Com problema", a frase em vermelho diz o que falta: nenhum arquivo desse tipo na Factorial, tipo de documento sem regra de busca, erro ao montar o PDF ou pendência que sumiu do portal.</dd>
+        <dt>Buscar na Factorial</dt><dd>Faz a busca agora, sem esperar a próxima leitura do portal (o mesmo que "Rodar a busca agora" na Operação). Os PDFs são montados de novo.</dd>
+        <dt>Atualizar lista</dt><dd>Recarrega a lista com a última leitura do portal.</dd>
+      </dl>
+      <h3>Cada linha da lista</h3>
+      <ul>
+        <li>A faixa colorida à esquerda: <b>verde</b> = PDF pronto, <b>vermelha</b> = com problema.</li>
+        <li>Embaixo do documento: a empresa contratada, a unidade e a área, a competência, o tamanho do PDF e a confiança da escolha do arquivo.</li>
+        <li><b>Ver PDF:</b> abre o PDF montado na aba 4.</li>
+        <li><b>Verificar:</b> confere se a pendência ainda aparece como "Não Entregue" na última leitura do portal. Não entra no portal.</li>
+        <li><b>Enviar:</b> desativado (veja o aviso acima).</li>
+        <li><b>Se não houver documento:</b> aparece nos tipos que têm comentário padrão do Bernhoeft (EPI, primeiros socorros, direção defensiva/CNH, CTPS, RG/CPF, ficha de registro, NRs). Abra, veja em que caso cada um vale e clique em "copiar" para colar no portal. O texto é o oficial, não mude.</li>
+      </ul>
+      <p>Embaixo, abrindo os títulos: <b>Histórico de envios</b> (vazio) e <b>Última busca na Factorial</b>, com o resultado de cada pendência.</p>
+    </section>
+
+    <section class="cartao" id="aj-docs">
+      <h2>8 · Os 36 documentos <button class="sec ir" data-ir-aba="docs">abrir esta tela</button></h2>
+      <p>Em cima, <b>Situação de cada documento agora</b>: um bloco por tipo com as pendências de hoje, quantas foram achadas, quantas travaram e por quê. Clique no tipo para abrir.</p>
+      <dl class="itens">
+        <dt>Os botões de filtro</dt><dd><b>Com problema:</b> tipos com pelo menos uma pendência travada ou com aviso. <b>Com pendência:</b> tipos que têm alguma pendência. <b>Todos os tipos:</b> os 36 e os do Bernhoeft. "atualizar" lê os dados de novo.</dd>
+        <dt>Lista de motivos</dt><dd>Cada problema aparece uma vez, com quantas pendências ele trava (2×) e quais são (#id e competência). "Já sabido" é o que se conhece do tipo, igual à tabela de baixo.</dd>
+        <dt>Tabela do tipo</dt><dd>Cada pendência com o arquivo achado (ou as partes na pasta, com o papel de cada uma), o que trava e o botão para ver o PDF. Os dados são os mesmos da aba 3.</dd>
+      </dl>
+      <p>Embaixo, a tabela com uma linha por tipo de documento que a Equatorial pede e o que a automação faz <b>hoje</b> com ele (não o plano).</p>
+      <dl class="itens">
+        <dt>Hoje</dt><dd><b>Robô busca e grava:</b> acha, monta o PDF e grava no banco. <b>Robô acha, só no painel:</b> acha e une no SharePoint, mas não grava no banco. <b>Só quando pedem:</b> pacote do Bernhoeft montado por funcionário na aba Operação. <b>Nenhum robô:</b> só a equipe faz.</dd>
+        <dt>Quem busca e de onde</dt><dd>O robô responsável e a pasta ou site onde o arquivo está.</dd>
+        <dt>Como o PDF é formado</dt><dd>Arquivo único ou as partes unidas, na ordem.</dd>
+        <dt>O que trava</dt><dd>O que impede o documento de ficar pronto hoje (arquivo faltando, regra que falta, conta sem permissão).</dd>
+        <dt>Na planilha da Milena</dt><dd>Em letra menor: como a equipe faz à mão, segundo o discovery de 19/10. Serve só de referência.</dd>
+      </dl>
+      <p>Nada desta tela é enviado: o envio ao Atlas está proibido até o Augusto liberar e o do Bernhoeft não tem permissão.</p>
+    </section>
+
+    <section class="cartao" id="aj-operacao">
+      <h2>Operação <button class="sec ir" data-ir-aba="operacao">abrir esta tela</button></h2>
+      <p>Os bastidores, para quem cuida do sistema. Nada nesta tela envia documento aos portais.</p>
+      <dl class="itens">
+        <dt>Rodar a busca agora</dt><dd>Faz a esteira Bernhoeft procurar na Factorial e montar os PDFs agora, sem esperar a próxima leitura.</dd>
+        <dt>Reiniciar Bernhoeft</dt><dd>Apaga os PDFs que a esteira montou e pede uma leitura nova do portal (2 a 3 min). A esteira roda sozinha em seguida.</dd>
+        <dt>Reiniciar Atlas</dt><dd>Pede uma coleta nova. Chega um código por e-mail, que precisa ser digitado em até 30 min. O banco não é apagado.</dd>
+        <dt>Reiniciar tudo</dt><dd>Os dois acima juntos. Todos pedem confirmação antes.</dd>
+        <dt>Cartão Atlas</dt><dd>Situação do login e o campo do <b>código do e-mail</b>: digite (letras e números, como chegou) e clique em "Gravar código" ou aperte <kbd>Enter</kbd>. O robô lê em até 2 s. Embaixo: totais da última coleta e os documentos mais pedidos.</dd>
+        <dt>Serviços</dt><dd>Cada parte que roda no servidor e se está no ar.</dd>
+        <dt>Esteira automática Bernhoeft</dt><dd>Tabela com cada pendência do Bernhoeft, o arquivo escolhido e o botão para ver o PDF.</dd>
+        <dt>Bernhoeft</dt><dd>As pendências do portal, leitura a leitura.</dd>
+        <dt>Documentos do Atlas no banco</dt><dd>Quantos documentos há em cada situação.</dd>
+        <dt>Pacotes manuais</dt><dd>Para montar um PDF na mão. Por funcionário: digite o nome completo ou o CPF e clique em "Montar pacote" (se houver mais de uma pessoa com o nome, aparecem botões para escolher). Documento de empresa: dê um título e os números (IDs) dos arquivos na Factorial, na ordem, e clique em "Unir em 1 PDF".</dd>
+        <dt>Últimas mudanças no banco</dt><dd>O que o robô e a sincronização alteraram por último.</dd>
+        <dt>Histórico de um serviço</dt><dd>As últimas linhas guardadas de um serviço. "Só o que importa" esconde as linhas de rotina; escolha a fonte ou o serviço e clique em "Carregar".</dd>
+      </dl>
+    </section>
+
+    <section class="cartao" id="aj-cores">
+      <h2>Cores e sinais</h2>
+      <dl class="itens">
+        <dt><span class="chip ok"><i>✓</i>verde</span></dt><dd>Funcionando, pronto ou deu certo.</dd>
+        <dt><span class="chip aviso"><i>!</i>amarelo</span></dt><dd>Esperando alguém (por exemplo, o código do Atlas) ou algo para conferir.</dd>
+        <dt><span class="chip falha"><i>✕</i>vermelho</span></dt><dd>Parado, com erro ou não achado.</dd>
+        <dt><span class="chip nada"><i>–</i>cinza</span></dt><dd>Ainda não começou ou não há nada ali.</dd>
+        <dt><span class="origem" style="--cor:var(--f-bern)">Bernhoeft</span> <span class="origem" style="--cor:var(--f-atlas)">Atlas</span></dt><dd>De qual portal veio a pendência.</dd>
+        <dt><span class="origem" style="--cor:var(--f-factorial)">Factorial</span> <span class="origem" style="--cor:var(--f-sharepoint)">SharePoint</span></dt><dd>Onde o documento é buscado.</dd>
+      </dl>
+    </section>
+
+    <section class="cartao" id="aj-estados">
+      <h2>Situação de cada documento</h2>
+      <p>Os documentos do Atlas passam por estas situações, nesta ordem (o nome entre parênteses é o que aparece no banco):</p>
+      <dl class="itens">
+        <dt>na fila</dt><dd>Ainda não foi buscado <code>PENDENTE_ENVIO</code></dd>
+        <dt>achado na Factorial</dt><dd>O arquivo existe e foi encontrado <code>LOCALIZADO</code></dd>
+        <dt>achado e PDF unido</dt><dd>Os arquivos foram juntados num PDF só <code>COMPOSTO</code></dd>
+        <dt>enviado</dt><dd>Entregue ao portal <code>ENVIADO</code></dd>
+        <dt>não achado</dt><dd>Não há arquivo desse tipo na Factorial <code>NAO_ENCONTRADO_FACTORIAL</code></dd>
+        <dt>divergência</dt><dd>O Atlas e a Factorial não batem: o CPF não existe na Factorial, ou o Atlas cobra documento de desligamento de quem ainda está ativo. Conferir com o RH; a Factorial é a fonte da verdade <code>DIVERGENTE_FACTORIAL</code></dd>
+        <dt>falta assinatura</dt><dd>Achou, mas o documento não está assinado <code>AGUARDANDO_ASSINATURA</code></dd>
+        <dt>erro ao unir</dt><dd>Não conseguiu juntar os arquivos <code>ERRO_COMPOSICAO</code></dd>
+        <dt>rejeitado</dt><dd>Gravado assim no banco por outro processo; o motivo registrado aparece em vermelho na linha <code>REJEITADO</code></dd>
+        <dt>achado no SharePoint · partes achadas, não deu para unir</dt><dd>Só no painel: o robô achou o arquivo (ou uniu as partes) nas pastas do RH, mas não gravou nada; "não deu para unir" = as partes estão lá, mas falta uma, sobra uma ou há arquivo sem papel (o motivo aparece no detalhe); no banco a pendência continua <code>PENDENTE_ENVIO</code></dd>
+      </dl>
+      <p>No Bernhoeft: <b>PDF unido, pronto para subir</b> · <b>nenhum arquivo deste tipo para o contrato/estado</b> · <b>erro ao baixar/unir</b> · <b>buscando agora</b> · <b>esteira ainda não rodou</b>.</p>
+    </section>
+
+    <section class="cartao" id="aj-problemas">
+      <h2>O que fazer quando…</h2>
+      <dl class="itens">
+        <dt>Aparece a faixa amarela do código</dt><dd>Abra o e-mail do Atlas, clique em "Digitar o código" na faixa, digite o código como veio (tem letras e números) e aperte <kbd>Enter</kbd>. Há um prazo, mostrado na faixa.</dd>
+        <dt>O código expirou</dt><dd>Na aba Operação, clique em "Reiniciar Atlas": chega um código novo por e-mail.</dd>
+        <dt>Robô Bernhoeft "parado"</dt><dd>Ele não lê o portal há mais de 1 hora. Veja na aba 5 (filtro "só erros") o motivo, normalmente o login. Se não voltar sozinho, use "Reiniciar Bernhoeft".</dd>
+        <dt>Serviço de PDF "fora do ar"</dt><dd>Nenhum PDF novo será montado. Avise quem cuida do servidor.</dd>
+        <dt>Banco de dados "sem acesso"</dt><dd>O painel não alcança o banco; os números do Atlas ficam zerados. Avise quem cuida do servidor.</dd>
+        <dt>Ponto vermelho "reconectando…"</dt><dd>A ligação com o servidor caiu. Confira se a VPN (Tailscale) está ligada; a página volta sozinha.</dd>
+        <dt>Um documento está em "Com problema"</dt><dd>Leia a frase em vermelho na linha (aba 6). Clique em "Verificar" para consultar o Atlas de novo, sem enviar.</dd>
+        <dt>A lista de envio está vazia</dt><dd>Clique em "Atualizar lista" (aba 6): o robô monta em alguns segundos.</dd>
+      </dl>
+    </section>
+
+    <section class="cartao" id="aj-glossario">
+      <h2>Palavras usadas</h2>
+      <dl class="itens">
+        <dt>Pendência</dt><dd>Um documento que o portal pede e ainda não recebeu.</dd>
+        <dt>Competência</dt><dd>O mês a que o documento se refere.</dd>
+        <dt>Atlas (AFM)</dt><dd>Portal de documentos de fornecedores. O login pede um código enviado por e-mail.</dd>
+        <dt>Bernhoeft (ContractWeb)</dt><dd>Outro portal de documentos de fornecedores, organizado por contrato.</dd>
+        <dt>Factorial</dt><dd>O sistema de RH onde ficam os documentos dos funcionários e da empresa.</dd>
+        <dt>SharePoint</dt><dd>Pastas de arquivos da empresa, onde ficam alguns tipos de documento.</dd>
+        <dt>Banco (Neon)</dt><dd>Onde fica guardada cada pendência do Atlas e a situação dela.</dd>
+        <dt>Esteira</dt><dd>A sequência de passos automáticos por onde cada documento passa.</dd>
+        <dt>Unir PDFs</dt><dd>Juntar vários arquivos de uma pendência num PDF só. Fotos e arquivos do Word são convertidos para PDF antes.</dd>
+        <dt>Confiança</dt><dd>O quanto o robô tem certeza de que escolheu o arquivo certo: alta, média ou baixa.</dd>
+        <dt>Coleta / leitura</dt><dd>Cada vez que um robô entra no portal e lê a lista de pendências (Bernhoeft a cada 30 min, Atlas a cada 60 min).</dd>
+        <dt>Homologação</dt><dd>O ambiente de testes onde este painel roda hoje.</dd>
+      </dl>
+    </section>
+  </div>
+</main>
 <script>
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const hora = (iso) => iso ? new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '—';
-const dataHora = (iso) => iso ? new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—';
+// Só data ("2026-07-03", prazo e validade do banco) não tem hora: mostrar o dia como está (new Date leria meia-noite UTC = dia anterior aqui).
+const dataHora = (iso) => !iso ? '—' : /^\d{4}-\d{2}-\d{2}$/.test(iso) ? iso.split('-').reverse().join('/')
+  : new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 function ha(iso) {
   if (!iso) return '—';
   const m = Math.round((Date.now() - new Date(iso)) / 60000);
@@ -717,7 +1139,219 @@ function esteiras(e) {
     '<span>A correia anda enquanto a estação funciona e fica vermelha onde a esteira para.</span>';
 }
 
-const ABAS = ['geral', 'esteira', 'pendencias', 'pdfs', 'vivo', 'envio', 'operacao'];
+// ---------- 8 · Os 36 documentos ----------
+// Como cada tipo é tratado HOJE pela automação (não o que a planilha de discovery pede). Ao mudar um robô, atualizar aqui.
+// como: auto = robô busca, monta e grava no banco · painel = robô acha e monta, só mostra aqui (não grava no banco)
+//       pacote = monta só quando alguém pede, por funcionário · manual = nenhum robô faz, só a equipe
+const DOCS36 = [
+  { n: 2, nome: 'Vale alimentação', vai: 'Atlas', como: 'painel', quem: 'Busca no SharePoint (robô Atlas)', de: 'SharePoint · Auditoria 20102080 / ano / mês / V.A',
+    forma: 'Une num PDF: relação de beneficiários → boleto → comprovante (nota fiscal fica fora)', trava: 'O mesmo PDF vai em cada colaborador listado no Atlas naquele mês',
+    milena: 'Relação vem do CAJU, boleto e comprovante do Santander; sobe o mesmo PDF em cada colaborador do mês' },
+  { n: 3, nome: 'Vale transporte', vai: 'Atlas', como: 'painel', quem: 'Busca no SharePoint (robô Atlas)', de: 'SharePoint · ano / mês / V.T',
+    forma: 'Une: relação → relação complementar → boleto → boleto complementar → comprovante → comprovante complementar', trava: 'VT 03 com 2 fornecedores: sem regra',
+    milena: 'Joana Novais tira as relações do CAJU; complementar quando há recarga depois do envio' },
+  { n: 4, nome: 'Seguro de vida', vai: 'Atlas', como: 'painel', quem: 'Busca no SharePoint (robô Atlas)', de: 'SharePoint · ano / mês / seguro',
+    forma: 'Une: relação → boleto → comprovante', trava: 'Aditamento da Prudential trava 06 e 08/2026; pasta de 07/2026 vazia',
+    milena: 'Relação + boleto + comprovante, nessa ordem' },
+  { n: 5, nome: 'Plano odontológico', vai: 'Atlas', como: 'manual', quem: 'Ninguém', de: 'SharePoint (pasta não mapeada)',
+    forma: 'Deveria ser relação → boleto → comprovante', trava: 'Sem regra no robô e sem nada na planilha', milena: '(vazio)' },
+  { n: 6, nome: 'Vale refeição', vai: 'Atlas', como: 'manual', quem: 'Ninguém (equipe)', de: 'Declaração (não é arquivo de pasta)',
+    forma: 'Uma declaração para cada colaborador', trava: 'Falta saber quem escreve a declaração e se há modelo',
+    milena: 'Não pega documento: sobe uma declaração para cada colaborador no AFM' },
+  { n: 7, nome: 'Plano de saúde', vai: 'Atlas', como: 'painel', quem: 'Busca no SharePoint (robô Atlas)', de: 'SharePoint · ano / mês / plano de saúde',
+    forma: 'Une: relação → boleto → comprovante (nota fiscal fica fora)', trava: '01 e 02/2025: o PDF já unido pela NIP tem nota fiscal e não tem relação',
+    milena: 'Nota fiscal não é exigida; a listagem de beneficiários deveria ser padronizada todo mês' },
+  { n: 8, nome: 'Aviso e recibo de férias', vai: 'Atlas', como: 'auto', quem: 'Sincronização Factorial (código do Evilásio, VPS a cada 2 h)', de: 'Factorial · pasta do colaborador / férias',
+    forma: 'Une: aviso → recibo → comprovante', trava: '27 sem o "Aviso de férias" na Factorial',
+    milena: 'Junta aviso + recibo + comprovante nessa ordem' },
+  { n: 9, nome: 'TRCT', vai: 'Atlas', como: 'auto', quem: 'Sincronização Factorial (VPS a cada 2 h)', de: 'Factorial · documentos / offboarding',
+    forma: 'Une: TRCT → comprovante de pagamento', trava: '22 sem assinatura · 32 PDFs prontos', milena: 'Baixa da pasta offboard e sobe no AFM' },
+  { n: 10, nome: 'GFD rescisória', vai: 'Atlas', como: 'auto', quem: 'Sincronização Factorial (VPS a cada 2 h)', de: 'Factorial · documentos do colaborador',
+    forma: 'Une: guia do FGTS → comprovante', trava: '17 PDFs prontos', milena: 'Pega a guia do FGTS + comprovante' },
+  { n: 24, nome: 'GFD (guia do FGTS Digital)', vai: 'Atlas', como: 'painel', quem: 'Busca no SharePoint (robô Atlas)', de: 'SharePoint · ano / mês / FGTS (arquivo "guia")',
+    forma: 'Arquivo único', trava: 'Nasce no FGTS Digital; alguém precisa salvar na pasta', milena: 'Conferir as observações; se reprovar, avisar o responsável' },
+  { n: 25, nome: 'RE (relação de empregados)', vai: 'Atlas', como: 'painel', quem: 'Busca no SharePoint (robô Atlas)', de: 'SharePoint · ano / mês / FGTS, por unidade',
+    forma: 'Arquivo único por unidade', trava: 'Amapá sem RE em 08 e 09', milena: 'Pasta do ano → mês → FGTS' },
+  { n: 26, nome: 'Comprovante de pagamento FGTS', vai: 'Atlas', como: 'painel', quem: 'Busca no SharePoint (robô Atlas)', de: 'SharePoint · ano / mês / FGTS',
+    forma: 'Arquivo único', trava: 'O nome do arquivo não traz a unidade (CEA = Amapá)', milena: 'Título sem unidade dificulta achar' },
+  { n: 56, nome: 'Comprovante de pagamento da folha', vai: 'Atlas', como: 'painel', quem: 'Busca no SharePoint (robô Atlas)', de: 'SharePoint · mês / comprovante de salário, pasta do tomador',
+    forma: 'Une todos os comprovantes (ou usa o "01 - Salarios" já pronto)', trava: 'Amapá sem salário em 08 e 09', milena: 'Baixa todos os comprovantes e unifica num PDF' },
+  { n: 59, nome: 'Comprovante de recolhimento', vai: 'Atlas', como: 'painel', quem: 'Busca no SharePoint (robô Atlas)', de: 'SharePoint · mês / INSS (comprovante do DARF)',
+    forma: 'Arquivo único', trava: 'A Milena diz que já sobe automático: confirmar quem sobe', milena: 'Já está subindo automático' },
+  { n: 60, nome: 'Recibo da DCTFWeb', vai: 'Atlas', como: 'painel', quem: 'Busca no SharePoint (robô Atlas)', de: 'SharePoint · mês / INSS',
+    forma: 'Arquivo único', trava: 'Nasce no e-CAC; alguém precisa salvar na pasta', milena: 'Pasta INSS, extrai o recibo' },
+  { n: 61, nome: 'Relatório da DCTFWeb', vai: 'Atlas', como: 'painel', quem: 'Busca no SharePoint (robô Atlas)', de: 'SharePoint · mês / INSS ("declaração completa")',
+    forma: 'Arquivo único', trava: '', milena: 'Responsável: Gabriela Mathias' },
+  { n: 63, nome: 'Extrato mensal da folha', vai: 'Atlas', como: 'painel', quem: 'Busca no SharePoint (robô Atlas)', de: 'SharePoint · mês / FOPAG, por unidade',
+    forma: 'Arquivo único por unidade', trava: 'A Milena diz que já sobe automático · Amapá sem FOPAG em 08 e 09', milena: 'Responsável: Gabriela Mathias' },
+  { n: 64, nome: 'CRF (regularidade do FGTS)', vai: 'Atlas', como: 'painel', quem: 'Busca no SharePoint (robô Atlas)', de: 'SharePoint · 0 - CERTIDÕES DE REGULARIDADE (qualquer mês, se válida)',
+    forma: 'Arquivo único', trava: 'No Atlas aparece como "Certidão de regularidade do FGTS" ou "CND do FGTS"', milena: 'Tira no site da Caixa (consulta CRF) pelo CNPJ' },
+  { n: 65, nome: 'DARF', vai: 'Atlas', como: 'painel', quem: 'Busca no SharePoint (robô Atlas)', de: 'SharePoint · mês / INSS (guia, sem o comprovante)',
+    forma: 'Arquivo único', trava: '', milena: 'Filtra o DARF no AFM' },
+  { n: 66, nome: 'Relatório mensal de ocorrências', vai: 'Atlas', como: 'manual', quem: 'Ninguém (equipe)', de: 'Modelo baixado do próprio Atlas',
+    forma: 'Planilha preenchida à mão', trava: 'Não é busca: é preenchimento. No banco a origem está errada (SharePoint)', milena: 'Baixa o modelo no Atlas e preenche' },
+  { n: 67, nome: 'ASO demissional', vai: 'Atlas', como: 'auto', quem: 'Robô Atlas (factorial.js, a cada leitura)', de: 'Factorial · pastas "BR ASO" e offboarding',
+    forma: 'Arquivo único', trava: '#284 e #297 levam ficha clínica e anamnese (LGPD) · 7 já reprovados no Atlas', milena: 'Conferir se o funcionário está ativo e se não recusou o ASO' },
+  { n: 68, nome: 'Baixa na CTPS e eSocial', vai: 'Atlas', como: 'auto', quem: 'Robô Atlas (factorial.js, a cada leitura)', de: 'Factorial · offboarding',
+    forma: 'Arquivo único', trava: '#270, #273 e #275 com o mesmo arquivo do #269 (trava pronta, não publicada)', milena: 'Responsável: Tatiana Almeida' },
+  { n: 69, nome: 'Pedido de demissão', vai: 'Atlas', como: 'auto', quem: 'Robô Atlas (factorial.js, a cada leitura)', de: 'Factorial · offboarding',
+    forma: 'Arquivo único', trava: '12 achados são aviso prévio da empresa e #329 é fim de experiência: não enviar', milena: 'Só existe quando o colaborador pede demissão' },
+  { n: 78, nome: 'ASO admissional e periódico', vai: 'Atlas (planilha: também Bernhoeft)', como: 'manual', quem: 'Ninguém', de: 'Factorial · pastas do colaborador',
+    forma: 'A equipe une os PDFs num só', trava: 'Sem regra no robô · a planilha diz Atlas e Bernhoeft, o banco só Atlas', milena: 'Conferir se o funcionário está ativo' },
+  { n: 79, nome: 'Ficha de registro', vai: 'Atlas (planilha: também Bernhoeft)', como: 'manual', quem: 'Ninguém', de: 'Factorial · onboarding',
+    forma: 'Arquivo único', trava: 'Sem regra no robô (fácil: igual ao 67/68/69, mas na pasta onboarding)', milena: '"Desconsiderar último pedido em 2024" · sempre colocar o eSocial · no Bernhoeft: "Anexado eSocial em substituição a FICHA DE REGISTRO."' },
+  { n: 80, nome: 'Comprovante de registro eSocial', vai: 'Atlas', como: 'manual', quem: 'Ninguém', de: 'Factorial · onboarding',
+    forma: 'Arquivo único', trava: 'Sem regra no robô (fácil: pasta onboarding)', milena: 'Parecido com o de demissão; se faltar, procura no site do eSocial' },
+  { n: 81, nome: 'CND Federal', vai: 'Atlas', como: 'painel', quem: 'Busca no SharePoint (robô Atlas)', de: 'SharePoint · 0 - CERTIDÕES DE REGULARIDADE (qualquer mês, se válida)',
+    forma: 'Arquivo único', trava: 'Nasce na Receita/PGFN; alguém precisa salvar na pasta', milena: 'Responsável: Gabriela Mathias' },
+  { n: 82, nome: 'CNDT (débitos trabalhistas)', vai: 'Atlas', como: 'manual', quem: 'Ninguém (equipe)', de: 'Site do TST, pelo CNPJ, com captcha',
+    forma: 'Arquivo único', trava: 'Não fica guardada em pasta nenhuma · no banco a origem está errada (SharePoint)', milena: 'Tira no tst.jus.br de tempo em tempo (validade longa)' },
+  { n: 83, nome: 'Cartão de ponto', vai: 'Atlas', como: 'manual', quem: 'Ninguém', de: 'Factorial · Controle de frequência (exportação)',
+    forma: 'Um PDF com todos os colaboradores, que chega por e-mail', trava: '16 pendências paradas · é exportação, não arquivo de pasta', milena: 'Filtra equipe "equatorial", marca todos os apoios à fiscalização e exporta' },
+  { n: 84, nome: 'AC, CC ou AIT (convenção coletiva)', vai: 'Atlas', como: 'manual', quem: 'Ninguém', de: 'SharePoint · 06 Convenções Coletivas',
+    forma: 'Arquivo único (anual)', trava: 'Sem regra no robô', milena: '(vazio) · anual, ou 30 dias após vencer' },
+  { n: 95, nome: 'Ficha de entrega de EPI', vai: 'Bernhoeft', como: 'pacote', quem: 'Pacote por funcionário (aba Operação), só quando pedem', de: 'Factorial · documentos do funcionário',
+    forma: 'Une no pacote do funcionário, com capa', trava: 'Conta do Bernhoeft sem permissão de envio e sem pendência desse tipo', milena: 'Sem EPI (administrativo): comentário padrão "NÃO APLICÁVEL - ATIVIDADES ADMINISTRATIVAS" (aba 7)' },
+  { n: 112, nome: 'Certificado de direção defensiva', vai: 'Bernhoeft', como: 'pacote', quem: 'Pacote por funcionário, só quando pedem', de: 'Factorial · documentos do funcionário',
+    forma: 'Une no pacote do funcionário, com capa', trava: 'Conta do Bernhoeft sem permissão de envio', milena: 'Não dirige: comentário "NÃO APLICÁVEL - NÃO CONDUZIRÁ VEÍCULOS" (aba 7)' },
+  { n: 113, nome: 'Certificado de qualificação', vai: 'Bernhoeft', como: 'pacote', quem: 'Pacote por funcionário, só quando pedem', de: 'Factorial · documentos do funcionário',
+    forma: 'Une no pacote do funcionário, com capa', trava: 'Conta do Bernhoeft sem permissão de envio', milena: 'Sem NR: comentário "NÃO APLICÁVEL - NRs 10, 10 SEP, 11, 12, 33 e 35" (aba 7)' },
+  { n: 114, nome: 'Certificado de integração', vai: 'Bernhoeft', como: 'pacote', quem: 'Pacote por funcionário, só quando pedem', de: 'Factorial · documentos do funcionário',
+    forma: 'Une no pacote do funcionário, com capa', trava: 'Conta do Bernhoeft sem permissão de envio', milena: '(vazio)' },
+  { n: 115, nome: 'Certificado de primeiros socorros', vai: 'Bernhoeft', como: 'pacote', quem: 'Pacote por funcionário, só quando pedem', de: 'Factorial · documentos do funcionário',
+    forma: 'Une no pacote do funcionário, com capa', trava: 'Conta do Bernhoeft sem permissão de envio', milena: 'Não precisa: comentário "já abordado no certificado de direção defensiva" ou, se administrativo, "NÃO APLICÁVEL" (aba 7)' },
+  { n: 116, nome: 'Treinamentos internos', vai: 'Bernhoeft', como: 'pacote', quem: 'Pacote por funcionário, só quando pedem', de: 'Factorial · documentos do funcionário',
+    forma: 'Une no pacote do funcionário, com capa', trava: 'Conta do Bernhoeft sem permissão de envio', milena: 'Sem NR: comentário "NÃO APLICÁVEL - NRs…" (aba 7)' },
+];
+const COMO_DOC = {
+  auto: ['ok', 'Robô busca e grava'],
+  painel: ['aviso', 'Robô acha, só no painel'],
+  pacote: ['aviso', 'Só quando pedem'],
+  manual: ['falha', 'Nenhum robô: manual'],
+};
+let filtroDocs = 'todos';
+function desenharDocs() {
+  const conta = (f) => DOCS36.filter(f).length;
+  $('docsKpis').innerHTML = [
+    ['Atlas', conta((d) => d.vai.startsWith('Atlas')), 'tipos de documento'],
+    ['Bernhoeft', conta((d) => d.vai === 'Bernhoeft'), 'tipos de documento'],
+    [COMO_DOC.auto[1], conta((d) => d.como === 'auto'), 'monta e grava no banco'],
+    [COMO_DOC.painel[1], conta((d) => d.como === 'painel'), 'SharePoint: acha e une, não grava no banco'],
+    [COMO_DOC.pacote[1], conta((d) => d.como === 'pacote'), 'pacote do Bernhoeft por funcionário'],
+    [COMO_DOC.manual[1], conta((d) => d.como === 'manual'), 'só a equipe faz'],
+  ].map(([t, v, s]) => kpi(esc(t), v, esc(s))).join('');
+  const filtros = [['todos', 'Todos'], ['Atlas', 'Vão para o Atlas'], ['Bernhoeft', 'Vão para o Bernhoeft'], ...Object.entries(COMO_DOC).map(([k, v]) => [k, v[1]])];
+  $('docsFiltros').innerHTML = filtros.map(([k, t]) => `<button class="sec${filtroDocs === k ? ' ativa' : ''}" data-fd="${k}">${esc(t)}</button>`).join(' ');
+  $('docsFiltros').querySelectorAll('button').forEach((b) => b.onclick = () => { filtroDocs = b.dataset.fd; desenharDocs(); });
+  const ver = DOCS36.filter((d) => filtroDocs === 'todos' || d.como === filtroDocs
+    || (filtroDocs === 'Atlas' && d.vai.startsWith('Atlas')) || (filtroDocs === 'Bernhoeft' && d.vai === 'Bernhoeft'));
+  $('docsTabela').innerHTML = `<table><thead><tr><th>Nº</th><th>Documento</th><th>Vai para</th><th>Hoje</th><th>Quem busca e de onde</th><th>Como o PDF é formado</th><th>O que trava / atenção</th></tr></thead><tbody>`
+    + ver.map((d) => `<tr><td>${d.n}</td><td><b>${esc(d.nome)}</b><br><small class="apagado">Na planilha da Milena: ${esc(d.milena)}</small></td>`
+      + `<td>${esc(d.vai)}</td><td>${chip(...COMO_DOC[d.como])}</td><td>${esc(d.quem)}<br><small class="tinta2">${esc(d.de)}</small></td>`
+      + `<td>${esc(d.forma)}</td><td>${d.trava ? esc(d.trava) : '<span class="apagado">nada</span>'}</td></tr>`).join('')
+    + '</tbody></table>';
+}
+
+// ---------- 8 · Situação de cada documento agora (dados de api/pendencias, os mesmos da aba 3) ----------
+// Por tipo: o que foi achado, o que travou e por quê. Os motivos iguais são somados ("falta relação" ×2: #217 #218).
+let SIT = null, sitFiltro = 'problema', sitAbertos = new Set();
+async function carregarSituacaoDocs() {
+  try { SIT = await (await fetch('api/pendencias')).json(); } catch (e) { $('sitDocs').innerHTML = `<p>${chip('falha', 'não carregou: ' + e.message)}</p>`; return; }
+  for (const l of SIT.linhas) l.cat = categoria(l);
+  desenharSituacaoDocs();
+}
+// O que trava esta pendência, em português (null = nada trava). aviso = achou, mas tem algo a conferir.
+function travaDe(l) {
+  if (l.cat === 'enviado') return null;
+  if (l.origem === 'Bernhoeft') return l.cat === 'pdf' ? null : l.erro || l.motivo || ROT_ESTADO[l.estado] || l.estado;
+  if (l.sharepoint) return l.sharepoint.achou ? null : l.sharepoint.motivo || 'não achado no SharePoint';
+  if (l.busca_factorial && !l.busca_factorial.achou) return l.busca_factorial.motivo || 'não achado na Factorial';
+  if (l.estado === 'REJEITADO') return `rejeitado no Atlas${l.situacao ? ': ' + l.situacao : ''}${l.alerta ? ' · ' + l.alerta : ''}`;
+  if (ESTADO_PROBLEMA.has(l.estado)) return l.alerta || ROT_ESTADO[l.estado];
+  if (l.pdf_erro) return 'o PDF não abre: ' + l.pdf_erro;
+  if (['COMPOSTO', 'LOCALIZADO'].includes(l.estado) && !l.pdf_atlas) return 'achado, mas o PDF não está na VPS';
+  if (l.cat === 'fila') return l.fila_motivo || 'ainda não buscado';
+  return null;
+}
+const avisoDe = (l) => l.sharepoint?.achou ? l.sharepoint.aviso || null : null;
+// "não dá para unir: falta relação; 2 arquivos de boleto (…)" vira um item por problema, para somar entre pendências.
+const partesTrava = (t) => /^não dá para unir: /.test(t) ? t.replace(/^não dá para unir: /, '').split(/; (?=[a-zà-ú0-9])/i).map((s) => s.trim()).filter(Boolean) : [t];
+function achadoDe(l) {
+  if (l.origem === 'Bernhoeft') return l.arquivos?.length ? l.arquivos.map((a) => a.filename).join(' + ') : '';
+  if (l.sharepoint) return l.sharepoint.achou ? `${l.sharepoint.arquivo}${l.sharepoint.partes?.length ? ': ' + l.sharepoint.partes.map((p) => `${p.papel ? p.papel + ' ' : ''}${p.nome}`).join(' → ') : ''}`
+    : l.sharepoint.partes?.length ? `na pasta: ${l.sharepoint.partes.map((p) => `${p.nome}${p.papel ? ` (${p.papel})` : ''}`).join(', ')}` : '';
+  if (l.caminho_origem) return String(l.caminho_origem).split(/[\\/]/).pop();
+  return '';
+}
+const pdfDe = (l) => l.pdf ? `pacotes/${l.pdf}` : l.pdf_atlas || l.sharepoint?.partes?.find((p) => p.url)?.url || null;
+function blocoSituacao(chave, titulo, sub, ls, conhecido) {
+  const abertas = ls.filter((l) => l.cat !== 'enviado');
+  const prontas = abertas.filter((l) => !travaDe(l));
+  const travadas = abertas.filter((l) => travaDe(l) && l.cat !== 'fila');
+  const fila = abertas.filter((l) => travaDe(l) && l.cat === 'fila');
+  const enviadas = ls.length - abertas.length;
+  // Diagnóstico: cada problema com quantas pendências ele trava e quais.
+  const probs = new Map();
+  for (const l of abertas) {
+    const t = travaDe(l), av = avisoDe(l);
+    for (const p of [...(t ? partesTrava(t) : []), ...(av ? ['atenção: ' + av] : [])]) {
+      if (!probs.has(p)) probs.set(p, []);
+      probs.get(p).push(l);
+    }
+  }
+  const ref = (l) => l.origem === 'Bernhoeft' ? l.contrato : '#' + l.id;
+  const diag = [...probs.entries()].sort((a, b) => b[1].length - a[1].length).map(([p, xs]) =>
+    `<li><span class="n">${xs.length}×</span>${esc(p)} <span class="apagado">· ${xs.slice(0, 12).map((l) => esc(`${ref(l)} ${l.competencia || ''}`.trim())).join(', ')}${xs.length > 12 ? '…' : ''}</span></li>`).join('');
+  const resumoChips = !ls.length ? chip('nada', 'nenhuma pendência hoje')
+    : [prontas.length && chip('ok', `${prontas.length} achada(s), sem problema`), travadas.length && chip('falha', `${travadas.length} com problema`),
+      fila.length && chip('nada', `${fila.length} na fila`), enviadas && chip('ok', `${enviadas} enviada(s)`)].filter(Boolean).join(' ');
+  const aberto = sitAbertos.has(chave);
+  let h = `<details class="sitDoc" data-k="${esc(chave)}" ${aberto ? 'open' : ''}><summary><b>${esc(titulo)}</b>${resumoChips}<span class="apagado">${esc(sub)}</span></summary>`;
+  if (!aberto) return h + '</details>';
+  if (conhecido) h += `<p class="tinta2" style="margin:8px 0 0"><b>Já sabido:</b> ${esc(conhecido)}</p>`;
+  h += diag ? `<ul class="diag">${diag}</ul>` : ls.length ? '<p class="tinta2">Nada trava as pendências deste tipo.</p>' : '';
+  if (ls.length) {
+    h += `<table class="pend"><tr><th>pendência</th><th>competência</th><th>unidade</th><th>funcionário</th><th>situação</th><th>achado</th><th>o que trava</th><th></th></tr>`
+      + ls.map((l) => {
+        const t = travaDe(l), av = avisoDe(l), u = pdfDe(l), [ct, ctxt] = CAT[l.cat];
+        return `<tr><td>${esc(ref(l))}</td><td>${esc(l.competencia || '—')}</td><td>${esc(l.unidade || '—')}</td>
+          <td class="nomeP">${esc(l.origem === 'Bernhoeft' ? l.contratada || '—' : l.funcionario || '—')}</td><td>${chip(ct, ctxt)}</td>
+          <td>${esc(achadoDe(l)) || '<span class="apagado">—</span>'}</td>
+          <td>${t ? `<span class="prob">${esc(t)}</span>` : ''}${av ? `<div class="apagado" style="font-size:12px">atenção: ${esc(av)}</div>` : ''}${!t && !av ? '<span class="apagado">nada</span>' : ''}</td>
+          <td>${u ? `<button class="sec" data-pdf="${esc(u)}">ver PDF</button>` : ''}</td></tr>`;
+      }).join('') + '</table>';
+  }
+  return h + '</details>';
+}
+function desenharSituacaoDocs() {
+  if (!SIT) return;
+  const atlas = SIT.linhas.filter((l) => l.origem === 'Atlas'), bern = SIT.linhas.filter((l) => l.origem === 'Bernhoeft');
+  const porDoc = new Map();
+  for (const l of atlas) { const k = Number(l.doc_id); if (!porDoc.has(k)) porDoc.set(k, []); porDoc.get(k).push(l); }
+  const tipos = DOCS36.map((d) => ({ k: 'A' + d.n, titulo: `${d.n} · ${d.nome}`, sub: `${d.vai} · ${d.quem}`, ls: porDoc.get(d.n) || [], conhecido: d.trava }));
+  for (const [n, ls] of porDoc) if (!DOCS36.some((d) => d.n === n)) tipos.push({ k: 'A' + n, titulo: `${n} · ${ls[0].nome}`, sub: 'Atlas · tipo fora da lista dos 36', ls });
+  const porB = new Map();
+  for (const l of bern) { const k = l.tipo_reconhecido || l.documento; if (!porB.has(k)) porB.set(k, []); porB.get(k).push(l); }
+  for (const [k, ls] of porB) tipos.push({ k: 'B' + k, titulo: `Bernhoeft · ${k}`, sub: ls[0].tipo_reconhecido ? 'buscado na Factorial pela esteira' : 'documento de empresa: nenhum robô busca', ls });
+  const temProb = (t) => t.ls.some((l) => l.cat !== 'enviado' && (travaDe(l) || avisoDe(l)));
+  const F = { problema: ['Com problema', temProb], pendencias: ['Com pendência', (t) => t.ls.length > 0], todos: ['Todos os tipos', () => true] };
+  $('sitDocsFiltros').innerHTML = Object.entries(F).map(([k, [t, f]]) => `<button class="sec${sitFiltro === k ? ' ativa' : ''}" data-sf="${k}">${t} (${tipos.filter(f).length})</button>`).join(' ')
+    + ` <button class="sec" id="sitAbrir">abrir todos</button> <button class="sec" id="sitFechar">fechar todos</button> <button class="sec" id="sitAtualizar">atualizar</button>`;
+  $('sitDocsHora').textContent = `dados de ${hora(SIT.agora)} · clique num tipo para ver cada pendência`;
+  const ver = tipos.filter(F[sitFiltro][1]);
+  $('sitDocs').innerHTML = ver.map((t) => blocoSituacao(t.k, t.titulo, t.sub, t.ls, t.conhecido)).join('') || '<p class="apagado">Nada com esse filtro.</p>';
+  $('sitDocsFiltros').querySelectorAll('[data-sf]').forEach((b) => b.onclick = () => { sitFiltro = b.dataset.sf; desenharSituacaoDocs(); });
+  $('sitAbrir').onclick = () => { ver.forEach((t) => sitAbertos.add(t.k)); desenharSituacaoDocs(); };
+  $('sitFechar').onclick = () => { sitAbertos.clear(); desenharSituacaoDocs(); };
+  $('sitAtualizar').onclick = carregarSituacaoDocs;
+  $('sitDocs').querySelectorAll('details.sitDoc > summary').forEach((s) => s.onclick = (ev) => {
+    ev.preventDefault();
+    const k = s.parentElement.dataset.k; sitAbertos.has(k) ? sitAbertos.delete(k) : sitAbertos.add(k); desenharSituacaoDocs();
+  });
+  $('sitDocs').querySelectorAll('[data-pdf]').forEach((b) => b.onclick = () => abrirNoVisor(b.dataset.pdf));
+}
+
+const ABAS = ['geral', 'esteira', 'pendencias', 'pdfs', 'vivo', 'envio', 'enviobern', 'docs', 'operacao', 'ajuda'];
 let abaAtual = 'geral';
 function trocarAba(aba) {
   if (aba === 'painel') aba = 'geral';
@@ -727,13 +1361,30 @@ function trocarAba(aba) {
   document.querySelectorAll('.abas button').forEach((b) => b.classList.toggle('ativa', b.dataset.aba === aba));
   history.replaceState(null, '', aba === 'geral' ? location.pathname : '#' + aba);
   window.scrollTo(0, 0);
+  if (aba === 'esteira') carregarFontes();
   if (aba === 'pendencias') carregarPendencias();
   if (aba === 'pdfs') carregarPdfs();
   if (aba === 'vivo') desenharVivo(true);
   if (aba === 'envio') carregarEnvio();
+  if (aba === 'enviobern') carregarAuto();
+  if (aba === 'docs') { desenharDocs(); carregarSituacaoDocs(); }
   if (aba === 'operacao' && !$('log').innerHTML) carregarLog();
 }
 document.querySelectorAll('.abas button').forEach((b) => b.onclick = () => trocarAba(b.dataset.aba));
+
+// Ajuda: abre o guia na seção da tela que estava aberta (botão do topo ou tecla ?).
+function abrirAjuda(secao) {
+  trocarAba('ajuda');
+  const el = $('aj-' + secao);
+  if (el) el.scrollIntoView({ block: 'start' });
+}
+$('ajudaTopo').onclick = () => abrirAjuda(abaAtual === 'ajuda' ? 'inicio' : abaAtual);
+document.querySelectorAll('[data-aj]').forEach((b) => b.onclick = (ev) => { ev.preventDefault(); abrirAjuda(b.dataset.aj); });
+document.querySelectorAll('[data-ir-aba]').forEach((b) => b.onclick = () => trocarAba(b.dataset.irAba));
+document.addEventListener('keydown', (ev) => {
+  if (ev.key !== '?' || /INPUT|SELECT|TEXTAREA/.test(document.activeElement?.tagName)) return;
+  abrirAjuda(abaAtual === 'ajuda' ? 'inicio' : abaAtual);
+});
 
 function atlas(a) {
   let h = '';
@@ -899,7 +1550,7 @@ async function carregarAuto() {
   const ativo = A.rodando || A.sinal?.bernhoeft || A.sinal?.atlas || (A.reiniciado_em && !A.inicio);
   if (ativo && !vigiaAuto) vigiaAuto = setInterval(carregarAuto, 3000);
   if (!ativo && vigiaAuto) { clearInterval(vigiaAuto); vigiaAuto = null; }
-  if (E) { esteiras(E); resumo(); }
+  if (E) { esteiras(E); resumo(); if (abaAtual === 'enviobern') desenharEnvioBern(); }
 }
 function verAuto(k) {
   const it = A.itens[k];
@@ -1005,7 +1656,7 @@ function irPara(alvo) {
 }
 const ESTADO_CURTO = {
   PENDENTE_ENVIO: 'na fila da busca', LOCALIZADO: 'achado na Factorial', COMPOSTO: 'achado e PDF unido', NAO_ENCONTRADO_FACTORIAL: 'não achado',
-  DIVERGENTE_FACTORIAL: 'achado com divergência', AGUARDANDO_ASSINATURA: 'falta assinatura', ERRO_COMPOSICAO: 'erro ao unir', ENVIADO: 'enviado',
+  DIVERGENTE_FACTORIAL: 'achado com divergência', AGUARDANDO_ASSINATURA: 'falta assinatura', ERRO_COMPOSICAO: 'erro ao unir', REJEITADO: 'rejeitado', ENVIADO: 'enviado',
 };
 const sub16 = (t) => `<span class="apagado" style="font-size:16px">${t}</span>`;
 function resumo() {
@@ -1024,13 +1675,18 @@ function resumo() {
   const naoA = est.NAO_ENCONTRADO_FACTORIAL || 0;
   const cs = Array.isArray(E.containers) ? E.containers : [];
   const noAr = cs.filter((c) => c.estado === 'running' && !/unhealthy/.test(c.status)).length;
+  // Busca no SharePoint (só para o painel): as pendências buscadas continuam PENDENTE_ENVIO no banco, mas já não estão "na fila".
+  const sp = n.erro ? null : E.sharepoint;
+  const spAch = sp ? sp.achadas + sp.partes : 0, spNao = sp ? sp.nao : 0;
+  // Busca do robô na Factorial (67/68/69): as não achadas também saem da fila e entram em "não achadas".
+  const bfNao = n.erro ? 0 : a.busca_factorial?.nao || 0;
 
   $('resumo').innerHTML = [
     kpiIr('Pendências encontradas', pendB + pendA, `${pendB} Bernhoeft · ${pendA} Atlas`, 'pendencias:todos'),
-    kpiIr('Achadas na Factorial', achouB + achouA, 'já têm arquivo para entregar', 'pendencias:achados', 'destaque'),
+    kpiIr('Achadas', achouB + achouA + spAch, `${achouB + achouA} na Factorial · ${spAch} no SharePoint`, 'pendencias:achados', 'destaque'),
     kpiIr('PDFs prontos', prontos + (est.COMPOSTO || 0), `${prontos} Bernhoeft · ${est.COMPOSTO || 0} Atlas`, 'pdfs', 'destaque'),
-    kpiIr('Não achadas', naoB + naoA, 'sem arquivo na Factorial', 'pendencias:nao', 'atencao'),
-    kpiIr('Na fila', (est.PENDENTE_ENVIO || 0) + Math.max(0, pendB - itens.length), 'ainda não buscadas', 'pendencias:fila'),
+    kpiIr('Não achadas', naoB + naoA + spNao + bfNao, 'sem arquivo na origem', 'pendencias:nao', 'atencao'),
+    kpiIr('Na fila', Math.max(0, (est.PENDENTE_ENVIO || 0) - (sp?.buscadas || 0) - bfNao) + Math.max(0, pendB - itens.length), 'ainda não buscadas: clique para ver o motivo', 'pendencias:fila'),
     kpiIr('Enviados aos portais', est.ENVIADO || 0, a.envio_automatico ? 'envio automático LIGADO' : 'envio automático desligado', 'envio', a.envio_automatico ? 'destaque' : 'parado'),
   ].join('');
 
@@ -1039,6 +1695,9 @@ function resumo() {
     ['Robô Bernhoeft', recente(b.coletado_em, 70) ? chip('ok', 'lendo o portal') : chip('falha', 'parado'), `última leitura ${ha(b.coletado_em)}`],
     ['Robô Atlas', chip(...login), a.coletado_em ? `última coleta ${ha(a.coletado_em)}` : 'falta o 1º login com o código do e-mail'],
     ['Busca na Factorial', !A ? chip('nada', '…') : !A.tem_chave ? chip('falha', 'sem chave') : A.rodando ? chip('aviso', 'buscando agora') : chip('ok', 'pronta'), A?.fim ? `rodou ${ha(A.fim)}` : ''],
+    ['Busca no SharePoint', !E.sharepoint ? chip('nada', 'ainda não rodou') : E.sharepoint.erro && (!E.sharepoint.em || E.sharepoint.erro_em > E.sharepoint.em) ? chip('falha', 'falhou') : chip('ok', 'pronta'),
+      !E.sharepoint ? 'roda junto com a leitura do Atlas' : E.sharepoint.erro && (!E.sharepoint.em || E.sharepoint.erro_em > E.sharepoint.em) ? `${ha(E.sharepoint.erro_em)}: ${E.sharepoint.erro}`
+        : `rodou ${ha(E.sharepoint.em)} · ${E.sharepoint.achadas} achada(s) · só mostra aqui, não grava no banco`],
     ['Banco de dados', n.erro ? chip('falha', 'sem acesso') : chip('ok', 'conectado'), n.erro ? '' : `${totalNeon} documento(s) do Atlas`],
     ['Serviço de PDF', E.gotenberg === 'ok' ? chip('ok', 'no ar') : chip('falha', 'fora do ar'), 'converte e une os arquivos'],
     ['Servidor', chip(noAr === cs.length && cs.length ? 'ok' : 'aviso', `${noAr} de ${cs.length} serviços no ar`), ''],
@@ -1066,6 +1725,7 @@ function resumo() {
   const passos = [
     ['Login do Atlas no servidor', a.login === 'ok' ? chip('ok', 'feito') : chip('aviso', 'esperando código'), 'Primeiro login com o código que chega por e-mail; depois o robô coleta sozinho.'],
     ['Busca do Atlas no servidor', chip('nada', 'a fazer'), 'Instalar a sincronização com a Factorial no servidor (hoje roda fora dele).'],
+    ['Busca no SharePoint', E.sharepoint ? chip('aviso', 'só no painel') : chip('nada', 'a fazer'), 'Os documentos achados no SharePoint aparecem nas abas 3 e 4, mas não são gravados no banco. Os benefícios e os comprovantes de salário já saem unidos. Falta decidir se o robô passa a gravar.'],
     ['Envio ao Atlas', est.ENVIADO ? chip('ok', 'funcionando') : chip('aviso', 'pronto, sem envio ainda'), 'Pronto na aba 6: testar o 1º documento com "Verificar" e "Enviar"; depois decidir se liga o automático.'],
     ['Envio ao Bernhoeft', chip('falha', 'bloqueado'), 'Precisa de uma conta de prestador com permissão de envio no ContractWeb.'],
     ['Tipos sem par', chip('nada', 'a fazer'), 'Folha de Pagamento Analítica e Comprovante do TRCT ainda não têm regra na Factorial.'],
@@ -1084,18 +1744,61 @@ function resumo() {
 const CAT = {
   pdf: ['ok', 'PDF pronto'], achado: ['ok', 'achado na Factorial'], atencao: ['aviso', 'achado, com ressalva'],
   nao: ['falha', 'não achado'], fila: ['nada', 'na fila (não buscado)'],
+  shp: ['ok', 'achado no SharePoint'], partes: ['aviso', 'não deu para unir'], enviado: ['ok', 'enviado'],
 };
+// Quadros de filtro que juntam mais de uma categoria. "Todas" são as pendências abertas: as enviadas têm quadro próprio.
+const FILTRO_CATS = { achados: ['pdf', 'achado', 'atencao', 'shp', 'partes'], shp: ['shp', 'partes'] };
+const noFiltro = (l, f) => f === 'todos' ? l.cat !== 'enviado' : (FILTRO_CATS[f] || [f]).includes(l.cat);
+const pastaCurta = (p) => String(p || '').split('/').slice(-2).join('/');
 const ROT_ESTADO = {
   pronto: 'PDF unido, pronto para subir', nao_encontrado: 'nenhum arquivo deste tipo para o contrato/estado', erro: 'erro ao baixar/unir', buscando: 'buscando agora…', sem_busca: 'esteira ainda não rodou para esta leitura',
   PENDENTE_ENVIO: 'na fila: a sincronização ainda não buscou', LOCALIZADO: 'arquivo achado na Factorial', COMPOSTO: 'achado e PDF unido',
-  NAO_ENCONTRADO_FACTORIAL: 'não achado na Factorial', DIVERGENTE_FACTORIAL: 'achado, mas com divergência (conferir)', AGUARDANDO_ASSINATURA: 'achado, falta assinatura',
-  ERRO_COMPOSICAO: 'erro ao unir o PDF', ENVIADO: 'enviado',
+  NAO_ENCONTRADO_FACTORIAL: 'não achado na Factorial', DIVERGENTE_FACTORIAL: 'Atlas e Factorial não batem (conferir com o RH)', AGUARDANDO_ASSINATURA: 'achado, falta assinatura',
+  ERRO_COMPOSICAO: 'erro ao unir o PDF', REJEITADO: 'rejeitado (ver o motivo)', ENVIADO: 'enviado',
 };
 function categoria(l) {
   if (l.origem === 'Bernhoeft') return { pronto: 'pdf', nao_encontrado: 'nao', erro: 'atencao' }[l.estado] || 'fila';
+  if (l.estado === 'ENVIADO') return 'enviado';
+  // Buscada no SharePoint pelo robô (o banco continua PENDENTE_ENVIO: nada foi gravado).
+  if (l.sharepoint) return l.sharepoint.achou ? 'shp' : l.sharepoint.partes?.length ? 'partes' : 'nao';
+  // Buscada na Factorial pelo robô Atlas e não achada (o banco continua PENDENTE_ENVIO): já não está na fila.
+  if (l.busca_factorial && !l.busca_factorial.achou) return 'nao';
   if (l.pdf_atlas && ['COMPOSTO', 'LOCALIZADO'].includes(l.estado)) return 'pdf';
-  return { COMPOSTO: 'atencao', LOCALIZADO: 'achado', DIVERGENTE_FACTORIAL: 'atencao', AGUARDANDO_ASSINATURA: 'atencao', ERRO_COMPOSICAO: 'atencao', NAO_ENCONTRADO_FACTORIAL: 'nao' }[l.estado] || 'fila';
+  return { COMPOSTO: 'atencao', LOCALIZADO: 'achado', DIVERGENTE_FACTORIAL: 'atencao', AGUARDANDO_ASSINATURA: 'atencao', ERRO_COMPOSICAO: 'atencao', REJEITADO: 'atencao', NAO_ENCONTRADO_FACTORIAL: 'nao' }[l.estado] || 'fila';
 }
+// De onde vem o documento (documento_regras.origem). Sem regra = o portal pede algo que o banco não sabe onde buscar.
+const COR_FONTE = { Factorial: 'var(--f-factorial)', SharePoint: 'var(--f-sharepoint)' };
+const selFonte = (f) => f ? `<span class="origem" style="--cor:${COR_FONTE[f] || 'var(--f-infra)'}">${esc(f)}</span>` : '<span class="apagado">sem regra</span>';
+const COR_DESTINO = { Atlas: 'var(--f-atlas)', Bernhoeft: 'var(--f-bern)' };
+async function carregarFontes() {
+  let R, P;
+  try { [R, P] = await Promise.all([fetch('api/regras').then((r) => r.json()), fetch('api/pendencias').then((r) => r.json()).catch(() => null)]); }
+  catch (e) { $('fontesAviso').innerHTML = `<p>${chip('falha', 'não carregou: ' + e.message)}</p>`; return; }
+  if (R.erro) { $('fontesAviso').innerHTML = `<p>${chip('falha', 'banco: ' + R.erro)}</p>`; return; }
+  // Pendências abertas de cada documento (Atlas pelo doc_id; Bernhoeft pelo tipo reconhecido não tem doc_id, então não entra na conta por linha).
+  const abertas = new Map();
+  for (const l of P?.linhas || []) if (l.origem === 'Atlas' && l.doc_id != null && l.estado !== 'ENVIADO') abertas.set(String(l.doc_id), (abertas.get(String(l.doc_id)) || 0) + 1);
+  const de = (f) => R.regras.filter((r) => r.origem === f);
+  const fac = de('Factorial'), shp = de('SharePoint'), outras = R.regras.filter((r) => !COR_FONTE[r.origem]);
+  const pendDe = (rs) => rs.reduce((s, r) => s + (abertas.get(String(r.doc_id)) || 0), 0);
+  const semFonte = (P?.linhas || []).filter((l) => !l.fonte).length;
+  $('fontesKpis').innerHTML = [
+    ['Factorial', fac.length, `tipos de documento · ${pendDe(fac)} pendência(s) do Atlas abertas`],
+    ['SharePoint', shp.length, `tipos de documento · ${pendDe(shp)} pendência(s) do Atlas abertas`],
+    ['Sem regra de origem', semFonte, 'pendências que o banco ainda não sabe onde buscar'],
+  ].map(([r, v, s]) => `<div class="kpi"><div class="r">${r}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join('');
+  $('fontesAviso').innerHTML = `<p class="tinta2" style="margin:0">A busca que grava no banco hoje só vai à <b>Factorial</b> (sincronização do Evilásio e robô Atlas; a esteira do Bernhoeft também busca lá). `
+    + `Os do <b>SharePoint</b> são buscados pelo robô Atlas a cada leitura e aparecem nas abas 3 e 4 só para conferir: o banco não é gravado e eles continuam PENDENTE_ENVIO.</p>`
+    + (outras.length ? `<p>${chip('aviso', `${outras.length} regra(s) com origem diferente: ${outras.map((r) => `${r.doc_id} ${r.origem || '(vazia)'}`).join(', ')}`)}</p>` : '');
+  const tabela = (rs) => rs.length ? `<table><tr><th>doc</th><th>documento</th><th>vai para</th><th>pendentes</th></tr>` + rs.map((r) => `<tr>
+      <td class="apagado">${r.doc_id}</td>
+      <td>${esc(r.nome)}${r.requer_composicao ? '<div class="apagado" style="font-size:12px">une vários arquivos num PDF</div>' : ''}</td>
+      <td><span class="origem" style="--cor:${COR_DESTINO[r.destino] || 'var(--f-infra)'}">${esc(r.destino || '—')}</span></td>
+      <td>${abertas.get(String(r.doc_id)) || '<span class="apagado">0</span>'}</td></tr>`).join('') + '</table>' : '<p class="apagado">Nenhuma regra.</p>';
+  $('fontesFactorial').innerHTML = tabela(fac); $('fontesFacN').textContent = `${fac.length} tipo(s)`;
+  $('fontesSharepoint').innerHTML = tabela(shp); $('fontesShpN').textContent = `${shp.length} tipo(s)`;
+}
+
 let PEND = null, pendFiltro = 'achados', pendOrd = { k: null, dir: 1 }, pendAbertas = new Set();
 const chaveLinha = (l) => l.origem === 'Bernhoeft' ? 'B|' + l.chave : 'A|' + (l.id ?? [l.doc_id, l.nome, l.competencia, l.unidade, l.numero_pedido, l.funcionario].join('|'));
 async function carregarPendencias() {
@@ -1104,9 +1807,9 @@ async function carregarPendencias() {
   desenharPendencias();
 }
 function pendVisiveis() {
-  const q = $('pendBusca').value.trim().toLowerCase(), o = $('pendOrigem').value;
-  let ls = PEND.linhas.filter((l) => (!o || l.origem === o)
-    && (pendFiltro === 'todos' || (pendFiltro === 'achados' ? ['pdf', 'achado', 'atencao'].includes(l.cat) : l.cat === pendFiltro))
+  const q = $('pendBusca').value.trim().toLowerCase(), o = $('pendOrigem').value, f = $('pendFonte').value;
+  let ls = PEND.linhas.filter((l) => (!o || l.origem === o) && (!f || (f === '-' ? !l.fonte : l.fonte === f))
+    && noFiltro(l, pendFiltro)
     && (!q || JSON.stringify(l).toLowerCase().includes(q)));
   if (pendOrd.k) {
     const v = (l) => String(colunaValor(l, pendOrd.k) ?? '').toLowerCase();
@@ -1116,23 +1819,35 @@ function pendVisiveis() {
 }
 function colunaValor(l, k) {
   return {
-    origem: l.origem, ref: l.origem === 'Bernhoeft' ? l.contrato : (l.numero_pedido || l.cliente),
+    origem: l.origem, fonte: l.fonte || '', ref: l.origem === 'Bernhoeft' ? l.contrato : (l.numero_pedido || l.cliente),
     doc: l.documento, onde: l.origem === 'Bernhoeft' ? `${l.unidade} ${l.area}` : l.unidade, quem: l.origem === 'Bernhoeft' ? l.contratada : l.funcionario,
-    comp: l.competencia, quando: l.origem === 'Bernhoeft' ? l.pendente_desde : l.atualizado_em, achado: (l.arquivos || []).map((a) => a.filename).join(' ') || l.caminho_origem,
+    comp: l.competencia, quando: l.origem === 'Bernhoeft' ? l.pendente_desde : l.atualizado_em,
+    achado: (l.arquivos || []).map((a) => a.filename).join(' ') || l.caminho_origem || l.sharepoint?.arquivo || (l.sharepoint?.partes || []).map((p) => p.nome).join(' '),
     conf: l.confianca, sit: l.cat,
   }[k];
+}
+// Subtítulo do quadro "Na fila": quem deveria buscar (o maior grupo primeiro).
+const GRUPO_FILA = { evilasio: 'esperam a sincronização da Factorial', sem_busca: 'da Factorial, sem robô que busque', robo: 'esperam o robô Atlas', sharepoint: 'esperam a busca no SharePoint', sem_regra: 'sem regra de origem', outra: 'origem que nenhum robô busca' };
+function resumoFila(ls) {
+  const g = {};
+  for (const l of ls) { const k = l.origem === 'Bernhoeft' ? 'a esteira do Bernhoeft' : GRUPO_FILA[l.fila_grupo] || 'outras'; g[k] = (g[k] || 0) + 1; }
+  const t = Object.entries(g).sort((a, b) => b[1] - a[1]).map(([k, n]) => `${n} ${k}`).join(' · ');
+  return t || 'ainda não buscadas';
 }
 function desenharPendencias() {
   if (!PEND) return;
   const L = PEND.linhas;
   const conta = (f) => L.filter(f).length;
+  const abertas = (f) => conta((l) => l.cat !== 'enviado' && f(l));
   const filtros = [
-    ['todos', 'Todas as pendências', L.length, `${conta((l) => l.origem === 'Bernhoeft')} Bernhoeft · ${conta((l) => l.origem === 'Atlas')} Atlas`],
-    ['achados', 'Achadas na Factorial', conta((l) => ['pdf', 'achado', 'atencao'].includes(l.cat)), 'tem arquivo para entregar'],
+    ['todos', 'Todas as pendências', abertas(() => true), `${abertas((l) => l.origem === 'Bernhoeft')} Bernhoeft · ${abertas((l) => l.origem === 'Atlas')} Atlas<br>vêm de: ${abertas((l) => l.fonte === 'Factorial')} Factorial · ${abertas((l) => l.fonte === 'SharePoint')} SharePoint · ${abertas((l) => !l.fonte)} sem regra`],
+    ['achados', 'Achadas', conta((l) => noFiltro(l, 'achados')), 'tem arquivo para entregar'],
     ['pdf', 'PDF pronto', conta((l) => l.cat === 'pdf'), 'unido, pronto para subir'],
     ['atencao', 'Achadas, com ressalva', conta((l) => l.cat === 'atencao'), 'divergência ou falta assinatura'],
-    ['nao', 'Não achadas', conta((l) => l.cat === 'nao'), 'sem arquivo na Factorial'],
-    ['fila', 'Na fila', conta((l) => l.cat === 'fila'), 'ainda não buscadas'],
+    ['shp', 'Achadas no SharePoint', conta((l) => noFiltro(l, 'shp')), `${conta((l) => l.cat === 'partes')} com partes para unir · não gravadas no banco`],
+    ['nao', 'Não achadas', conta((l) => l.cat === 'nao'), 'sem arquivo na origem'],
+    ['fila', 'Na fila', conta((l) => l.cat === 'fila'), resumoFila(L.filter((l) => l.cat === 'fila'))],
+    ['enviado', 'Enviadas', conta((l) => l.cat === 'enviado'), 'para onde foram: clique na linha'],
   ];
   $('pendKpis').innerHTML = filtros.map(([k, r, v, s]) => `<button class="kpi ${pendFiltro === k ? 'ativa' : ''}" data-f="${k}"><div class="r">${r}</div><div class="v">${v}</div><div class="s">${s}</div></button>`).join('');
   document.querySelectorAll('#pendKpis [data-f]').forEach((b) => b.onclick = () => { pendFiltro = b.dataset.f; desenharPendencias(); });
@@ -1141,8 +1856,8 @@ function desenharPendencias() {
   const B = PEND.bernhoeft;
   $('pendConta').innerHTML = `${ls.length} linha(s) · Bernhoeft lido ${ha(B.coletado_em)}, esteira ${B.esteira.rodando ? 'rodando agora' : B.esteira.fim ? 'rodou ' + ha(B.esteira.fim) : 'ainda não rodou'}` +
     (PEND.atlas.erro ? ` · <span style="color:var(--critico)">Atlas/Neon: ${esc(PEND.atlas.erro)}</span>` : '') + ` · dados de ${hora(PEND.agora)}`;
-  const cab = [['origem', 'origem'], ['ref', 'contrato / pedido'], ['doc', 'documento exigido'], ['onde', 'unidade · área'], ['quem', 'empresa / funcionário'],
-    ['comp', 'competência'], ['quando', 'pendente desde / atualizado'], ['achado', 'achado na Factorial'], ['conf', 'confiança'], ['sit', 'situação'], [null, 'PDF']];
+  const cab = [['origem', 'origem'], ['fonte', 'vem de'], ['ref', 'contrato / pedido'], ['doc', 'documento exigido'], ['onde', 'unidade · área'], ['quem', 'empresa / funcionário'],
+    ['comp', 'competência'], ['quando', 'pendente desde / atualizado'], ['achado', 'arquivo achado'], ['conf', 'confiança'], ['sit', 'situação'], [null, 'PDF']];
   const seta = (k) => k && pendOrd.k === k ? (pendOrd.dir > 0 ? ' ▲' : ' ▼') : '';
   let h = `<table class="pend"><thead><tr>${cab.map(([k, t]) => `<th ${k ? `data-ord="${k}"` : ''}>${t}${seta(k)}</th>`).join('')}</tr></thead><tbody>`;
   for (const l of ls) {
@@ -1151,24 +1866,42 @@ function desenharPendencias() {
     const corOrigem = l.origem === 'Bernhoeft' ? 'var(--f-bern)' : 'var(--f-atlas)';
     const achado = l.origem === 'Bernhoeft'
       ? (l.arquivos.length ? l.arquivos.map((a) => `<div class="arq">${a.erro ? '✕' : '✓'} ${esc(a.filename)} <span class="apagado">· ${esc((a.created_at || '').slice(0, 10))}${a.paginas ? ` · ${a.paginas} pág.` : ''}</span></div>`).join('') : `<span class="apagado">${esc(l.motivo || ROT_ESTADO[l.estado] || '')}</span>`)
-      : (l.caminho_origem ? `<div class="arq">✓ ${esc(String(l.caminho_origem).split(/[\\/]/).pop())}</div>` : `<span class="apagado">${esc(ROT_ESTADO[l.estado] || l.estado)}</span>`);
+      : l.caminho_origem ? `<div class="arq">✓ ${esc(String(l.caminho_origem).split(/[\\/]/).pop())}</div>`
+      : l.sharepoint ? (l.sharepoint.achou
+        ? `<div class="arq">✓ ${esc(l.sharepoint.arquivo)}</div><div class="apagado" style="font-size:12px">SharePoint · ${esc(pastaCurta(l.sharepoint.pasta))} · não gravado no banco</div>`
+        : l.sharepoint.partes?.length
+          ? `<div class="arq">${l.sharepoint.partes.length} parte(s) em ${esc(pastaCurta(l.sharepoint.pasta))}</div><div class="apagado" style="font-size:12px">não deu para unir · não gravado no banco</div>`
+          : `<span class="apagado">${esc(l.sharepoint.motivo)}</span>`)
+      : l.busca_factorial ? `<span class="apagado">${esc(l.busca_factorial.motivo || 'não achado')}</span><div class="apagado" style="font-size:12px">buscado na Factorial pelo robô Atlas ${ha(l.busca_factorial.em)}</div>`
+      : l.fila_motivo ? `<span class="apagado">${esc(l.fila_motivo)}</span>`
+      : `<span class="apagado">${esc(ROT_ESTADO[l.estado] || l.estado)}</span>`;
+    // Motivo que a sincronização registrou (tabela alerta), só enquanto o documento está parado num problema.
+    const motivoSinc = l.alerta && ESTADO_PROBLEMA.has(l.estado) ? `<div class="motivoSinc">${esc(l.alerta)}</div>` : '';
+    // De que foi feito (pasta na Factorial ou nº de partes unidas) e, se já saiu ou vai para outro portal, para onde.
+    const m = l.montagem, mi = m?.itens || [];
+    const feito = m?.tipo === 'unido' ? (mi.length ? `unido de ${mi.length} arquivo(s)` : 'unido · partes não registradas')
+      : mi[0]?.pasta ? `${mi[0].origem} · pasta ${mi[0].pasta}` : '';
+    const vaiPara = l.origem === 'Atlas' && (l.estado === 'ENVIADO' || l.destino?.portais?.length || (l.destino?.previstos || []).some((p) => p !== 'Atlas')) ? textoDestino(l) : '';
+    const rastro = [feito, vaiPara && '→ ' + vaiPara].filter(Boolean).map((t) => `<div class="apagado" style="font-size:12px">${esc(t)}</div>`).join('');
     const conf = l.confianca ? chip(l.confianca === 'alta' ? 'ok' : l.confianca === 'média' ? 'aviso' : 'nada', l.confianca) : '<span class="apagado">—</span>';
     const pdf = l.pdf ? `<button class="sec" data-pdf="pacotes/${esc(l.pdf)}">ver PDF</button>`
       : l.pdf_atlas ? `<button class="sec" data-pdf="${esc(l.pdf_atlas)}">ver PDF</button>`
+      : l.sharepoint?.partes?.some((p) => p.url) ? `<button class="sec" data-pdf="${esc(l.sharepoint.partes.find((p) => p.url).url)}">ver partes</button>`
       : l.origem === 'Atlas' && l.estado === 'COMPOSTO' ? '<span class="apagado" style="font-size:12px">PDF ainda não está na VPS</span>' : '';
     h += `<tr class="linha ${aberta ? 'aberta' : ''}" data-id="${esc(id)}">
       <td><span class="origem" style="--cor:${corOrigem}">${l.origem}</span></td>
+      <td>${selFonte(l.fonte)}</td>
       <td>${esc(colunaValor(l, 'ref') || '—')}</td>
       <td>${esc(l.tipo_reconhecido || l.documento)}${l.tipo_reconhecido ? `<div class="apagado" style="font-size:12px">${esc(l.documento)}</div>` : ''}</td>
       <td>${esc(l.unidade || '')}${l.area ? `<div class="apagado" style="font-size:12px">${esc(l.area)}</div>` : ''}</td>
       <td class="${l.origem === 'Atlas' ? 'nomeP' : ''}">${esc(colunaValor(l, 'quem') || '—')}</td>
       <td>${esc(l.competencia || '—')}</td>
       <td>${l.origem === 'Bernhoeft' ? `${dataHora(l.pendente_desde)}<div class="apagado" style="font-size:12px">em ${l.leituras || 1} leitura(s)</div>` : dataHora(l.atualizado_em)}</td>
-      <td>${achado}</td>
+      <td>${achado}${rastro}${motivoSinc}</td>
       <td>${conf}</td>
-      <td>${chip(ct, ctxt)}</td>
+      <td>${l.estado === 'DIVERGENTE_FACTORIAL' ? chip('aviso', 'divergência') : chip(ct, ctxt)}</td>
       <td>${pdf}</td></tr>`;
-    if (aberta) h += `<tr><td class="det" colspan="11">${detalhe(l)}</td></tr>`;
+    if (aberta) h += `<tr><td class="det" colspan="12">${detalhe(l)}</td></tr>`;
   }
   h += '</tbody></table>';
   if (!ls.length) h += '<p class="apagado">Nada com esse filtro.</p>';
@@ -1190,15 +1923,18 @@ const ROT_CAMPO = {
   estado: 'estado', motivo: 'por que este arquivo', kb: 'tamanho do PDF (KB)', unidos: 'arquivos unidos', paginas: 'páginas', buscado_em: 'buscado na Factorial em', erro: 'erro',
   nome: 'documento', doc_id: 'doc_id', funcionario: 'funcionário', categoria: 'categoria', aba: 'aba do Atlas', situacao: 'situação no Atlas', grupo: 'grupo',
   numero_pedido: 'pedido', qtd_docs: 'qtd. de documentos', prazo_envio: 'prazo de envio', validade: 'validade', critico: 'crítico', atualizado_em: 'atualizado no banco',
-  enviado_em: 'enviado em', validado_em: 'validado em', cliente: 'cliente', caminho_origem: 'arquivo de origem',
+  enviado_em: 'enviado em', validado_em: 'validado em', cliente: 'cliente', caminho_origem: 'arquivo de origem', fonte: 'vem de',
+  alerta: 'motivo (sincronização)', alerta_em: 'motivo registrado em',
 };
+const ESTADO_PROBLEMA = new Set(['DIVERGENTE_FACTORIAL', 'NAO_ENCONTRADO_FACTORIAL', 'AGUARDANDO_ASSINATURA', 'ERRO_COMPOSICAO', 'REJEITADO']);
 const FORA_DET = new Set(['origem', 'arquivos', 'deixados', 'pdf', 'pdf_atlas', 'pdf_kb', 'cat', 'documento', 'descricao', 'confianca']);
 function detalhe(l) {
   const campos = Object.entries(l).filter(([k, v]) => !FORA_DET.has(k) && v !== null && v !== '' && v !== undefined && typeof v !== 'object');
   const val = (k, v) => /(_em|_desde|^prazo_envio$|^validade$)/.test(k) && !isNaN(Date.parse(v)) ? `${dataHora(v)} <span class="apagado">(${ha(v)})</span>` : esc(v);
   let h = `<div style="font-weight:600;margin-bottom:8px">${esc(l.documento)}</div><dl>` +
     campos.map(([k, v]) => `<div><dt>${esc(ROT_CAMPO[k] || k.replace(/_/g, ' '))}</dt><dd class="${k === 'funcionario' ? 'nomeP' : ''}">${val(k, v)}</dd></div>`).join('') +
-    `<div><dt>situação</dt><dd>${esc(ROT_ESTADO[l.estado] || l.estado)}</dd></div></dl>`;
+    `<div><dt>situação</dt><dd>${esc(l.sharepoint || l.busca_factorial ? `${CAT[l.cat][1]} (no banco continua PENDENTE_ENVIO)${l.busca_factorial ? ': ' + l.busca_factorial.motivo : ''}`
+      : l.fila_motivo || ROT_ESTADO[l.estado] || l.estado)}</dd></div></dl>`;
   if (l.arquivos?.length) {
     h += `<b>Arquivos escolhidos na Factorial</b> <span class="apagado">(nesta ordem no PDF unido)</span><table><tr><th>ID Factorial</th><th>arquivo</th><th>pasta</th><th>criado em</th><th>assinatura</th><th>páginas</th><th>por quê</th><th></th></tr>` +
       l.arquivos.map((a) => `<tr><td>${esc(a.id)}</td><td>${a.erro ? '✕ ' : '✓ '}${esc(a.filename)}${a.erro ? `<div style="color:var(--critico)">${esc(a.erro)}</div>` : ''}</td><td>${esc(a.pasta || '—')}</td>
@@ -1209,17 +1945,93 @@ function detalhe(l) {
     h += `<p style="margin-top:10px"><b>Deixados de fora:</b> ` + l.deixados.map((d) => `${esc(d.filename)} <span class="apagado">(${esc(d.motivo)})</span>`).join(' · ') + '</p>';
   }
   if (l.pdf) h += `<p style="margin-top:10px"><button data-pdf="pacotes/${esc(l.pdf)}">Abrir o PDF unido no visor</button> <span class="tinta2">${l.unidos || 1} arquivo(s) · ${l.paginas ? l.paginas + ' página(s) · ' : ''}${l.kb} KB</span></p>`;
-  if (l.pdf_atlas) h += `<p style="margin-top:10px"><button data-pdf="${esc(l.pdf_atlas)}">Abrir no visor o PDF que vai para o Atlas</button> <span class="tinta2">${l.pdf_kb ?? '?'} KB</span></p>`;
+  if (l.sharepoint) {
+    const s = l.sharepoint;
+    h += `<p style="margin-top:10px"><b>Busca no SharePoint</b> <span class="apagado">(${dataHora(s.em)} · só para conferir: o banco continua PENDENTE_ENVIO)</span></p><dl>` +
+      [['pasta', s.pasta], ['arquivo achado', s.arquivo], ['modificado no SharePoint', s.modificado], ['resultado', s.motivo], ['atenção', s.aviso],
+        ['arquivos parecidos', (s.candidatos || []).join(' · ')], ['deixados de fora', (s.deixados || []).map((d) => `${d.nome} (${d.motivo})`).join(' · ')]]
+        .filter(([, v]) => v).map(([k, v]) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('') + '</dl>';
+    if (s.partes?.length) {
+      h += (s.unido ? '<b>Partes unidas, nesta ordem</b>' : '<b>Partes na pasta</b> <span class="apagado">(não deu para unir: o motivo está em "resultado")</span>') +
+        `<table><tr><th>parte</th><th>arquivo</th><th>é o quê</th><th>modificado</th><th>páginas</th><th></th></tr>` +
+        s.partes.map((p, k) => `<tr><td>${k + 1}</td><td>${p.erro ? '✕ ' : '✓ '}${esc(p.nome)}${p.erro ? `<div style="color:var(--critico)">${esc(p.erro)}</div>` : ''}</td>
+          <td>${esc(p.papel || '—')}</td><td>${esc(p.modificado || '—')}</td><td>${p.paginas ?? '—'}</td><td>${p.url ? `<button class="sec" data-pdf="${esc(p.url)}">ver esta parte</button>` : ''}</td></tr>`).join('') + '</table>';
+    }
+  }
+  h += secaoMontagem(l);
+  if (l.pdf_atlas) h += `<p style="margin-top:10px"><button data-pdf="${esc(l.pdf_atlas)}">${l.sharepoint ? 'Abrir no visor o PDF achado no SharePoint' : l.estado === 'ENVIADO' ? 'Abrir no visor o PDF que foi enviado' : 'Abrir no visor o PDF que vai para o Atlas'}</button> <span class="tinta2">${l.pdf_kb ?? '?'} KB</span>${l.pdf_erro ? `<div class="motivoSinc">Não abre: ${esc(l.pdf_erro)}</div>` : ''}</p>`;
+  h += secaoDestino(l);
+  return h;
+}
+// ---------- Rastro: de que arquivos o PDF foi feito (montagem) e para onde vai/foi (destino) ----------
+function textoDestino(l) {
+  const d = l.destino;
+  if (!d) return '';
+  if (d.portais?.length) return d.portais.map((p) => `${p.destino}: ${p.situacao || ROT_ESTADO[p.estado] || p.estado || '—'}`).join(' · ');
+  if (l.estado === 'ENVIADO') return `enviado ao ${d.previstos.join(', ')}${l.enviado_em ? ' em ' + dataHora(l.enviado_em) : ''}`;
+  return `vai para ${d.previstos.join(', ')}`;
+}
+function textoMontagem(l) {
+  if (l.origem === 'Bernhoeft') return (l.arquivos || []).map((a) => `${a.filename} [Factorial ${a.id}]`).join(' + ');
+  const m = l.montagem;
+  if (!m) return '';
+  return m.itens.length ? m.itens.map((i) => `${i.arquivo || '?'} [${i.origem}${i.id ? ' ' + i.id : ''}${i.pasta ? ' · ' + i.pasta : ''}]`).join(' + ') : m.nota || '';
+}
+// Bernhoeft já mostra a tabela "Arquivos escolhidos na Factorial" acima; aqui só o Atlas.
+function secaoMontagem(l) {
+  const m = l.montagem;
+  if (!m) return '';
+  let h = `<p style="margin-top:10px"><b>Arquivos usados para montar o PDF</b> <span class="apagado">(${m.tipo === 'único'
+    ? 'arquivo único: o PDF é o próprio arquivo da origem' : `PDF unido${m.final ? ' ' + esc(m.final) : ''}${m.itens.length ? ', nesta ordem' : ''}`})</span></p>`;
+  if (m.itens.length) {
+    h += `<table><tr><th>#</th><th>vem de</th><th>arquivo</th><th>pasta</th><th>id na origem</th><th>criado em</th><th>assinatura</th></tr>` +
+      m.itens.map((i, k) => `<tr><td>${k + 1}</td><td>${selFonte(i.origem)}</td>
+        <td>${i.erro ? '✕ ' : '✓ '}${esc(i.arquivo || '—')}${i.erro ? `<div style="color:var(--critico)">${esc(i.erro)}</div>` : ''}</td>
+        <td>${esc(i.pasta || '—')}</td><td>${esc(i.id ?? '—')}</td><td>${i.criado ? dataHora(i.criado) : '—'}</td><td>${esc(i.assinatura || '—')}</td></tr>`).join('') + '</table>';
+  }
+  if (m.nota) h += `<div class="motivoSinc">${esc(m.nota)}</div>`;
+  return h;
+}
+function secaoDestino(l) {
+  const d = l.destino;
+  if (!d) return '';
+  const foi = l.estado === 'ENVIADO' || d.robo?.acao === 'enviar' && d.robo.ok;
+  let h = `<p style="margin-top:10px"><b>${foi ? 'Para onde foi' : 'Para onde vai'}</b> <span class="apagado">(destino pela regra do documento: ${esc(d.previstos.join(', '))})</span></p>`;
+  if (d.portais.length) {
+    h += `<table><tr><th>portal</th><th>situação no portal</th><th>estado</th><th>protocolo</th><th>atualizado</th></tr>` +
+      d.portais.map((p) => `<tr><td><span class="origem" style="--cor:${COR_DESTINO[p.destino] || 'var(--f-infra)'}">${esc(p.destino)}</span></td>
+        <td>${esc(p.situacao || '—')}</td><td>${esc(ROT_ESTADO[p.estado] || p.estado || '—')}</td>
+        <td>${p.protocolos.length ? p.protocolos.map((q) => `${esc(q.protocolo || '—')} <span class="apagado">${q.em ? dataHora(q.em) : ''} ${esc(q.estado || '')}</span>${q.texto ? `<div class="apagado" style="font-size:12px">${esc(q.texto)}</div>` : ''}`).join('<br>') : '—'}</td>
+        <td>${p.em ? dataHora(p.em) : '—'}</td></tr>`).join('') + '</table>';
+  }
+  if (d.protocolos.length) {
+    h += `<b>Protocolos</b><table><tr><th>plataforma</th><th>protocolo</th><th>quando</th><th>estado</th><th>resultado</th></tr>` +
+      d.protocolos.map((q) => `<tr><td>${esc(q.plataforma || '—')}</td><td>${esc(q.protocolo || '—')}</td><td>${q.em ? dataHora(q.em) : '—'}</td><td>${esc(q.estado || '—')}</td><td>${esc(q.texto || '')}</td></tr>`).join('') + '</table>';
+  }
+  const linhas = [];
+  if (l.estado === 'ENVIADO') linhas.push(['enviado', `${esc(d.previstos.join(', '))}${l.enviado_em ? ` em ${dataHora(l.enviado_em)}` : ''}`]);
+  if (d.robo) linhas.push([d.robo.acao === 'enviar' ? 'envio pelo robô (aba 6)' : 'última conferência do robô (aba 6)',
+    `${d.robo.ok ? '✓' : '✕'} ${esc(d.robo.msg)}${d.robo.status_atlas && !d.robo.msg.includes(d.robo.status_atlas) ? ` <span class="apagado">· status no Atlas: ${esc(d.robo.status_atlas)}</span>` : ''} <span class="apagado">· ${dataHora(d.robo.em)}</span>`]);
+  if (!foi && !d.portais.length && !d.nota) linhas.push(['situação', 'ainda não enviado']);
+  if (d.nota) linhas.push(['situação', esc(d.nota)]);
+  if (linhas.length) h += '<dl>' + linhas.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('') + '</dl>';
+  if (d.historico.length) {
+    h += `<b>Histórico da sincronização</b> <span class="apagado">(últimas etapas, mais nova primeiro)</span><table><tr><th>etapa</th><th>status</th><th>quando</th><th>mensagem</th></tr>` +
+      d.historico.map((e) => `<tr><td>${esc(e.etapa || '—')}</td><td>${esc(e.status || '—')}</td><td>${e.em ? dataHora(e.em) : '—'}</td><td>${esc(e.msg || '')}</td></tr>`).join('') + '</table>';
+  }
+  if (d.erros.length) h += `<div class="apagado" style="font-size:12px;margin-top:6px">Faltam dados: ${esc(d.erros.join('; '))}. Situação em cada portal, protocolos e histórico aparecem quando o painel puder ler essas tabelas (role painel_leitura).</div>`;
   return h;
 }
 function nomeCsv(s) { return $('ocultar').checked ? String(s || '').split(/\s+/).filter(Boolean).map((p) => p[0] + '.').join(' ') : s; }
 $('pendCsv').onclick = () => {
   if (!PEND) return;
-  const cols = [['origem', (l) => l.origem], ['contrato/pedido', (l) => colunaValor(l, 'ref')], ['documento exigido', (l) => l.documento], ['tipo reconhecido', (l) => l.tipo_reconhecido],
+  const cols = [['origem', (l) => l.origem], ['vem de', (l) => l.fonte || 'sem regra'], ['contrato/pedido', (l) => colunaValor(l, 'ref')], ['documento exigido', (l) => l.documento], ['tipo reconhecido', (l) => l.tipo_reconhecido],
     ['unidade', (l) => l.unidade], ['área', (l) => l.area], ['empresa/funcionário', (l) => l.origem === 'Atlas' ? nomeCsv(l.funcionario) : l.contratada], ['competência', (l) => l.competencia],
     ['pendente desde/atualizado', (l) => l.origem === 'Bernhoeft' ? l.pendente_desde : l.atualizado_em], ['situação', (l) => CAT[l.cat][1]], ['estado', (l) => l.estado],
     ['confiança', (l) => l.confianca], ['arquivos na Factorial', (l) => (l.arquivos || []).map((a) => `${a.filename} [${a.id}]`).join(' | ')],
-    ['ids Factorial', (l) => (l.arquivos || []).map((a) => a.id).join(' ')], ['páginas', (l) => l.paginas], ['KB', (l) => l.kb], ['motivo', (l) => l.motivo]];
+    ['ids Factorial', (l) => (l.arquivos || []).map((a) => a.id).join(' ')], ['páginas', (l) => l.paginas], ['KB', (l) => l.kb], ['motivo', (l) => l.motivo],
+    ['motivo da sincronização', (l) => ESTADO_PROBLEMA.has(l.estado) ? l.alerta : ''],
+    ['arquivos usados no PDF', textoMontagem], ['vai/foi para', textoDestino]];
   const cel = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
   const txt = '﻿' + [cols.map(([t]) => cel(t)).join(';'), ...pendVisiveis().map((l) => cols.map(([, f]) => cel(f(l))).join(';'))].join('\r\n');
   const a = document.createElement('a');
@@ -1229,6 +2041,7 @@ $('pendCsv').onclick = () => {
 };
 $('pendBusca').oninput = desenharPendencias;
 $('pendOrigem').onchange = desenharPendencias;
+$('pendFonte').onchange = desenharPendencias;
 setInterval(() => { if (abaAtual === 'pendencias') carregarPendencias(); }, 30000);
 
 // ---------- Envio ao Atlas: modo (manual/automático) + números + lista em linhas ----------
@@ -1277,6 +2090,36 @@ function msgPt(s) {
     .replace(/Atlas recusou o envio: HTTP \d+/g, 'o Atlas recusou o envio');
 }
 
+// Ficha de cada PDF antes do envio: para onde vai, de que pasta veio, como foi montado e o que leva dentro.
+function fichaEnvio(f) {
+  if (!f) return '';
+  const d = f.destino, o = f.origem, g = f.organizacao;
+  const vai = [`<b>Atlas</b> · "${esc(d.nome_atlas || d.documento)}"`, d.unidade && `unidade ${esc(d.unidade)}`, d.competencia && `competência ${esc(d.competencia)}`,
+    d.prazo && `prazo ${dataHora(d.prazo)}`, d.pedido && `pedido ${esc(d.pedido)}`,
+    d.schedule_id ? `local no Atlas ${esc(d.schedule_id)}${d.url ? ` · <a href="${esc(d.url)}" target="_blank" rel="noopener">abrir no Atlas</a>` : ''}` : '<span class="falta">sem local no Atlas</span>',
+    d.status_atlas && `no Atlas: ${esc(statusPt(d.status_atlas))} (conferido ${ha(d.conferido_em)})`].filter(Boolean).join(' · ');
+  const vem = `${esc(o.fonte)} · ${o.pastas.length ? o.pastas.map((p) => `pasta <b>${esc(p)}</b>`).join(' | ') : '<span class="apagado">pasta não registrada</span>'} · regra ${esc(o.regra)}`;
+  const como = [esc(g.como), g.paginas && `${g.paginas} página(s)`, g.kb != null && `${g.kb} KB`, g.sha256 && `SHA-256 ${esc(g.sha256)}…`].filter(Boolean).join(' · ');
+  const partes = f.partes.length
+    ? `<ol>${f.partes.map((p) => `<li>${p.papel ? `<span class="papel">${esc(p.papel)}</span> · ` : ''}${esc(p.arquivo || '—')}` +
+        `${p.pasta && !o.pastas.includes(p.pasta) ? ` <span class="apagado">(${esc(p.pasta)})</span>` : ''}` +
+        `${p.paginas ? ` · ${p.paginas} pág.` : ''}${p.criado ? ` · ${dataHora(p.criado)}` : ''}${p.id ? ` <span class="apagado">· id ${esc(p.id)}</span>` : ''}` +
+        `${p.url ? ` · <button class="link" data-pdf="${esc(p.url)}">ver</button>` : ''}${p.erro ? ` <span class="falta">${esc(p.erro)}</span>` : ''}</li>`).join('')}</ol>`
+    : `<span class="falta">${esc(f.nota || 'não há registro dos arquivos que entraram neste PDF')}</span>`;
+  const atencao = f.aviso ? `<dt class="falta">Atenção</dt><dd class="falta">${esc(f.aviso)}</dd>` : '';
+  const deixados = f.deixados.length ? `<dt>Deixados de fora</dt><dd>${f.deixados.map((x) => `${esc(x.nome)} <span class="apagado">(${esc(x.motivo)})</span>`).join('; ')}</dd>` : '';
+  return `<div class="ficha"><dl>${atencao}<dt>Vai para</dt><dd>${vai}</dd><dt>Vem de</dt><dd>${vem}</dd><dt>Como foi montado</dt><dd>${como}</dd>` +
+    `<dt>Leva dentro (${f.partes.length})</dt><dd>${partes}</dd>${deixados}</dl></div>`;
+}
+// Mesmo resumo em texto, para a confirmação do botão Enviar.
+function fichaTexto(f) {
+  if (!f) return '';
+  const d = f.destino;
+  return `${f.aviso ? `\nATENÇÃO: ${f.aviso}\n` : ''}\nVai para: Atlas · "${d.nome_atlas || d.documento}"${d.unidade ? ' · ' + d.unidade : ''} · local ${d.schedule_id || '?'}` +
+    `\nVem de: ${f.origem.fonte}${f.origem.pastas.length ? ' · ' + f.origem.pastas.join(' | ') : ''}` +
+    `\nMontagem: ${f.organizacao.como}${f.organizacao.paginas ? ` · ${f.organizacao.paginas} página(s)` : ''}` +
+    `\nLeva dentro:${f.partes.length ? f.partes.map((p) => `\n  ${p.ordem}. ${p.papel ? p.papel + ': ' : ''}${p.arquivo || '—'}`).join('') : ' (sem registro das partes)'}\n`;
+}
 function desenharEnvio() {
   const E = ENVIO, ligado = E.modo.automatico === true, R = E.robo;
   const naFila = (acao, id) => E.pedidos.some((p) => p.acao === acao && String(p.id) === String(id));
@@ -1313,7 +2156,8 @@ function desenharEnvio() {
   // Filtro + lista
   const cont = { prontas: prontas.length, atencao: problema.length, todas: E.itens.length };
   $('envioFiltro').querySelectorAll('button').forEach((b) => { b.classList.toggle('ativa', b.dataset.f === envioFiltro); b.querySelector('span').textContent = cont[b.dataset.f]; });
-  $('envioConta').textContent = E.lista_em ? `lista de ${dataHora(E.lista_em)}` : '';
+  $('envioConta').textContent = [E.lista_em && `lista de ${dataHora(E.lista_em)}`,
+    E.fora_do_atlas && `${E.fora_do_atlas} não aparecem mais no Atlas e saíram da lista`].filter(Boolean).join(' · ');
   const q = $('envioBuscaTxt').value.trim().toLowerCase();
   const itens = (envioFiltro === 'prontas' ? prontas : envioFiltro === 'atencao' ? problema : E.itens)
     .filter((i) => !q || [i.id, i.nome, i.funcionario, i.competencia].join(' ').toLowerCase().includes(q))
@@ -1333,6 +2177,7 @@ function desenharEnvio() {
         <div class="doc" title="situação: ${esc(ROT_ESTADO[i.estado] || i.estado)}${i.schedule_id ? ' · local no Atlas: ' + esc(i.schedule_id) : ''}">${esc(i.nome)}<small>#${i.id}</small></div>
         <div class="meta"><span class="nomeP">${esc(i.funcionario || 'sem funcionário')}</span><span>competência ${esc(i.competencia || '—')}</span>${i.kb != null ? `<span>PDF ${i.kb} KB</span>` : ''}${i.montado_aqui ? '<span>montado na VPS</span>' : ''}</div>
         ${i.pronta ? '' : `<div class="motivo">${esc(i.motivos.map(msgPt).join(' · ') || 'não está pronta')}</div>`}
+        ${fichaEnvio(i.ficha)}
         ${r ? `<div class="ultima ${r.ok ? 'ok' : 'falha'}">${esc(ACAO_ENVIO[r.acao] || r.acao)}${r.auto ? ' automática' : ''} ${ha(r.em)}: ${esc(msgPt(r.msg))}</div>` : ''}
       </div>
       <div class="acoes">${acoes}</div>
@@ -1350,7 +2195,7 @@ function desenharEnvio() {
   });
   $('envioLista').querySelectorAll('[data-enviar]').forEach((b) => b.onclick = () => {
     const i = E.itens.find((x) => String(x.id) === b.dataset.enviar);
-    if (!confirm(`Enviar este documento ao Atlas?\n\n${i.nome}\n${i.funcionario || ''}${i.competencia ? ' · competência ' + i.competencia : ''}\n\nO robô confere de novo no Atlas (nome, status e formato) antes de anexar. Este envio é de verdade.`)) return;
+    if (!confirm(`Enviar este documento ao Atlas?\n\n${i.nome}\n${i.funcionario || ''}${i.competencia ? ' · competência ' + i.competencia : ''}\n${fichaTexto(i.ficha)}\nO robô confere de novo no Atlas (nome, status e formato) antes de anexar. Este envio é de verdade.`)) return;
     b.disabled = true;
     pedirEnvio({ acao: 'enviar', id: i.id, confirmo: i.schedule_id }, undefined, `Enviando #${i.id} ao Atlas…`);
   });
@@ -1372,6 +2217,136 @@ $('envioAtualizar').onclick = () => pedirEnvio({ acao: 'atualizar' }, undefined,
 $('envioBuscar').onclick = () => pedirEnvio({ acao: 'buscar' }, undefined, 'O robô vai buscar na Factorial agora');
 setInterval(() => { if (abaAtual === 'envio') carregarEnvio(); }, 5000);
 
+// ---------- Envio ao Bernhoeft: igual à aba 6, com o envio DESATIVADO ----------
+// Lista = itens da esteira automática (A) + pendências da última leitura (E.bernhoeft) que a esteira ainda não viu.
+// "Verificar" não entra no portal: confere se a pendência ainda está "Não Entregue" na última leitura do robô.
+const SEM_PERMISSAO = 'Envio ao Bernhoeft desativado: a conta atual é de contratante e o portal responde "Sem Permissão" no envio.';
+let ebFiltro = 'prontas';
+const ebVerif = {};
+function itensBern() {
+  const pend = E?.bernhoeft?.pendentes || [];
+  const naLeitura = new Set(pend.map((p) => p.chave));
+  const itens = (A?.itens || []).map((it) => ({ ...it, chave: it.pendencia.chave, sumiu: Boolean(pend.length) && !naLeitura.has(it.pendencia.chave) }));
+  const vistos = new Set(itens.map((i) => i.chave));
+  for (const p of pend) if (!vistos.has(p.chave)) itens.push({ pendencia: p, chave: p.chave, tipo: null, arquivos: [], estado: 'sem_busca' });
+  return itens.map((i) => ({ ...i, pronta: i.estado === 'pronto' && !i.sumiu }));
+}
+function motivoBern(i) {
+  if (i.sumiu) return 'a pendência não aparece mais no portal (sumiu ou foi entregue na última leitura)';
+  if (i.estado === 'erro') return 'erro ao baixar ou unir: ' + (i.erro || '?');
+  if (i.estado === 'nao_encontrado') return i.motivo === 'tipo de documento sem regra de busca'
+    ? 'este tipo de documento ainda não tem regra de busca na Factorial' : 'nenhum arquivo deste tipo na Factorial para este contrato ou estado';
+  return ROT_ESTADO[i.estado] || i.estado;
+}
+// Comentários padrão do Bernhoeft (22/10). Cópia de bernhoeft-robo/comentarios.json: mudar os dois juntos.
+const COMENTARIOS_BERN = [
+  { casa: /epi/, quando: 'Colaborador administrativo, sem ficha de EPI', texto: 'NÃO APLICÁVEL - O COLABORADOR DESENVOLVERÁ ATIVIDADES ADMINISTRATIVAS.' },
+  { casa: /primeiros socorros/, quando: 'Colaborador administrativo, sem primeiros socorros', texto: 'NÃO APLICÁVEL - O COLABORADOR DESENVOLVERÁ ATIVIDADES ADMINISTRATIVAS.' },
+  { casa: /primeiros socorros/, quando: 'Já há certificado de direção defensiva nesta mobilização', texto: 'CONTEÚDO PROGRAMÁTICO ABORDADO NO CERTIFICADO DE DIREÇÃO DEFENSIVA JÁ ANEXADO A ESSA MOBILIZAÇÃO.' },
+  { casa: /direcao defensiva|\bcnh\b|habilitacao/, quando: 'Não conduz veículo (sem direção defensiva e sem CNH)', texto: 'NÃO APLICÁVEL - O COLABORADOR NÃO CONDUZIRÁ VEÍCULOS.' },
+  { casa: /ctps|carteira de trabalho/, quando: 'Sobe o eSocial no lugar da CTPS', texto: 'Anexado eSocial em substituição a CTPS.' },
+  { casa: /\brg\b|\bcpf\b|identidade/, quando: 'Sobe a CNH no lugar de RG e CPF', texto: 'Anexado CNH em substituição a RG e CPF.' },
+  { casa: /ficha de registro/, quando: 'Sobe o eSocial no lugar da ficha de registro', texto: 'Anexado eSocial em substituição a FICHA DE REGISTRO.' },
+  { casa: /\bnr\b|nr ?-?(10|11|12|33|35)|sep\b/, quando: 'Não faz atividade de NR 10, 10 SEP, 11, 12, 33 e 35', texto: 'NÃO APLICÁVEL - O COLABORADOR NÃO DESENVOLVERÁ ATIVIDADES RELACIONADAS AS NRS 10, 10 SEP, 11, 12, 33 e 35.' },
+];
+const semAcento = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const comentariosDe = (i) => { const t = semAcento([i.tipo, i.pendencia?.descricao].join(' ')); return COMENTARIOS_BERN.filter((c) => c.casa.test(t)); };
+function copiar(t) { // o painel é http (Tailscale): navigator.clipboard não existe fora de https
+  const ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select();
+  let ok = false; try { ok = document.execCommand('copy'); } catch {} ta.remove(); return ok;
+}
+function blocoComentarios(i) {
+  const cs = comentariosDe(i);
+  if (!cs.length) return '';
+  return `<details class="comentBern"><summary>Se não houver documento: ${cs.length} comentário(s) padrão</summary>${cs.map((c) =>
+    `<div><span class="apagado">${esc(c.quando)}</span><br><code>${esc(c.texto)}</code> <button class="link" data-copiar="${esc(c.texto)}">copiar</button></div>`).join('')}</details>`;
+}
+function desenharEnvioBern() {
+  if (!A || !E) return;
+  const b = E.bernhoeft || {}, itensTodos = itensBern();
+  const prontas = itensTodos.filter((i) => i.pronta), problema = itensTodos.filter((i) => !i.pronta);
+  const leituraOk = b.coletado_em && Date.now() - new Date(b.coletado_em) < 70 * 60000;
+
+  // Modo: travado em Manual, e o manual também desativado
+  let rob = leituraOk ? `<span><span class="ponto on"></span>robô Bernhoeft no ar · última leitura ${ha(b.coletado_em)}</span>`
+    : `<span><span class="ponto off"></span>robô Bernhoeft sem leitura recente${b.coletado_em ? ' (' + ha(b.coletado_em) + ')' : ''}</span>`;
+  rob += A.rodando ? `<span>esteira: buscando na Factorial agora</span>` : A.fim ? `<span>esteira rodou ${ha(A.fim)}</span>` : '';
+  $('ebModo').innerHTML = `<div class="modo">
+      <button class="interruptor" disabled role="switch" aria-checked="false" title="${esc(SEM_PERMISSAO)}"></button>
+      <div class="txt">
+        <div class="rot">Modo de envio</div>
+        <div class="tit">Desativado</div>
+        <div class="exp">Nada é enviado ao Bernhoeft, nem um por um nem automático. A conta atual é de contratante e o portal responde "Sem Permissão" no envio. Os PDFs ficam prontos aqui para conferir.</div>
+        <div class="robo">${rob}</div>
+      </div>
+    </div>`;
+
+  const num = (v, rot, cor) => `<div class="n ${cor}"><b>${v}</b><span>${rot}</span></div>`;
+  $('ebNumeros').innerHTML = num(prontas.length, 'prontas para enviar', 'verde') + num(problema.length, 'com problema', problema.length ? 'vermelho' : '') +
+    num(0, 'já enviadas', 'azul') + num((b.pendentes || []).length, 'pendentes no portal', '');
+
+  const cont = { prontas: prontas.length, atencao: problema.length, todas: itensTodos.length };
+  $('ebFiltro').querySelectorAll('button').forEach((x) => { x.classList.toggle('ativa', x.dataset.f === ebFiltro); x.querySelector('span').textContent = cont[x.dataset.f]; });
+  $('ebConta').textContent = b.coletado_em ? `leitura de ${dataHora(b.coletado_em)}` : '';
+  const q = $('ebBuscaTxt').value.trim().toLowerCase();
+  const itens = (ebFiltro === 'prontas' ? prontas : ebFiltro === 'atencao' ? problema : itensTodos)
+    .filter((i) => !q || [i.tipo, i.pendencia.descricao, i.pendencia.contrato, i.pendencia.contratada, i.pendencia.unidade].join(' ').toLowerCase().includes(q))
+    .sort((x, y) => (y.pronta - x.pronta) || String(x.pendencia.contrato).localeCompare(String(y.pendencia.contrato), 'pt-BR', { numeric: true }));
+
+  let h = itens.map((i) => {
+    const p = i.pendencia, v = ebVerif[i.chave];
+    const acoes = (i.pdf ? `<button class="link" data-pdf="pacotes/${esc(i.pdf)}">Ver PDF</button>` : '') +
+      `<button class="sec" data-ebverificar="${esc(i.chave)}" title="Confere na última leitura do portal, sem entrar nele">Verificar</button>` +
+      `<button class="enviar" disabled title="${esc(SEM_PERMISSAO)}">Enviar</button>`;
+    return `<div class="envItem ${i.pronta ? 'pronta' : 'problema'}">
+      <div class="faixaCor"></div>
+      <div>
+        <div class="doc" title="situação: ${esc(ROT_ESTADO[i.estado] || i.estado)}">${esc(i.tipo || p.descricao)}<small>contrato ${esc(p.contrato)}</small></div>
+        <div class="meta"><span>${esc(p.contratada || 'sem empresa')}</span>${p.unidade ? `<span>${esc(p.unidade)}${p.area ? ' · ' + esc(p.area) : ''}</span>` : ''}<span>${/\d/.test(p.competencia || '') ? 'competência ' : ''}${esc(p.competencia || 'sem competência')}</span>${i.kb != null ? `<span>PDF ${i.kb} KB${i.unidos > 1 ? ` · ${i.unidos} arquivos unidos` : ''}</span>` : ''}${i.confianca ? `<span>confiança ${esc(i.confianca)}</span>` : ''}</div>
+        ${i.pronta ? '' : `<div class="motivo">${esc(motivoBern(i))}</div>`}
+        ${blocoComentarios(i)}
+        ${v ? `<div class="ultima ${v.ok ? 'ok' : 'falha'}">Verificação ${ha(v.em)}: ${esc(v.msg)}</div>` : ''}
+      </div>
+      <div class="acoes">${acoes}</div>
+    </div>`;
+  }).join('');
+  if (!itensTodos.length) h = '<div class="vazio"><b>A lista ainda não foi montada</b>A esteira roda sozinha a cada leitura nova do portal. Para rodar agora, clique em "Buscar na Factorial".</div>';
+  else if (!itens.length) h = q ? '<div class="vazio"><b>Nada encontrado</b>Nenhum documento bate com a busca.</div>'
+    : ebFiltro === 'prontas' ? '<div class="vazio"><b>Nenhum documento pronto agora</b>Veja em "Com problema" o que falta em cada um.</div>'
+    : '<div class="vazio"><b>Nenhum problema</b>Todos os documentos da lista têm PDF pronto.</div>';
+  const el = $('ebLista'), topo = el.scrollTop;
+  el.innerHTML = h;
+  el.scrollTop = topo;
+  el.querySelectorAll('[data-pdf]').forEach((x) => x.onclick = () => abrirNoVisor(x.dataset.pdf));
+  el.querySelectorAll('[data-ebverificar]').forEach((x) => x.onclick = () => verificarBern(x.dataset.ebverificar));
+  el.querySelectorAll('[data-copiar]').forEach((x) => x.onclick = () => { const ok = copiar(x.dataset.copiar); avisar(ok ? 'Comentário copiado' : 'Não deu para copiar: selecione o texto', !ok); });
+
+  const T = A.itens || [];
+  $('ebBuscaN').textContent = A.inicio ? `· ${T.filter((x) => x.estado === 'pronto').length} de ${T.length} com PDF · ${A.rodando ? 'rodando agora' : ha(A.fim || A.inicio)}` : '';
+  $('ebBusca').innerHTML = !T.length ? '<p class="apagado">A busca ainda não rodou.</p>'
+    : '<table><tr><th>contrato</th><th>documento</th><th>resultado</th></tr>' + T.map((x) => `<tr><td>${esc(x.pendencia.contrato)}</td><td>${esc(x.tipo || x.pendencia.descricao)}</td><td>${
+      x.estado === 'pronto' ? chip('ok', `${x.unidos} arquivo(s), confiança ${x.confianca}`) : x.estado === 'buscando' ? chip('aviso', 'buscando…') : `<span class="res falha">${esc(motivoBern(x))}</span>`}</td></tr>`).join('') + '</table>';
+}
+function verificarBern(chave) {
+  const b = E?.bernhoeft || {}, p = (b.pendentes || []).find((x) => x.chave === chave);
+  const v = p ? { ok: true, msg: `continua "Não Entregue" no portal (leitura de ${dataHora(b.coletado_em)})` }
+    : { ok: false, msg: `não aparece mais na leitura de ${dataHora(b.coletado_em)}: pode ter sido entregue ou mudado` };
+  ebVerif[chave] = { ...v, em: new Date().toISOString() };
+  avisar(v.ok ? 'Ainda pendente no Bernhoeft' : 'Não está mais pendente na última leitura', !v.ok);
+  desenharEnvioBern();
+}
+$('ebFiltro').querySelectorAll('button').forEach((x) => x.onclick = () => { ebFiltro = x.dataset.f; desenharEnvioBern(); });
+$('ebBuscaTxt').oninput = desenharEnvioBern;
+$('ebAtualizar').onclick = async () => { await carregar(); await carregarAuto(); avisar('Lista atualizada com a última leitura do portal'); };
+$('ebBuscar').onclick = async () => {
+  if (A?.rodando) return avisar('A esteira já está buscando agora');
+  if (!A?.tem_chave) return avisar('Falta a chave da Factorial no cofre', true);
+  const r = await fetch('api/auto/rodar', { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' });
+  const j = await r.json().catch(() => ({}));
+  avisar(r.ok && j.ok !== false ? 'A esteira vai buscar na Factorial agora' : (j.erro || `erro ${r.status}`), !(r.ok && j.ok !== false));
+  await carregarAuto();
+};
+
 // ---------- PDFs: lista + visor grande ----------
 let PDFS = [], pdfAtual = null, parteAtual = null;
 async function carregarPdfs() {
@@ -1388,7 +2363,8 @@ function desenharListaPdfs() {
     if (p.grupo !== grupo) { grupo = p.grupo; h += `<h3>${esc(grupo)}</h3>`; }
     h += `<button class="pdfItem ${pdfAtual === p.url ? 'ativo' : ''}" data-url="${esc(p.url)}">
       <div class="t">${esc(p.titulo)}</div><div class="s">${esc(p.sub || '')}</div>
-      <div class="m">${p.paginas ? p.paginas + ' pág. · ' : ''}${p.kb} KB · ${dataHora(p.em)}${p.partes?.length > 1 ? ` · ${p.partes.length} arquivos unidos` : ''}${p.confianca ? ` · confiança ${esc(p.confianca)}` : ''}</div></button>`;
+      <div class="m">${p.paginas ? p.paginas + ' pág. · ' : ''}${p.kb} KB · ${dataHora(p.em)}${p.sem_uniao ? ` · ${p.partes.length} parte(s), não deu para unir` : p.partes?.length > 1 ? ` · ${p.partes.length} arquivos unidos` : ''}${p.confianca ? ` · confiança ${esc(p.confianca)}` : ''}</div>
+      ${p.erro ? `<div class="e">Não abre: ${esc(p.erro)}</div>` : ''}${p.partes?.some((y) => y.erro) ? `<div class="e">${p.partes.filter((y) => y.erro).length} parte(s) não abrem</div>` : ''}</button>`;
   }
   $('pdfLista').innerHTML = h || '<p class="apagado">Nenhum PDF montado ainda. A esteira automática monta os do Bernhoeft a cada leitura nova.</p>';
   $('pdfLista').querySelectorAll('[data-url]').forEach((b) => b.onclick = () => verPdf(b.dataset.url));
@@ -1400,7 +2376,9 @@ function verPdf(url, parte) {
   pdfAtual = p.url;
   parteAtual = parte || (url !== p.url ? url : null);
   const alvo = parteAtual || p.url;
-  const pt = p.partes?.find((y) => y.url === parteAtual);
+  // Partes do SharePoint ainda não unidas: não há "PDF unido"; o visor começa na parte 1.
+  const ativa = parteAtual || (p.sem_uniao ? p.url : null);
+  const pt = p.partes?.find((y) => y.url === ativa);
   const i = PDFS.indexOf(p);
   $('pdfCab').innerHTML = `<div class="pdfCab">
       <button class="sec" id="pdfAnt" ${i <= 0 ? 'disabled' : ''} title="anterior (←)">◀</button>
@@ -1411,10 +2389,18 @@ function verPdf(url, parte) {
       <a class="botao" href="${urlPdf(alvo)}?baixar=1">baixar</a>
       <button class="sec" id="pdfProx" ${i >= PDFS.length - 1 ? 'disabled' : ''} title="próximo (→)">▶</button>
     </div>
-    ${p.partes?.length ? `<div class="pdfPartes"><button class="${!parteAtual ? 'ativa' : ''}" data-parte="">PDF unido (o que vai para o portal)</button>` +
-      p.partes.map((y, k) => `<button class="${parteAtual === y.url ? 'ativa' : ''}" data-parte="${esc(y.url)}" title="${esc(y.nome)}">parte ${k + 1}: ${esc(y.nome.length > 48 ? y.nome.slice(0, 47) + '…' : y.nome)}</button>`).join('') + '</div>' : ''}
-    ${pt ? `<div class="apagado" style="font-size:12px;margin-top:6px">ID Factorial ${esc(pt.id)} · ${esc(pt.pasta || '')} · criado ${dataHora(pt.created_at)} · assinatura ${esc(pt.assinatura || '—')}${pt.paginas ? ` · ${pt.paginas} pág.` : ''}</div>` : ''}`;
-  $('pdfFrame').src = urlPdf(alvo) + '#view=FitH';
+    ${p.partes?.length ? `<div class="pdfPartes">${p.sem_uniao ? '' : `<button class="${!parteAtual ? 'ativa' : ''}" data-parte="">PDF unido (o que vai para o portal)</button>`}` +
+      p.partes.map((y, k) => `<button class="${ativa === y.url ? 'ativa' : ''}" data-parte="${esc(y.url)}" title="${esc(y.nome)}${y.erro ? ' · não abre: ' + esc(y.erro) : ''}">parte ${k + 1}: ${esc(y.nome.length > 48 ? y.nome.slice(0, 47) + '…' : y.nome)}${y.erro ? '<div class="e">não abre</div>' : ''}</button>`).join('') + '</div>' : ''}
+    ${pt ? `<div class="apagado" style="font-size:12px;margin-top:6px">${pt.id ? `ID Factorial ${esc(pt.id)} · ${esc(pt.pasta || '')} · criado ${dataHora(pt.created_at)} · assinatura ${esc(pt.assinatura || '—')}`
+      : `SharePoint · ${esc(pt.pasta || '')}${pt.modificado ? ` · modificado ${esc(pt.modificado)}` : ''}`}${pt.paginas ? ` · ${pt.paginas} pág.` : ''}</div>` : ''}`;
+  // PDF que o servidor já sabe que não abre: mostra o motivo no lugar do visor (senão o navegador só diz "Failed to load").
+  const falha = pt ? pt.erro : !parteAtual && p.erro;
+  $('pdfFalha').hidden = !falha;
+  $('pdfFrame').hidden = !!falha;
+  if (falha) {
+    $('pdfFalha').innerHTML = `<b>Este PDF não abre no visor.</b><p class="tinta2" style="margin-top:6px">Motivo: ${esc(falha)}</p>`;
+    $('pdfFrame').removeAttribute('src');
+  } else $('pdfFrame').src = urlPdf(alvo) + '#view=FitH';
   $('pdfAnt').onclick = () => irPdf(-1);
   $('pdfProx').onclick = () => irPdf(1);
   $('pdfCab').querySelectorAll('[data-parte]').forEach((b) => b.onclick = () => verPdf(p.url, b.dataset.parte || null));

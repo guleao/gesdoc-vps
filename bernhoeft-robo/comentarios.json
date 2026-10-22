@@ -1,0 +1,13 @@
+{
+  "_sobre": "Comentários padrão do Bernhoeft (recebidos em 22/10/2026). Texto exato, não mudar. 'casa' = regex (sem acento, minúsculas) sobre o nome do documento pedido no portal. A rotina de envio (ainda não feita) usa esta lista; o painel (aba 7) tem uma cópia em COMENTARIOS_BERN.",
+  "comentarios": [
+    { "id": "epi_adm", "docs": [95], "casa": "epi", "quando": "Colaborador administrativo, sem ficha de EPI", "texto": "NÃO APLICÁVEL - O COLABORADOR DESENVOLVERÁ ATIVIDADES ADMINISTRATIVAS." },
+    { "id": "socorros_adm", "docs": [115], "casa": "primeiros socorros", "quando": "Colaborador administrativo, sem primeiros socorros", "texto": "NÃO APLICÁVEL - O COLABORADOR DESENVOLVERÁ ATIVIDADES ADMINISTRATIVAS." },
+    { "id": "socorros_dd", "docs": [115], "casa": "primeiros socorros", "quando": "Já há certificado de direção defensiva nesta mobilização", "texto": "CONTEÚDO PROGRAMÁTICO ABORDADO NO CERTIFICADO DE DIREÇÃO DEFENSIVA JÁ ANEXADO A ESSA MOBILIZAÇÃO." },
+    { "id": "nao_conduz", "docs": [112], "casa": "direcao defensiva|\\bcnh\\b|habilitacao", "quando": "Não conduz veículo (sem direção defensiva e sem CNH)", "texto": "NÃO APLICÁVEL - O COLABORADOR NÃO CONDUZIRÁ VEÍCULOS." },
+    { "id": "ctps_esocial", "docs": [], "casa": "ctps|carteira de trabalho", "quando": "Sobe o eSocial no lugar da CTPS", "texto": "Anexado eSocial em substituição a CTPS." },
+    { "id": "rg_cnh", "docs": [], "casa": "\\brg\\b|\\bcpf\\b|identidade", "quando": "Sobe a CNH no lugar de RG e CPF", "texto": "Anexado CNH em substituição a RG e CPF." },
+    { "id": "ficha_esocial", "docs": [79], "casa": "ficha de registro", "quando": "Sobe o eSocial no lugar da ficha de registro", "texto": "Anexado eSocial em substituição a FICHA DE REGISTRO." },
+    { "id": "sem_nr", "docs": [113, 116], "casa": "\\bnr\\b|nr ?-?(10|11|12|33|35)|sep\\b", "quando": "Não faz atividade de NR 10, 10 SEP, 11, 12, 33 e 35", "texto": "NÃO APLICÁVEL - O COLABORADOR NÃO DESENVOLVERÁ ATIVIDADES RELACIONADAS AS NRS 10, 10 SEP, 11, 12, 33 e 35." }
+  ]
+}

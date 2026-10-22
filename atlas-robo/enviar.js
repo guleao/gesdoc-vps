@@ -231,6 +231,20 @@ async function enviarUma(ctx, item, sql) {
     item.pronta = !!item.schedule_id && !!item.arquivo && !item.avisos?.length;
     return item;
   });
+  // O mesmo arquivo em pendências de funcionários diferentes = arquivo errado em alguém (19/10: o mesmo "eSocial.pdf" de 23 páginas
+  // anexado a 4 pessoas na Factorial, #269 #270 #273 #275): nenhuma sai até alguém conferir. Documento de empresa (sem CPF) pode repetir.
+  const comHash = await neon(url).query('select id, cpf, hash_arquivo from documentos where hash_arquivo is not null and cpf is not null');
+  for (const [i, item] of itens.entries()) {
+    const cpf = digitos(linhas[i].cpf);
+    if (!cpf) continue;
+    const hashes = new Set([item.hash, linhas[i].hash_arquivo].filter(Boolean));
+    const outros = comHash.filter((x) => x.id !== item.id && hashes.has(x.hash_arquivo) && digitos(x.cpf) !== cpf);
+    if (!outros.length) continue;
+    const m = `o mesmo arquivo está na pendência de outro funcionário (#${outros.map((x) => x.id).join(', #')}): conferir em quem ele foi anexado`;
+    (item.avisos ||= []).push(m);
+    item.motivos.push(m);
+    item.pronta = false;
+  }
 
   if (opc.verificar) {
     const item = itens[0];

@@ -44,12 +44,20 @@ services:
       # Busca dos documentos de arquivo único (factorial.js, só leitura na Factorial). Sem a chave, a busca é pulada.
       FACTORIAL_API_KEY:
       FACTORIAL_API_URL:
+      # Busca no SharePoint do RH (sharepoint.js --baixar, app AppRHBrasilSP, só leitura): baixa os achados só para o painel mostrar,
+      # NÃO grava no Neon. Sem as três variáveis, a busca é pulada.
+      SHAREPOINT_TENANT_ID:
+      SHAREPOINT_CLIENT_ID:
+      SHAREPOINT_CLIENT_SECRET:
       # Envio ao Atlas só acontece com o botão "envio automático" ligado no painel ou num "Enviar" da aba Envio (robo.js).
       ENVIO_MAX_POR_RODADA: "30"
     volumes:
       - atlas-data:/data
       # Para o código de 8 dígitos do e-mail: gravar em /opt/gesdoc/data/hml/pendencias-atlas/codigo.txt
       - /opt/gesdoc/data/hml/pendencias-atlas:/app/out
+      # PDFs da sincronização Factorial (services/sincronizacao): o Neon grava caminho_origem "/srv/gesdoc/downloads/<id>/<nome>",
+      # então o enviar.js acha o arquivo no mesmo caminho. Só leitura.
+      - /opt/gesdoc/data/hml/sincronizacao/downloads:/srv/gesdoc/downloads:ro
     shm_size: 1gb
     mem_limit: 2g
     security_opt: ["no-new-privileges:true"]

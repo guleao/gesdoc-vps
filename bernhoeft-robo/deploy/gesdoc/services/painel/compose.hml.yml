@@ -31,6 +31,8 @@ services:
       DOCKER_URL: http://127.0.0.1:3021
       CODIGO_MIN: "30"
       PACOTES: /pacotes
+      # PAINEL_DATABASE_URL = role painel_leitura (só SELECT, seguranca/roles.sql); sem ela no cofre, o painel usa ROBO_DATABASE_URL.
+      PAINEL_DATABASE_URL:
       ROBO_DATABASE_URL:
       # Pacotes Bernhoeft (pacote.js): só leitura na Factorial; sem a chave o painel funciona, só não monta pacote.
       FACTORIAL_API_KEY:

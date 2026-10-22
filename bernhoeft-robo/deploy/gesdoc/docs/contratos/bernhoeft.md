@@ -1,11 +1,20 @@
 # Portal Bernhoeft (ContractWeb): mapa do portal (F3.17)
 
-Mapeado de 05 a 08/10/2026 com a conta do lado contratante (Equatorial). Toda a exploração foi somente leitura.
+Mapeado de 05 a 08/10/2026 e revisto em 19/10/2026 com a conta de um operador da **NIP (lado contratada)**. Toda a exploração foi somente leitura.
 
-**Situação da F3.17:** a parte de **leitura** está mapeada (abaixo). A parte de **envio** (telas, formatos, nomes de arquivo, campos obrigatórios e retorno) **não está**, porque a conta atual não tem permissão de upload: `/LinksContratante/CriarLink` responde "Sem Permissão" e as telas de Carregamento estão vazias. Para fechar a tarefa, falta uma destas opções:
-- uma conta do lado **contratada** com acesso ao envio;
-- a permissão de upload liberada na conta atual;
-- a gravação do fluxo de envio feita por quem já envia hoje.
+**Situação da F3.17:** a parte de **leitura** está mapeada (abaixo). A parte de **envio** (telas, formatos, nomes de arquivo, campos obrigatórios e retorno) **não está**. Causa, confirmada em 19/10 pelo `loginapi.contractweb.com.br/api/v1/Auth/GetUserInfo` (menus e roles do usuário):
+- **Perfil:** em carregamento, só `CARREGAMENTO_MENSAL_PESQUISAR` (+ `OPCIONAL2`). Não tem CRIAR/EDITAR, nem nenhuma role de Carregamento Mobilização, Veículo ou Ambiental. O documento de empresa entra pela Mobilização (a tela traz `action-mobilizacao-documentos-empresa`).
+- **Vínculo:** nenhum contrato ligado ao operador. `ListarCompetenciasAjax` devolve `recordsTotal=0` em qualquer filtro (mês "todos", com e sem concluídos) desde 06/10.
+- `/LinksContratante/CriarLink` "Sem Permissão" vem de `LINKS_POR_CONTRATANTE` ter só PESQUISAR. Publicar link é função da contratante e não tem relação com o envio.
+
+O relatório 012 mostra documentos "Analisado" e "Não Analisado" nos contratos da NIP. Em 20/10 a Milena disse que **esta é a única conta Bernhoeft** que eles têm, então não há "login de quem já envia" a pedir. Esses envios saíram desta conta antes de perderem o vínculo/perfil, de um login que a Milena não conhece, ou do lado da Equatorial ou da Bernhoeft (perguntar). Para fechar a tarefa, falta o gestor da conta NIP no ContractWeb (ou o suporte Bernhoeft) vincular este operador aos contratos da Equatorial e dar o perfil de carregamento (Mensal e Mobilização com criar/editar).
+
+**Exploração de 20/10 (só leitura, scripts `%TEMP%/gesdoc-teste/bern-explorar3..7.js`):**
+- A conta é mesmo usada por uma pessoa: o analytics do portal (UserGuiding, `/sdk/identify`) registra o operador 83205 em Edge/Windows desde 23/05/2025, com 1697 sessões. O xlsx do 012 de 25/09 também foi pedido por "Rodrigo Rocha".
+- O app novo (`app.contractweb.com.br`, 43 rotas lidas do router) só tem relatórios, dossiê, logs e autocadastro. **Não há tela de envio nele.** O envio é no newcontract.
+- Todas as telas de carregamento abrem sem "Sem Permissão" e voltam com 0 competências: Mensal, Mobilização (`TipoCompetencia` 0, 1 e 2=todos; o 3 em diante cai no 2), Veículo (`/MobilizacaoVeiculo`) e Ambiental (`/ModuloAmbiental`). O contratante aparece (Equatorial, id 188), mas a lista de contratos no filtro do app vem vazia.
+- No xlsx do 012, as 39 linhas são da competência "Documentos de Empresa": 17 Analisado, 13 Não Analisado e 9 Não Entregue.
+- O nome das roles pode enganar: é possível que o upload dependa só do vínculo com o contrato e não de uma role CRIAR. O que falta descobrir é se a Milena vê hoje competências que o robô não vê, ou se o vínculo caiu depois de 25/09.
 
 ## Acesso
 

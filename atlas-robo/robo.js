@@ -1,7 +1,8 @@
 // Robô Atlas na VPS: um processo só, com UMA fila (o perfil do Chromium não aceita dois navegadores ao mesmo tempo).
 // Substitui o laço em shell do Dockerfile. Faz, em ordem e nunca duas coisas juntas:
 //   - a cada INTERVALO_MIN (ou quando o painel grava out/rodar-agora): rodada completa
-//       coleta (pendencias.js, que grava no Neon) -> busca na Factorial (factorial.js) -> lista de envio (enviar.js, simulação)
+//       coleta (pendencias.js, que grava no Neon) -> busca na Factorial (factorial.js)
+//       -> busca no SharePoint (sharepoint.js --baixar: só baixa para o painel mostrar, NÃO grava no Neon) -> lista de envio (enviar.js, simulação)
 //       -> se o ENVIO AUTOMÁTICO estiver ligado: enviar.js --auto (envia as prontas, uma por vez, para na primeira recusa);
 //   - entre as rodadas, a cada 5 s: os pedidos do painel em out/envio/pedidos/*.json
 //       { acao: 'verificar' | 'enviar' | 'buscar' | 'atualizar', id, confirmo }.
@@ -49,6 +50,13 @@ function rodar(script, args = []) {
   });
 }
 const automatico = () => (lerJson(ARQ_MODO) || {}).automatico === true;
+// Sem as variáveis do app do Azure no cofre, a busca no SharePoint é pulada.
+const temSharepoint = () => !!(process.env.SHAREPOINT_TENANT_ID && process.env.SHAREPOINT_CLIENT_ID && process.env.SHAREPOINT_CLIENT_SECRET);
+async function buscarSharepoint() {
+  if (!temSharepoint()) return null;
+  fazendo('buscando documentos no SharePoint (só para o painel)');
+  return rodar('sharepoint.js', ['--baixar']);
+}
 
 async function rodada(porque) {
   const r = { inicio: new Date().toISOString(), porque, codigos: {} };
@@ -57,6 +65,7 @@ async function rodada(porque) {
   // Sem coleta nova (login pendente etc.) não busca nem envia: a lista de envio depende dela.
   if (r.codigos.coleta === 0 || r.codigos.coleta === 3) {
     if (process.env.FACTORIAL_API_KEY) { fazendo('buscando documentos na Factorial'); r.codigos.factorial = await rodar('factorial.js'); }
+    if (temSharepoint()) r.codigos.sharepoint = await buscarSharepoint();
     fazendo('atualizando a lista de envio'); r.codigos.lista = await rodar('enviar.js');
     if (automatico()) { fazendo('ENVIANDO ao Atlas (automático)'); r.codigos.envio = await rodar('enviar.js', ['--auto']); }
   }
@@ -79,7 +88,7 @@ async function atenderPedidos() {
     log(`Pedido do painel: ${p.acao}${id ? ` #${id}` : ''}`);
     if (p.acao === 'verificar' && id) { fazendo(`verificando #${id} no Atlas`); code = await rodar('enviar.js', ['--verificar', '--id', id]); }
     else if (p.acao === 'enviar' && id && confirmo) { fazendo(`ENVIANDO #${id} ao Atlas`); code = await rodar('enviar.js', ['--enviar', '--id', id, '--confirmo', confirmo]); }
-    else if (p.acao === 'buscar') { fazendo('buscando documentos na Factorial'); code = await rodar('factorial.js'); }
+    else if (p.acao === 'buscar') { fazendo('buscando documentos na Factorial'); code = await rodar('factorial.js'); await buscarSharepoint(); }
     else if (p.acao !== 'atualizar') { log(`Pedido ignorado (inválido): ${f}`); continue; }
     // Depois de qualquer ação, a lista de envio é refeita (quem foi enviado sai, quem foi achado entra).
     fazendo('atualizando a lista de envio'); await rodar('enviar.js');
