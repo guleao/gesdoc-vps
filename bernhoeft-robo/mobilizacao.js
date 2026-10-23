@@ -101,7 +101,7 @@ async function lerFactorial(plano) {
   for (const c of plano.colaboradores) {
     const r = { cpf: mascara(c.cpf), ok: false, dados: null, arquivos: [], itens: [] };
     relatorio.colaboradores.push(r);
-    const f = funcionarios.filter((e) => dig(e.identifier) === dig(c.cpf));
+    const f = funcionarios.filter((e) => dig(e.identifier) === dig(c.cpf) || dig(e.social_security_number) === dig(c.cpf)); // como o factorial.js: o CPF pode estar em qualquer um dos dois
     if (f.length !== 1) { r.motivo = f.length ? `${f.length} funcionários com esse CPF na Factorial` : 'CPF não achado na Factorial'; continue; }
     const e = f[0];
     // Contrato atual: função, salário e admissão (campos a conferir na chamada; o que vier vazio fica para a pessoa preencher).
@@ -110,8 +110,8 @@ async function lerFactorial(plano) {
     r.dados = {
       nome: e.full_name || [e.first_name, e.last_name].filter(Boolean).join(' '),
       matricula: e.company_identifier || '',
-      pis: e.social_security_number || '',
-      cpf: dig(e.identifier),
+      pis: [e.identifier, e.social_security_number].map(dig).find((x) => x && x !== dig(c.cpf)) || '', // o campo que NÃO é o CPF; conferir na chamada
+      cpf: dig(c.cpf),
       rg: '', // a Factorial não traz RG no cadastro (ver 22/10); fica vazio
       nascimento: e.birthday_on || '',
       sexo: e.gender === 'female' ? 'Feminino' : e.gender === 'male' ? 'Masculino' : '',
@@ -150,7 +150,7 @@ async function baixar(doc) {
   const pasta = path.join(OUT, 'arquivos');
   fs.mkdirSync(pasta, { recursive: true, mode: 0o700 });
   const arq = path.join(pasta, `${doc.id}.pdf`);
-  if (fs.existsSync(arq)) return arq;
+  if (fs.existsSync(arq)) { doc.sha256 = crypto.createHash('sha256').update(fs.readFileSync(arq)).digest('hex'); return arq; }
   const link = await api('/documents/download_urls/bulk_create', { method: 'POST', body: JSON.stringify({ ids: [Number(doc.id)] }) }).then((x) => (x.data || x)[0]);
   const res = await fetch(link.url);
   if (!res.ok) throw new Error(`download ${doc.id} falhou (HTTP ${res.status})`);
@@ -196,8 +196,10 @@ async function avisoDoPortal() { // modal "Aviso!" / SweetAlert / toast: devolve
   const m = page.locator('.swal2-popup:visible, .modal.show:visible, .toast:visible, .alert-danger:visible').first();
   return (await m.count()) ? norm(await m.innerText().catch(() => '')) : '';
 }
-async function proximo(etapa) {
+async function proximo(etapa, id) {
   await registrar(`etapa${etapa}`);
+  // No ensaio não clica em "Próximo" (pode salvar a etapa): abre a próxima pela URL.
+  if (!EXECUTAR) { await page.goto(`${BASE}/AtualizarColaborador/Etapa${etapa + 1}/${id}`, { waitUntil: 'domcontentloaded' }).catch(() => {}); return; }
   const b = botao(/pr[oó]ximo/i);
   if (!(await b.count())) throw new Error(`etapa ${etapa}: botão "Próximo" não achado`);
   // Avançar de etapa não grava nada sozinho (no vídeo os dados já tinham sido salvos antes); fica livre no ensaio
@@ -371,9 +373,9 @@ async function etapa5(id) {
       log('Ensaio: sem mobilization_id no plano, as etapas não foram abertas. Para ver as etapas, ponha o id de uma mobilização existente.');
     } else {
       await etapa2(id, plano);
-      await proximo(2); // → 3
-      await proximo(3); // → 4
-      await proximo(4); // → 5
+      await proximo(2, id); // → 3
+      await proximo(3, id); // → 4
+      await proximo(4, id); // → 5
       await etapa5(id);
       if (CONCLUIR) {
         await page.goto(`${BASE}/AtualizarColaborador/Etapa8/${id}`, { waitUntil: 'domcontentloaded' }).catch(() => {});

@@ -1,0 +1,8 @@
+{
+  "contrato": "757/2025-PA",
+  "contratada": "NIP",
+  "mobilizacao_id": null,
+  "colaboradores": [
+    { "cpf": "00000000000", "administrativo": true, "conduz_veiculo": false, "faz_nr": false }
+  ]
+}

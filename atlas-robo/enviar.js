@@ -73,6 +73,12 @@ function acharArquivo(caminho, pasta, id) {
     const achado = fs.existsSync(dir) && fs.readdirSync(dir).find((f) => f.startsWith(fid[1] + '.'));
     return achado ? { arquivo: path.join(dir, achado), original: true } : { erro: `ainda não baixado da Factorial (${fid[1]})` };
   }
+  // SharePoint (sharepoint.js --gravar): "sharepoint:<id do item>" ou "sharepoint:unido-<chave>", baixado em <pasta>/sharepoint/<...>.pdf.
+  const sid = /^sharepoint:([\w!.\-]+)$/i.exec(caminho);
+  if (sid) {
+    const arq = path.join(pasta, 'sharepoint', `${sid[1]}.pdf`);
+    return fs.existsSync(arq) && fs.statSync(arq).isFile() ? { arquivo: arq, original: true } : { erro: `ainda não baixado do SharePoint (${sid[1]})` };
+  }
   if (fs.existsSync(caminho) && fs.statSync(caminho).isFile()) return { arquivo: caminho, original: true };
   // Montado de novo nesta máquina, na pasta do id do Neon (mesmas partes da Factorial, outro arquivo: o SHA-256 muda).
   const norm = caminho.replace(/\\/g, '/');

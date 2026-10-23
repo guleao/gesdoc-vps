@@ -6,3 +6,5 @@ out/
 .venv-captcha/
 __pycache__/
 profile-teste*/
+plano*.json
+!plano.exemplo.json
