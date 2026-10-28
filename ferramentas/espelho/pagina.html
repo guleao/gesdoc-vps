@@ -1,0 +1,609 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Espelho dos portais</title>
+<style>
+@font-face { font-family: "Geist"; src: url(/fontes/Geist-Variable.woff2) format("woff2"); font-weight: 100 900; }
+@font-face { font-family: "Geist Mono"; src: url(/fontes/GeistMono-Variable.woff2) format("woff2"); font-weight: 100 900; }
+:root {
+  --s0: #09090b; --s1: #0f0f12; --s2: #151518; --s3: #1c1c20; --s4: #26262b;
+  --l1: rgba(255,255,255,.06); --l2: rgba(255,255,255,.1); --l3: rgba(255,255,255,.16);
+  --t1: #ededef; --t2: #a0a0ab; --t3: #6c6c76; --t4: #4a4a52;
+  --ac: #3ecf8e; --ac-fundo: rgba(62,207,142,.12); --ac-tinta: #04140c;
+  --ok: #3ecf8e; --at: #f0a541; --er: #f0565a; --in: #6ea8fe;
+  --r1: 5px; --r2: 7px; --r3: 10px;
+  --ui: "Geist", "Segoe UI", system-ui, sans-serif; --mono: "Geist Mono", Consolas, monospace;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--s0); color: var(--t1); font: 13px/1.45 var(--ui); }
+header { display: flex; align-items: center; gap: 12px; height: 46px; padding: 0 16px; border-bottom: 1px solid var(--l1); background: var(--s1); position: sticky; top: 0; z-index: 3; }
+header h1 { font-size: 14px; font-weight: 600; margin: 0 8px 0 0; }
+.seg { display: inline-flex; background: var(--s3); border-radius: var(--r2); padding: 2px; gap: 2px; }
+.seg button { height: 24px; padding: 0 10px; border: 0; border-radius: var(--r1); background: none; color: var(--t2); font: inherit; cursor: pointer; }
+.seg button.on { background: var(--s4); color: var(--t1); }
+.seg button .n { font-family: var(--mono); font-size: 11.5px; color: var(--t3); margin-left: 6px; }
+button.btn { height: 28px; padding: 0 12px; border: 1px solid var(--l2); border-radius: var(--r2); background: var(--s3); color: var(--t1); font: inherit; cursor: pointer; }
+button.btn:hover { background: var(--s4); }
+.dir { margin-left: auto; display: flex; align-items: center; gap: 10px; color: var(--t2); }
+main { padding: 16px; max-width: 1700px; margin: 0 auto; }
+.cartoes { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+.cartao { background: var(--s2); border: 1px solid var(--l1); border-radius: var(--r3); padding: 10px 14px; min-width: 190px; }
+.cartao .rot { color: var(--t3); font-size: 11.5px; }
+.cartao .val { font-family: var(--mono); font-size: 16px; margin-top: 2px; }
+.cartao .sub { color: var(--t2); font-size: 12px; margin-top: 2px; }
+.ok { color: var(--ok); } .at { color: var(--at); } .er { color: var(--er); } .fr { color: var(--t3); }
+.filtros { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 12px 0; }
+.filtros select, .filtros input { height: 28px; background: var(--s3); color: var(--t1); border: 1px solid var(--l2); border-radius: var(--r2); padding: 0 8px; font: inherit; max-width: 260px; }
+.filtros input[type=search] { width: 240px; }
+.filtros label { color: var(--t2); display: inline-flex; align-items: center; gap: 6px; }
+.contagem { color: var(--t2); margin-left: auto; font-family: var(--mono); font-size: 12px; }
+.tabela { background: var(--s1); border: 1px solid var(--l1); border-radius: var(--r3); overflow: auto; max-height: calc(100vh - 290px); }
+table { border-collapse: collapse; width: 100%; }
+th { position: sticky; top: 0; background: var(--s2); color: var(--t2); font-weight: 500; text-align: left; font-size: 12px; padding: 7px 10px; border-bottom: 1px solid var(--l2); white-space: nowrap; cursor: pointer; user-select: none; }
+th:hover { color: var(--t1); }
+td { padding: 6px 10px; border-bottom: 1px solid var(--l1); vertical-align: top; }
+tr:hover td { background: var(--s2); }
+td.m { font-family: var(--mono); font-size: 12px; white-space: nowrap; }
+td.doc { max-width: 380px; }
+.selo { display: inline-block; padding: 0 6px; border-radius: var(--r1); font-size: 11.5px; line-height: 18px; border: 1px solid var(--l2); color: var(--t2); white-space: nowrap; }
+.selo.ok { color: var(--ok); border-color: rgba(62,207,142,.35); }
+.selo.at { color: var(--at); border-color: rgba(240,165,65,.35); }
+.selo.er { color: var(--er); border-color: rgba(240,86,90,.35); }
+.selo.in { color: var(--in); border-color: rgba(110,168,254,.35); }
+.cod { color: var(--t4); font-family: var(--mono); font-size: 11px; display: block; }
+a { color: var(--in); text-decoration: none; } a:hover { text-decoration: underline; }
+.nosso { color: var(--t2); font-size: 12px; max-width: 300px; }
+.aviso { background: var(--s2); border: 1px solid rgba(240,165,65,.35); color: var(--at); border-radius: var(--r3); padding: 10px 14px; margin-bottom: 12px; }
+.erro { border-color: rgba(240,86,90,.35); color: var(--er); }
+.saiu td { color: var(--t3); text-decoration: line-through; }
+h2 { font-size: 13px; font-weight: 600; margin: 20px 0 8px; }
+.dica { color: var(--t3); font-size: 12px; }
+tbody tr[data-i] { cursor: pointer; }
+tr.sel td { background: var(--s4); }
+/* Ficha da pendência (mesmo roteiro das fichas de 27/10) */
+#ficha { position: fixed; top: 46px; right: 0; bottom: 0; width: min(620px, 100vw); background: var(--s1); border-left: 1px solid var(--l2); overflow: auto; padding: 18px 20px 40px; transform: translateX(100%); transition: transform .15s; z-index: 4; }
+#ficha.aberta { transform: none; }
+#ficha .fechar { position: absolute; top: 12px; right: 14px; }
+#ficha .num { color: var(--t3); font-size: 11.5px; font-family: var(--mono); }
+#ficha h3 { font-size: 16px; font-weight: 600; margin: 4px 40px 4px 0; line-height: 1.3; }
+#ficha .quem-e { color: var(--t2); margin-bottom: 14px; }
+#ficha dl { margin: 0; }
+#ficha dt { color: var(--t3); font-size: 11.5px; margin-top: 14px; }
+#ficha dd { margin: 3px 0 0; color: var(--t1); font-size: 13px; line-height: 1.5; }
+#ficha ol, #ficha ul { margin: 4px 0 0; padding-left: 20px; }
+#ficha li { margin: 3px 0; }
+#ficha .quem { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: var(--r1); background: var(--s3); color: var(--t2); font-size: 11.5px; }
+#ficha .grupo { display: inline-block; margin-top: 6px; }
+#ficha .manual { margin-top: 18px; padding: 12px 14px; background: var(--s2); border: 1px solid var(--l1); border-radius: var(--r3); }
+#ficha .manual .tit { font-weight: 600; margin-bottom: 2px; }
+#ficha .dados { margin-top: 18px; }
+#ficha .dados summary { color: var(--t2); cursor: pointer; }
+#ficha .dados table td { padding: 3px 8px 3px 0; border: 0; font-size: 12px; }
+#ficha .dados table td:first-child { color: var(--t3); white-space: nowrap; }
+#ficha .ressalva { color: var(--at); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Espelho dos portais</h1>
+  <div class="seg" id="portal">
+    <button data-p="atlas" class="on">Atlas</button>
+    <button data-p="bern">Bernhoeft</button>
+  </div>
+  <div class="dir">
+    <span id="lido"></span>
+    <button class="btn" id="atualizar" title="Busca de novo o que o robô leu por último na VPS (não entra nos portais)">Atualizar</button>
+  </div>
+</header>
+<main id="tela"><p class="fr">Carregando…</p></main>
+<aside id="ficha"></aside>
+
+<script src="/diag.js"></script>
+<script>
+// Situações com o nome que o próprio Atlas mostra.
+const STATUS_ATLAS = {
+  CriticalDelay: 'Crítico atrasado', Delay: 'Atrasado', DelayNotSent: 'Não enviado no prazo', DelayRejected: 'Reprovado (atrasado)',
+  Pending: 'Pendente', PendingNotSent: 'Não enviado', PendingRejected: 'Reprovado (pendente)', WaitingForPredecessors: 'Aguardando predecessor(es)',
+  ToValidate: 'Em análise', Valid: 'Aprovado', Expired: 'Vencido',
+};
+const corAtlas = (s) => /Rejected/.test(s) ? 'er' : /Delay/.test(s) ? 'at' : /Valid$/.test(s) ? 'ok' : /ToValidate|Waiting/.test(s) ? 'in' : '';
+const corBern = (s) => /Não Entregue/i.test(s) ? 'er' : /Não Analisado/i.test(s) ? 'in' : /^Analisado/i.test(s) ? 'ok' : /reprov/i.test(s) ? 'er' : '';
+const ABAS_ATLAS = ['Atrasados', 'Próximas entregas', 'Reprovados'];
+
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const data = (s) => { const m = /^(\d{4})-(\d\d)-(\d\d)/.exec(s || ''); return m ? `${m[3]}/${m[2]}/${m[1]}` : (s || ''); };
+const hora = (s) => s ? new Date(s).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+const nomeLeitura = (arq) => hora(arq.replace('.json', '').replace(/T(\d\d)-(\d\d)-(\d\d)-(\d+)Z/, 'T$1:$2:$3.$4Z'));
+const cpfMasc = (c) => !c ? '' : estado.verCpf ? c : String(c).replace(/^(\d{3})\.?(\d{3})\.?(\d{3})-?(\d{2})$/, '***.$2.$3-**');
+
+const estado = { portal: 'atlas', atlas: null, bern: null, abaAtlas: 'Atrasados', statusBern: 'todos', f: {}, ordem: null, verCpf: false, antigaAtlas: null, antigaBern: null };
+
+async function api(rota) {
+  const r = await fetch(rota);
+  const j = await r.json();
+  if (!r.ok) throw new Error(j.erro || r.status);
+  return j;
+}
+
+async function carregar(novo) {
+  const tela = document.getElementById('tela');
+  document.getElementById('lido').textContent = 'Lendo da VPS…';
+  try {
+    if (estado.portal === 'atlas') estado.atlas = await api('/api/atlas' + (novo ? '?novo=1' : ''));
+    else estado.bern = await api('/api/bern' + (novo ? '?novo=1' : ''));
+    desenhar();
+  } catch (e) {
+    document.getElementById('lido').textContent = '';
+    tela.innerHTML = `<div class="aviso erro">Não deu para ler da VPS: ${esc(e.message)}<br><span class="dica">Confira se o Tailscale está ligado. Se o tailscale ssh pedir para aprovar um link no navegador, aprove e clique em Atualizar.</span></div>`;
+  }
+}
+
+function opcoes(lista, campo, rotulo) {
+  const vals = [...new Set(lista.map((x) => x[campo]).filter((v) => v != null && v !== ''))].sort((a, b) => String(a).localeCompare(String(b), 'pt-BR', { numeric: true }));
+  const sel = estado.f[campo] || '';
+  return `<select data-f="${campo}"><option value="">${esc(rotulo)}: todos</option>${vals.map((v) => `<option ${String(v) === sel ? 'selected' : ''} value="${esc(v)}">${esc(campo === 'status' && STATUS_ATLAS[v] && estado.portal === 'atlas' ? STATUS_ATLAS[v] : v)}</option>`).join('')}</select>`;
+}
+
+function filtrar(lista, campos) {
+  const busca = (estado.f.busca || '').toLowerCase();
+  let r = lista.filter((x) => Object.entries(estado.f).every(([k, v]) => !v || k === 'busca' || k === 'comFunc' || String(x[k] ?? '') === v));
+  if (estado.f.comFunc) r = r.filter((x) => x.funcionario || x.colaboradores);
+  if (busca) r = r.filter((x) => campos.some((c) => String(x[c] ?? '').toLowerCase().includes(busca)) || (x.cpf && String(x.cpf).replace(/\D/g, '').includes(busca.replace(/\D/g, '') || '§')));
+  if (estado.ordem) {
+    const [c, dir] = estado.ordem;
+    r = [...r].sort((a, b) => String(a[c] ?? '').localeCompare(String(b[c] ?? ''), 'pt-BR', { numeric: true }) * dir);
+  }
+  return r;
+}
+
+const th = (c, t) => `<th data-ord="${c}">${esc(t)}${estado.ordem?.[0] === c ? (estado.ordem[1] > 0 ? ' ↑' : ' ↓') : ''}</th>`;
+
+function desenhar() {
+  fecharFicha();
+  if (estado.portal === 'atlas') desenharAtlas(); else desenharBern();
+}
+
+// ---------- Atlas ----------
+function desenharAtlas() {
+  const { coleta, nosso, painel_ok, leituras } = estado.atlas;
+  const L = coleta.pendencias || [];
+  document.getElementById('lido').textContent = `Robô leu o Atlas em ${hora(coleta.coletado_em)}`;
+  const tot = coleta.totais || {};
+
+  // Comparação com uma leitura guardada antes.
+  const ant = estado.antigaAtlas;
+  const antIds = ant ? new Map(ant.pendencias.map((p) => [p.document_schedule_id + '|' + p.aba, p])) : null;
+  const antSched = ant ? new Set(ant.pendencias.map((p) => p.document_schedule_id)) : null;
+  const atuIds = new Set(L.map((p) => p.document_schedule_id + '|' + p.aba));
+  const saiu = ant ? ant.pendencias.filter((p) => !atuIds.has(p.document_schedule_id + '|' + p.aba)) : [];
+
+  const cartoes = ABAS_ATLAS.map((a) => {
+    const n = L.filter((p) => p.aba === a).length;
+    const igual = tot[a] == null || tot[a] === n;
+    return `<div class="cartao"><div class="rot">${esc(a)}</div><div class="val ${igual ? '' : 'er'}">${n}</div><div class="sub">${tot[a] == null ? 'o portal não informou o total' : igual ? `<span class="ok">o portal diz ${tot[a]}: igual</span>` : `<span class="er">o portal diz ${tot[a]}: faltam ${tot[a] - n}</span>`}</div></div>`;
+  }).join('') + `<div class="cartao"><div class="rot">Entregues</div><div class="val">${tot.Entregues ?? '?'}</div><div class="sub fr">total do portal; o robô não lê esta aba</div></div>`
+    + `<div class="cartao"><div class="rot">Com funcionário</div><div class="val">${L.filter((p) => p.cpf).length}</div><div class="sub">${new Set(L.filter((p) => p.cpf).map((p) => p.cpf)).size} pessoas diferentes</div></div>`;
+
+  const daAba = L.filter((p) => p.aba === estado.abaAtlas);
+  const enviadosTab = estado.abaAtlas === 'Enviados por nós';
+  const envs = [...(estado.atlas.enviados || [])].sort((a, b) => String(b.em).localeCompare(String(a.em)));
+  const lista = enviadosTab ? filtrar(envs, ['nome', 'funcionario', 'competencia', 'msg']) : filtrar(daAba, ['documento', 'funcionario', 'unidades', 'pedido', 'competencia', 'categoria', 'tipo']);
+  estado.vis = lista;
+  const linhasEnv = !enviadosTab ? '' : lista.map((e, k) => `<tr data-i="${k}">
+      <td class="doc">${esc(e.nome)}</td><td>${esc(e.funcionario || '')}</td><td class="m">${esc(e.competencia || '')}</td>
+      <td class="m">${esc(hora(e.em))}</td><td>${e.auto ? 'automático' : 'pelo painel'}</td>
+      <td>${e.status_atlas ? `<span class="selo ${corAtlas(e.status_atlas)}">${esc(STATUS_ATLAS[e.status_atlas] || e.status_atlas)}</span>` : ''}</td>
+      <td>${e.schedule_id ? `<a href="https://gestao.atlasfacilities.com.br/document-schedule/${encodeURIComponent(e.schedule_id)}/general-information?resume=false" target="_blank" rel="noopener">abrir</a>` : ''}</td></tr>`).join('');
+  const linhas = enviadosTab ? '' : lista.map((p, k) => {
+    const n = nosso[p.document_schedule_id];
+    const novo = ant && !antSched.has(p.document_schedule_id);
+    const mudou = ant && !novo && antIds.get(p.document_schedule_id + '|' + p.aba)?.status !== p.status && antIds.has(p.document_schedule_id + '|' + p.aba);
+    let nossoTxt = '<span class="fr">não está na lista de envio</span>';
+    if (n) {
+      const partes = [];
+      if (n.enviado_em) partes.push(`<span class="ok">enviado ${esc(hora(n.enviado_em))}${n.enviado_auto ? ' (automático)' : ''}</span>`);
+      if (n.estado) partes.push(`#${esc(n.id)} ${esc(n.estado)}${n.pronta ? ' · <span class="ok">pronta</span>' : ''}`);
+      if (n.resultado && !n.resultado.ok && n.resultado.msg) partes.push(`<span class="er">${esc(n.resultado.msg.slice(0, 120))}</span>`);
+      else if (!n.pronta && n.motivos?.length) partes.push(`<span class="at">${esc(n.motivos[0].slice(0, 120))}</span>`);
+      nossoTxt = partes.join('<br>');
+    }
+    return `<tr data-i="${k}">
+      <td>${novo ? '<span class="selo in">novo</span> ' : ''}${mudou ? `<span class="selo at" title="antes: ${esc(STATUS_ATLAS[antIds.get(p.document_schedule_id + '|' + p.aba).status] || '')}">mudou</span> ` : ''}</td>
+      <td class="doc">${esc(p.documento)}</td>
+      <td>${esc(p.funcionario || '')}${p.cpf ? `<span class="cod">${esc(cpfMasc(p.cpf))}</span>` : ''}</td>
+      <td>${esc(p.unidades || '')}<span class="cod">${esc(p.cliente || '')}</span></td>
+      <td>${esc(p.categoria || '')}<span class="cod">${esc(p.tipo || '')}</span></td>
+      <td class="m">${esc(p.competencia || '')}</td>
+      <td class="m">${esc(data(p.prazo_envio))}</td>
+      <td><span class="selo ${corAtlas(p.status)}">${esc(STATUS_ATLAS[p.status] || p.status)}</span>${p.critico ? ' <span class="selo er">crítico</span>' : ''}<span class="cod">${esc(p.status)}</span></td>
+      <td class="m">${esc(p.pedido || '')}</td>
+      <td class="m">${p.enviado_em ? esc(hora(p.enviado_em)) : ''}${p.validade ? `<span class="cod">validade ${esc(data(p.validade))}</span>` : ''}</td>
+      <td class="nosso">${nossoTxt}</td>
+      <td>${p.document_schedule_id ? `<a href="https://gestao.atlasfacilities.com.br/document-schedule/${encodeURIComponent(p.document_schedule_id)}/general-information?resume=false" target="_blank" rel="noopener" title="Abre a pendência no Atlas (só a tela)">abrir</a>` : ''}</td>
+    </tr>`;
+  }).join('');
+
+  const outrasLeituras = leituras.filter((a) => a !== leituras[0]);
+  document.getElementById('tela').innerHTML = `
+    ${painel_ok ? '' : '<div class="aviso">O painel não respondeu: a coluna "nosso sistema" está vazia.</div>'}
+    <div class="cartoes">${cartoes}</div>
+    <div class="seg" id="abasAtlas">${ABAS_ATLAS.map((a) => `<button data-aba="${esc(a)}" class="${a === estado.abaAtlas ? 'on' : ''}">${esc(a)}<span class="n">${L.filter((p) => p.aba === a).length}</span></button>`).join('')}<button data-aba="Enviados por nós" class="${enviadosTab ? 'on' : ''}" title="Histórico de envios do painel: no Atlas eles estão na aba Entregues">Enviados por nós<span class="n">${envs.length}</span></button></div>
+    ${enviadosTab ? `<div class="filtros"><input type="search" data-f="busca" placeholder="Buscar documento, funcionário, competência" value="${esc(estado.f.busca || '')}"><span class="dica">No Atlas, estes ficam na aba Entregues (o robô não lê essa aba). Situação = a da conferência na hora do envio.</span><span class="contagem">${lista.length} de ${envs.length}</span></div>
+    <div class="tabela"><table><thead><tr>${th('nome', 'Documento')}${th('funcionario', 'Funcionário')}${th('competencia', 'Competência')}${th('em', 'Enviado em')}<th>Como</th>${th('status_atlas', 'Situação no envio')}<th></th></tr></thead>
+      <tbody>${linhasEnv || '<tr><td colspan="7" class="fr">Nenhum envio registrado.</td></tr>'}</tbody></table></div>` : `
+    <div class="filtros">
+      <input type="search" data-f="busca" placeholder="Buscar funcionário, CPF, documento, pedido" value="${esc(estado.f.busca || '')}">
+      ${opcoes(daAba, 'unidades', 'Unidade')}${opcoes(daAba, 'categoria', 'Categoria')}${opcoes(daAba, 'documento', 'Documento')}${opcoes(daAba, 'status', 'Status')}${opcoes(daAba, 'competencia', 'Competência')}
+      <label><input type="checkbox" data-f="comFunc" ${estado.f.comFunc ? 'checked' : ''}> só com funcionário</label>
+      <label><input type="checkbox" id="verCpf" ${estado.verCpf ? 'checked' : ''}> mostrar CPF</label>
+      <label>Comparar com <select id="antiga"><option value="">nenhuma leitura</option>${outrasLeituras.map((a) => `<option value="${esc(a)}" ${estado.antigaAtlas?._arq === a ? 'selected' : ''}>${esc(nomeLeitura(a))}</option>`).join('')}</select></label>
+      ${outrasLeituras.length ? '' : '<span class="dica">As leituras passam a ser guardadas a partir de agora (o robô só guarda a última).</span>'}
+      <span class="contagem">${lista.length} de ${daAba.length}</span>
+    </div>
+    <div class="tabela"><table>
+      <thead><tr><th></th>${th('documento', 'Documento')}${th('funcionario', 'Funcionário')}${th('unidades', 'Unidade')}${th('categoria', 'Categoria')}${th('competencia', 'Competência')}${th('prazo_envio', 'Prazo de envio')}${th('status', 'Status')}${th('pedido', 'Pedido')}${th('enviado_em', 'Enviado em')}<th>Nosso sistema</th><th></th></tr></thead>
+      <tbody>${linhas || '<tr><td colspan="12" class="fr">Nada com esses filtros.</td></tr>'}</tbody>
+    </table></div>`}
+    ${ant ? `<h2>Saíram desde ${esc(nomeLeitura(ant._arq))} (${saiu.length})</h2>
+      <div class="tabela" style="max-height:none"><table><thead><tr><th>Aba</th><th>Documento</th><th>Funcionário</th><th>Unidade</th><th>Competência</th><th>Status antes</th></tr></thead><tbody>
+      ${saiu.map((p) => `<tr class="saiu"><td>${esc(p.aba)}</td><td>${esc(p.documento)}</td><td>${esc(p.funcionario || '')}</td><td>${esc(p.unidades || '')}</td><td class="m">${esc(p.competencia || '')}</td><td>${esc(STATUS_ATLAS[p.status] || p.status)}</td></tr>`).join('') || '<tr><td colspan="6" class="fr">Nenhuma.</td></tr>'}
+      </tbody></table></div>` : ''}
+  `;
+  ligar();
+}
+
+// ---------- Bernhoeft ----------
+function desenharBern() {
+  const { coleta, leituras } = estado.bern;
+  const L = coleta.itens || [];
+  document.getElementById('lido').textContent = `Robô leu o Bernhoeft em ${hora(coleta.coletado_em)}`;
+  const ant = estado.antigaBern;
+  const antMap = ant ? new Map(ant.itens.map((x) => [x.chave, x])) : null;
+  const atu = new Set(L.map((x) => x.chave));
+  const saiu = ant ? ant.itens.filter((x) => !atu.has(x.chave)) : [];
+
+  const status = [...new Set(L.map((x) => x.status))];
+  // A situação de cada documento vem do xlsx do relatório 012 que o robô baixou por último (o nome traz a data do pedido).
+  const m012 = /(\d\d)-(\d\d)-(\d{4})-(\d\d)-(\d\d)-\d\d_/.exec(coleta.relatorio012?.ultimo_baixado || '');
+  const data012 = m012 ? new Date(`${m012[3]}-${m012[2]}-${m012[1]}T${m012[4]}:${m012[5]}:00-03:00`) : null;
+  const dias012 = data012 ? Math.floor((Date.now() - data012) / 86400000) : null;
+  const aviso012 = !data012
+    ? '<div class="aviso">Não dá para saber de quando é o relatório 012 usado nesta leitura: a situação dos documentos pode estar velha.</div>'
+    : dias012 >= 2
+      ? `<div class="aviso">A situação de cada documento abaixo vem do <b>relatório 012 pedido em ${esc(hora(data012))}</b> (${dias012} dias atrás), não do portal de hoje. O robô lê a tela a cada 30 min, mas o status por documento só muda quando sai um relatório 012 novo. Por isso o que foi enviado depois dessa data (por exemplo, os dois de 26/10) ainda aparece como "Não Entregue".</div>`
+      : '';
+  const cartoes = `<div class="cartao"><div class="rot">Documentos lidos</div><div class="val">${L.length}</div><div class="sub">${data012 ? `relatório 012 de <span class="${dias012 >= 2 ? 'at' : ''}">${esc(hora(data012))}</span>` : ''}</div></div>`
+    + status.map((s) => `<div class="cartao"><div class="rot">${esc(s)}</div><div class="val ${corBern(s)}">${L.filter((x) => x.status === s).length}</div></div>`).join('')
+    + `<div class="cartao"><div class="rot">Com colaborador</div><div class="val">${L.filter((x) => x.colaboradores).length}</div><div class="sub fr">${coleta.incluiu_concluidos ? 'inclui concluídos' : 'sem os concluídos'}</div></div>`;
+
+  const daAba = estado.statusBern === 'todos' ? L : L.filter((x) => x.status === estado.statusBern);
+  const lista = filtrar(daAba, ['contrato', 'contratada', 'area', 'descricao', 'colaboradores', 'unidade', 'competencia']);
+  estado.vis = lista;
+  const linhas = lista.map((x, k) => {
+    const a = antMap?.get(x.chave);
+    const novo = ant && !a;
+    const mudou = a && a.status !== x.status;
+    return `<tr data-i="${k}">
+      <td>${novo ? '<span class="selo in">novo</span>' : ''}${mudou ? `<span class="selo at" title="antes: ${esc(a.status)}">mudou</span>` : ''}</td>
+      <td class="m">${esc(x.contrato)}</td>
+      <td>${esc(x.contratada)}</td>
+      <td>${esc(x.area)}<span class="cod">${esc(x.unidade || '')}</span></td>
+      <td class="m">${esc(x.competencia)}</td>
+      <td class="doc">${esc(x.descricao)}</td>
+      <td>${esc(x.colaboradores || '')}</td>
+      <td>${esc(x.risco || '')}</td>
+      <td>${esc(x.tipo || '')}</td>
+      <td><span class="selo ${corBern(x.status)}">${esc(x.status)}</span>${mudou ? `<span class="cod">antes: ${esc(a.status)}</span>` : ''}${x.docs_pendentes ? ' <span class="selo er">docs pendentes</span>' : ''}</td>
+    </tr>`;
+  }).join('');
+
+  const r012 = coleta.relatorio012;
+  const outras = leituras.filter((a) => a !== leituras[0]);
+  document.getElementById('tela').innerHTML = `
+    ${aviso012}
+    <div class="cartoes">${cartoes}</div>
+    <div class="seg" id="statusBern">${['todos', ...status].map((s) => `<button data-st="${esc(s)}" class="${s === estado.statusBern ? 'on' : ''}">${s === 'todos' ? 'Todos' : esc(s)}<span class="n">${s === 'todos' ? L.length : L.filter((x) => x.status === s).length}</span></button>`).join('')}</div>
+    <div class="filtros">
+      <input type="search" data-f="busca" placeholder="Buscar contrato, área, documento, colaborador" value="${esc(estado.f.busca || '')}">
+      ${opcoes(daAba, 'contrato', 'Contrato')}${opcoes(daAba, 'area', 'Área')}${opcoes(daAba, 'unidade', 'Unidade')}${opcoes(daAba, 'tipo', 'Tipo')}${opcoes(daAba, 'competencia', 'Competência')}
+      <label>Comparar com <select id="antiga"><option value="">nenhuma leitura</option>${outras.map((a) => `<option value="${esc(a)}" ${estado.antigaBern?._arq === a ? 'selected' : ''}>${esc(nomeLeitura(a))}</option>`).join('')}</select></label>
+      <span class="contagem">${lista.length} de ${daAba.length}</span>
+    </div>
+    <div class="tabela"><table>
+      <thead><tr><th></th>${th('contrato', 'Contrato')}${th('contratada', 'Contratada')}${th('area', 'Área')}${th('competencia', 'Competência')}${th('descricao', 'Documento')}${th('colaboradores', 'Colaboradores')}${th('risco', 'Risco')}${th('tipo', 'Tipo')}${th('status', 'Status')}</tr></thead>
+      <tbody>${linhas || '<tr><td colspan="10" class="fr">Nada com esses filtros.</td></tr>'}</tbody>
+    </table></div>
+    ${ant ? `<h2>Saíram desde ${esc(nomeLeitura(ant._arq))} (${saiu.length})</h2>
+      <div class="tabela" style="max-height:none"><table><thead><tr><th>Contrato</th><th>Área</th><th>Competência</th><th>Documento</th><th>Status antes</th></tr></thead><tbody>
+      ${saiu.map((x) => `<tr class="saiu"><td>${esc(x.contrato)}</td><td>${esc(x.area)}</td><td>${esc(x.competencia)}</td><td>${esc(x.descricao)}</td><td>${esc(x.status)}</td></tr>`).join('') || '<tr><td colspan="5" class="fr">Nenhuma.</td></tr>'}
+      </tbody></table></div>` : ''}
+    ${r012 ? `<h2>Relatório 012 (pedidos de relatório) · ${r012.total_pedidos ?? r012.pedidos?.length ?? 0}</h2>
+      <div class="tabela" style="max-height:320px"><table><thead><tr><th>Solicitado em</th><th>Status</th><th>Contratante</th><th>Grupo/área</th><th>Unidade</th><th>Download</th></tr></thead><tbody>
+      ${(r012.pedidos || []).map((p) => `<tr><td class="m">${esc(p.solicitado_em)}</td><td>${esc(p.status)}</td><td>${esc(p.contratante)}</td><td>${esc(p.grupo_area)}</td><td>${esc(p.unidade)}</td><td>${p.tem_download ? 'sim' : '<span class="fr">não</span>'}</td></tr>`).join('')}
+      </tbody></table></div>` : ''}
+  `;
+  ligar();
+}
+
+// ---------- fichas ----------
+// Mesmo roteiro das fichas de 27/10: como está, no portal agora, o que aconteceu, por quê, o que fazer (quem), resolvido quando.
+// Se a pendência foi analisada à mão (DIAG do painel), essa análise vem primeiro; embaixo, a leitura automática de agora.
+const semAcento = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const soDig = (s) => String(s || '').replace(/\D/g, '').replace(/^0+/, '');
+const DIA = 86400000;
+const diasAte = (iso) => { const m = /^(\d{4})-(\d\d)-(\d\d)/.exec(iso || ''); return m ? Math.round((new Date(+m[1], m[2] - 1, +m[3]) - new Date(new Date().toDateString())) / DIA) : null; };
+const comp = (s) => { const t = String(s || ''); const a = /^(\d{4})-(\d\d)/.exec(t), b = /(\d\d)\/(\d{4})/.exec(t); return a ? `${a[2]}/${a[1]}` : b ? `${b[1]}/${b[2]}` : t; };
+const ESTADO_NEON = {
+  PENDENTE_ENVIO: 'na fila: ainda sem arquivo', LOCALIZADO: 'arquivo achado', COMPOSTO: 'PDF montado (partes unidas)', ENVIADO: 'enviado',
+  REJEITADO: 'reprovado no Atlas', DIVERGENTE_FACTORIAL: 'divergente da Factorial',
+};
+const DIAG_OK = typeof DIAG !== 'undefined' ? DIAG : [];
+
+function data012() {
+  const m = /(\d\d)-(\d\d)-(\d{4})-(\d\d)-(\d\d)-\d\d_/.exec(estado.bern?.coleta?.relatorio012?.ultimo_baixado || '');
+  return m ? new Date(`${m[3]}-${m[2]}-${m[1]}T${m[4]}:${m[5]}:00-03:00`) : null;
+}
+
+// Linha do banco (Neon) que corresponde à linha da coleta: primeiro pelo id que o painel liga ao schedule_id,
+// depois por documento + competência + unidade, desempatando por funcionário, pedido e prazo.
+function bancoDe(p) {
+  const { banco = [], nosso = {} } = estado.atlas;
+  const n = nosso[p.document_schedule_id];
+  if (n?.id) { const b = banco.find((x) => String(x.id) === String(n.id)); if (b) return b; }
+  const cand = banco.filter((b) => semAcento(b.documento) === semAcento(p.documento) && comp(b.competencia) === comp(p.competencia) && semAcento(b.unidade) === semAcento(p.unidades));
+  const nota = (b) => (semAcento(b.funcionario) === semAcento(p.funcionario) ? 4 : 0) + (String(b.pedido || '') === String(p.pedido || '') ? 2 : 0) + (b.prazo === String(p.prazo_envio || '').slice(0, 10) ? 1 : 0);
+  return cand.sort((a, b) => nota(b) - nota(a))[0] || null;
+}
+
+function situacaoNossa(p, b, n, env) {
+  // O que o nosso lado sabe e por que a pendência ainda não saiu.
+  const modo = estado.atlas.modo || {};
+  const r = { agora: '', aconteceu: '', porque: '', fazer: [] };
+  const segurada = (n?.motivos || []).some((m) => /segurad/i.test(m));
+  if (env) {
+    r.agora = `Nós enviamos em ${hora(env.em)} (${env.auto ? 'automático' : 'pelo painel'}), mas esta leitura do Atlas ainda mostra o item sem arquivo.`;
+    r.porque = 'Ou o Atlas não guardou o arquivo, ou a pendência foi reaberta depois do envio. Não é normal: o enviado sai de "Atrasados"/"Próximas".';
+    r.fazer.push(['Abrir no Atlas e ver se o arquivo está lá.', 'equipe']);
+    return r;
+  }
+  if (!b) {
+    r.agora = 'Não achamos esta pendência no banco (Neon).';
+    r.porque = p.aba === 'Reprovados' ? 'A aba Reprovados não é gravada no banco: o item reprovado entra pela aba Atrasados.' : 'Pode ser nova: o robô grava no banco a cada rodada (60 min). Se continuar assim depois de uma rodada, a ligação falhou.';
+    return r;
+  }
+  r.agora = `No nosso banco: #${b.id}, ${ESTADO_NEON[b.estado] || b.estado}${b.fonte ? ` (vem de ${b.fonte})` : ''}.`;
+  if (b.estado === 'ENVIADO') {
+    r.aconteceu = 'O banco diz que foi enviado, mas o Atlas ainda mostra o item sem arquivo.';
+    r.porque = 'O envio foi registrado fora do histórico do painel, ou o Atlas reabriu o item.';
+    r.fazer.push(['Abrir no Atlas e conferir se há arquivo no item.', 'equipe']);
+  } else if (b.estado === 'DIVERGENTE_FACTORIAL') {
+    r.aconteceu = 'A sincronização da Factorial marcou divergência: o que está na Factorial não bate com o que o Atlas pede.';
+    r.fazer.push(['Conferir na Factorial o cadastro e o documento deste funcionário.', 'NIP']);
+  } else if (n?.pronta && !segurada) {
+    r.aconteceu = 'O PDF está pronto para envio.';
+    r.porque = !modo.liberado ? 'O envio está bloqueado no painel (aba 6).' : modo.automatico ? 'O envio automático está ligado: deve sair na próxima rodada do robô (a cada 60 min).' : 'O envio está liberado, mas no modo manual: alguém precisa clicar em Enviar na aba 6.';
+  } else if (n) {
+    r.aconteceu = segurada ? 'Está segurado no painel: o automático não envia.' : 'O robô conferiu e não está pronto.';
+    if (n.motivos?.length) r.porque = n.motivos.join(' · ');
+    if (n.resultado && !n.resultado.ok && n.resultado.msg) r.porque = [r.porque, `Última tentativa ${hora(n.resultado.em)}: ${n.resultado.msg}`].filter(Boolean).join(' · ');
+    r.fazer.push(segurada ? ['Quando estiver resolvido, clicar em Soltar na aba 6.', 'quem segurou'] : ['Resolver o motivo acima; o robô confere de novo a cada rodada.', 'equipe']);
+  } else if (b.busca_factorial && b.busca_factorial.achou === false) {
+    r.aconteceu = `O robô procurou na Factorial em ${hora(b.busca_factorial.em)} e não achou.`;
+    r.porque = b.busca_factorial.motivo || 'Não há arquivo deste tipo na ficha do funcionário.';
+    r.fazer.push(['Anexar o documento na Factorial (o robô busca de novo a cada rodada).', 'NIP']);
+  } else if (b.estado === 'PENDENTE_ENVIO') {
+    r.aconteceu = 'Ainda não há arquivo para esta pendência.';
+    r.porque = b.fila_motivo ? (typeof b.fila_motivo === 'string' ? b.fila_motivo : JSON.stringify(b.fila_motivo)) : 'Nenhum robô registrou busca para este documento.';
+    r.fazer.push(['Conferir se o documento existe na origem (Factorial ou SharePoint).', 'NIP']);
+  } else {
+    r.aconteceu = 'Há arquivo no banco, mas a pendência não está na lista de envio do robô.';
+    r.porque = 'A lista de envio é refeita a cada rodada; se continuar fora, o arquivo pode não ter sido baixado na VPS.';
+  }
+  if (b.pdf_erro) r.porque = [r.porque, `Problema no PDF: ${b.pdf_erro}`].filter(Boolean).join(' · ');
+  return r;
+}
+
+function fichaAtlas(p) {
+  const { nosso = {}, enviados = [] } = estado.atlas;
+  const sid = p.document_schedule_id, n = nosso[sid], b = bancoDe(p);
+  const env = enviados.find((e) => String(e.schedule_id) === String(sid));
+  const st = STATUS_ATLAS[p.status] || p.status;
+  const dias = diasAte(p.prazo_envio);
+  const prazoTxt = dias == null ? '' : dias < 0 ? `atrasado desde ${data(p.prazo_envio)} (${-dias} dias)` : dias === 0 ? 'vence hoje' : `vence em ${data(p.prazo_envio)} (faltam ${dias} dias)`;
+  const nossa = situacaoNossa(p, b, n, env);
+  let f;
+  if (/Rejected/.test(p.status)) {
+    const nosEnv = enviados.filter((e) => String(e.schedule_id) === String(sid)).pop();
+    f = {
+      titulo: 'Reprovado no Atlas: precisa trocar o arquivo',
+      aconteceu: `${nosEnv ? `Nós enviamos em ${hora(nosEnv.em)} (${nosEnv.auto ? 'automático' : 'pelo painel'}).` : p.enviado_em ? `O arquivo foi enviado em ${hora(p.enviado_em)}, fora do robô (equipe ou outro sistema).` : 'O Atlas não informou quando o arquivo foi enviado.'}${p.validado_em ? ` A equipe da Equatorial reprovou em ${hora(p.validado_em)}.` : ' Depois a equipe da Equatorial reprovou.'}`,
+      porque: 'O motivo da reprovação fica escrito no Atlas, na tela do item; o robô não lê esse texto. O arquivo reprovado continua anexado, e o Atlas recusa outro ("Documento já importado!") até alguém excluir o antigo.',
+      fazer: [['Abrir no Atlas e ler o motivo da reprovação.', 'equipe'], ['Excluir o arquivo reprovado no Atlas.', 'equipe'],
+        ['Conseguir o documento certo e enviar (pelo painel, depois de Soltar, ou à mão).', 'NIP + equipe'], ['Enquanto isso, deixar segurado na aba 6 para o automático não tentar.', 'quem usa o painel']],
+      resolvido: 'Quando o item sair de Reprovados e aparecer "Em análise" com o arquivo novo.',
+      extra: 'O item reprovado aparece duas vezes no Atlas: em Atrasados (se o prazo passou) e em Reprovados. É a mesma pendência.',
+    };
+  } else if (p.status === 'DelayNotSent' || p.status === 'CriticalDelay' || p.status === 'Delay') {
+    f = { titulo: `Atrasado: ${prazoTxt || 'prazo vencido'}${p.critico ? ' · crítico' : ''}`, aconteceu: nossa.aconteceu, porque: nossa.porque, fazer: nossa.fazer,
+      resolvido: 'Quando o item sair de Atrasados (com arquivo, vai para "Em análise").' };
+  } else {
+    f = { titulo: `No prazo: ${prazoTxt || 'sem prazo informado'}`, aconteceu: nossa.aconteceu, porque: nossa.porque, fazer: nossa.fazer,
+      resolvido: 'Quando o arquivo subir antes do prazo (o item sai de Próximas entregas e vai para "Em análise").' };
+  }
+  f.agora = nossa.agora;
+  f.portal = `${st}${p.critico ? ' (crítico)' : ''}${prazoTxt ? ` · ${prazoTxt}` : ''}${p.enviado_em ? ` · arquivo enviado em ${hora(p.enviado_em)}` : ''}`;
+  f.sabemos = [`Leitura do robô Atlas em ${hora(estado.atlas.coleta.coletado_em)}: aba ${p.aba}, situação ${p.status}.`,
+    b ? `Banco (Neon) #${b.id}${b.atualizado_em ? `, atualizado em ${hora(b.atualizado_em)}` : ''}.` : 'Sem linha correspondente no banco.',
+    n ? 'Lista de envio do painel (aba 6).' : 'Não está na lista de envio do painel.'];
+  f.num = `Atlas · ${p.aba}${b ? ` · #${b.id}` : ''}`;
+  f.quem = [p.documento, p.funcionario, p.unidades, p.competencia].filter(Boolean).join(' · ');
+  f.link = sid ? `https://gestao.atlasfacilities.com.br/document-schedule/${encodeURIComponent(sid)}/general-information?resume=false` : '';
+  f.manual = b ? DIAG_OK.find((d) => d.onde === 'atlas' && d.ids.includes(Number(b.id))) : null;
+  f.dados = [['schedule_id', sid], ['Pedido', p.pedido], ['Categoria', p.categoria], ['Tipo', p.tipo], ['Cliente', p.cliente], ['CPF', cpfMasc(p.cpf)],
+    ['Validade', data(p.validade)], ['Estado no banco', b?.estado], ['Vem de', b?.fonte], ['Montagem', b?.montagem ? `${b.montagem.tipo}, ${b.montagem.n} parte(s)` : '']];
+  return f;
+}
+
+function fichaEnviado(e) {
+  const s = e.status_atlas;
+  const sig = s === 'WaitingForPredecessors'
+    ? 'O Atlas recebeu o arquivo, mas este item depende de outro documento do mesmo pedido (o "predecessor"). Provavelmente a análise só começa quando o anterior for aprovado ou enviado.'
+    : s === 'ToValidate' ? 'O Atlas recebeu o arquivo e ele está na fila de análise da equipe da Equatorial.'
+      : /Rejected/.test(s || '') ? 'Logo depois do envio o item já aparecia reprovado.' : 'O robô não registrou a situação depois do envio.';
+  const naColeta = (estado.atlas.coleta.pendencias || []).filter((p) => String(p.document_schedule_id) === String(e.schedule_id));
+  return {
+    num: `Atlas · enviado por nós · #${e.id}`, quem: [e.nome, e.funcionario, e.competencia].filter(Boolean).join(' · '),
+    titulo: `Enviado em ${hora(e.em)} (${e.auto ? 'automático' : 'pelo painel'})`,
+    agora: e.msg || 'Envio registrado no histórico do painel.',
+    portal: naColeta.length ? `Voltou a aparecer na leitura de agora: ${naColeta.map((p) => `${p.aba}, ${STATUS_ATLAS[p.status] || p.status}`).join(' · ')}.` : 'Não aparece em Atrasados, Próximas nem Reprovados: está na aba "Entregues" do Atlas, que o robô não lê.',
+    aconteceu: `Na conferência feita na hora do envio, o Atlas mostrava: ${STATUS_ATLAS[s] || s || 'sem situação'}.`,
+    porque: sig,
+    fazer: naColeta.some((p) => /Rejected/.test(p.status)) ? [['Abrir no Atlas e ler o motivo da reprovação.', 'equipe']] : [['Nada a fazer agora: esperar a análise. Para achar no Atlas, use o link abaixo ou a aba Entregues.', '']],
+    resolvido: 'Quando o Atlas mostrar "Aprovado".',
+    sabemos: ['Histórico de envios do painel (out/envio/historico-envios.json).', 'A situação mostrada é a da conferência na hora do envio, não a de hoje.'],
+    link: e.schedule_id ? `https://gestao.atlasfacilities.com.br/document-schedule/${encodeURIComponent(e.schedule_id)}/general-information?resume=false` : '',
+    manual: DIAG_OK.find((d) => d.onde === 'atlas' && d.ids.includes(Number(e.id))),
+    dados: [['schedule_id', e.schedule_id], ['Situação na hora', s]],
+  };
+}
+
+function fichaBern(x) {
+  const { esteira = [], envio } = estado.bern;
+  const est = esteira.find((s) => s.chave === x.chave);
+  const env = (envio?.enviados || []).filter((e) => e.chave === x.chave).pop();
+  const res = envio?.resultados?.[x.chave];
+  const seg = envio?.segurar?.[x.chave];
+  const modo = envio?.modo || {};
+  const d012 = data012();
+  const ressalva = d012 ? `A situação "${x.status}" vem do relatório 012 de ${hora(d012)}, não da tela de hoje.` : 'Não dá para saber de quando é o relatório 012 desta leitura.';
+  const f = { num: `Bernhoeft · ${x.contrato}`, quem: [x.descricao, x.area, x.competencia].filter(Boolean).join(' · '), portal: x.status, fazer: [] };
+  if (env) {
+    f.titulo = `Enviado por nós em ${hora(env.em)}`;
+    f.agora = `Logo depois do envio, o portal mostrava "${env.status_portal || 'sem situação'}"${env.competencia_status ? ` e a competência "${env.competencia_status}"` : ''}.`;
+    f.aconteceu = d012 && d012 < new Date(env.em) ? `O relatório 012 usado é de ${hora(d012)}, antes do envio: por isso aqui ainda aparece "${x.status}". O status só muda quando sair um 012 novo.` : `O relatório 012 já é de depois do envio e mostra "${x.status}".`;
+    f.porque = 'O documento de empresa entra na competência "Documentos da empresa" do contrato; o analista do Bernhoeft/Equatorial é quem analisa.';
+    f.fazer.push(['Esperar a análise. Se o arquivo enviado estiver errado, trocar no portal antes da análise.', 'equipe']);
+    f.resolvido = 'Quando o 012 mostrar "Analisado".';
+  } else if (/Não Entregue/i.test(x.status)) {
+    f.titulo = 'Não entregue';
+    if (x.colaboradores) {
+      f.agora = 'Documento de colaborador: não passa pela esteira de documentos de empresa.';
+      f.porque = 'Documento de colaborador entra pela Mobilização (etapas 1 a 8), que o robô ainda não faz sozinho.';
+      f.fazer.push(['Enviar pela Mobilização no portal.', 'equipe']);
+    } else if (!est) {
+      f.agora = 'A esteira do painel não tem esta pendência.';
+      f.porque = 'A esteira monta a lista a cada leitura (30 min); durante uns 3 minutos ela fica vazia. Se continuar fora, o painel não reconheceu o documento.';
+    } else if (est.estado === 'pronto') {
+      f.agora = `PDF pronto, confiança ${est.confianca || '?'}${est.arquivos.length ? `: ${est.arquivos.join(', ')}` : ''}.`;
+      const ordem = { alta: 3, media: 2, baixa: 1 }, min = modo.confianca || 'alta';
+      f.porque = seg ? 'Está segurado no painel: o automático não envia.' : !modo.liberado ? 'O envio está bloqueado no painel (aba 7).' : !modo.automatico ? 'O envio está liberado, mas no modo manual: alguém precisa clicar em Enviar na aba 7.'
+        : (ordem[est.confianca] || 0) < (ordem[min] || 3) ? `O automático só manda com confiança ${min} ou maior; esta é ${est.confianca}. Precisa conferir o PDF e enviar à mão, ou trocar o arquivo na origem.` : 'O automático está ligado e a confiança basta: deve sair depois da próxima leitura.';
+      f.aconteceu = est.motivo || '';
+      f.fazer.push(['Abrir o PDF no painel (aba 7) e conferir se é deste contrato.', 'equipe']);
+    } else if (est.estado === 'nao_encontrado') {
+      f.agora = 'Nenhum arquivo encontrado na Factorial.';
+      f.aconteceu = est.motivo || ''; f.porque = 'Não há na pasta HSEQ arquivo deste tipo para este contrato ou estado.';
+      f.fazer.push(['Pedir ao HSEQ o documento deste contrato, com o número do contrato no nome do arquivo.', 'HSEQ']);
+    } else if (est.estado === 'erro') {
+      f.agora = 'Erro ao montar o PDF.'; f.aconteceu = est.erro || est.motivo || '';
+      f.fazer.push(['Clicar em "Buscar na Factorial" na aba 7 para tentar de novo.', 'quem usa o painel']);
+    } else {
+      f.agora = `Esteira: ${est.estado}.`; f.aconteceu = est.motivo || '';
+    }
+    if (res && res.msg) f.aconteceu = [f.aconteceu, `Última conferência do robô ${hora(res.em)}: ${res.msg}`].filter(Boolean).join(' · ');
+    f.resolvido = 'Quando o arquivo certo subir e o 012 mostrar "Não Analisado" ou "Analisado".';
+  } else if (/Não Analisado/i.test(x.status)) {
+    f.titulo = 'Entregue, esperando análise'; f.agora = 'Há arquivo no portal.'; f.porque = 'O analista do Bernhoeft/Equatorial ainda não analisou.';
+    f.fazer.push(['Nada a fazer agora.', '']); f.resolvido = 'Quando o 012 mostrar "Analisado".';
+  } else if (/^Analisado/i.test(x.status)) {
+    f.titulo = 'Analisado'; f.agora = 'O documento foi analisado.'; f.porque = 'O relatório 012 não diz se foi aprovado ou reprovado: só a tela do portal mostra.';
+    f.fazer.push(['Se precisar saber o resultado, abrir o documento no portal.', 'equipe']);
+  } else {
+    f.titulo = x.status || 'Sem situação'; f.agora = '';
+  }
+  f.extra = ressalva;
+  f.sabemos = [`Leitura do robô Bernhoeft em ${hora(estado.bern.coleta.coletado_em)}.`, ressalva, est ? `Esteira do painel${est.buscado_em ? `, busca em ${hora(est.buscado_em)}` : ''}.` : 'Sem dados da esteira.'];
+  const ct = soDig(String(x.contrato || '').split(/[-\s]/)[0]), t = semAcento([est?.tipo_reconhecido, x.descricao].join(' ')), nomes = (est?.arquivos || []).map(semAcento);
+  f.manual = DIAG_OK.find((d) => d.onde === 'bern' && ct && ct.startsWith(soDig(d.contrato)) && d.doc.test(t) && (d.arq ? nomes.some((nm) => d.arq.test(nm)) : !nomes.length));
+  f.dados = [['Chave', x.chave], ['Contratada', x.contratada], ['Unidade', x.unidade], ['Tipo', x.tipo], ['Risco', x.risco], ['Colaboradores', x.colaboradores],
+    ['Esteira', est ? `${est.estado}${est.confianca ? `, confiança ${est.confianca}` : ''}${est.deixados ? `, ${est.deixados} arquivo(s) deixado(s) de fora` : ''}` : ''], ['Segurado', seg ? 'sim' : '']];
+  return f;
+}
+
+function mostrarFicha(f) {
+  const el = document.getElementById('ficha');
+  const linha = (t, v) => v ? `<dt>${t}</dt><dd>${v}</dd>` : '';
+  const fazer = (l) => l?.length ? `<ol>${l.map(([o, q]) => `<li>${esc(o)}${q ? `<span class="quem">${esc(q)}</span>` : ''}</li>`).join('')}</ol>` : '';
+  const lista = (l) => l?.length ? `<ul>${l.map((s) => `<li>${esc(s)}</li>`).join('')}</ul>` : '';
+  const m = f.manual;
+  el.innerHTML = `<button class="btn fechar" id="fecharFicha" title="Fechar (Esc)">Fechar</button>
+    <div class="num">${esc(f.num)}</div><h3>${esc(f.titulo)}</h3><div class="quem-e">${esc(f.quem)}</div>
+    ${m ? `<div class="manual"><div class="num">analisado em 27/10 · ficha ${esc(m.ficha)}${GRUPOS_DIAG[m.grupo] ? ` · ${esc(GRUPOS_DIAG[m.grupo])}` : ''}</div><div class="tit">${esc(m.titulo)}</div><dl>
+      ${linha('Como estava em 27/10', esc(m.agora))}${linha('O que aconteceu', esc(m.aconteceu))}${linha('Por quê', esc(m.porque))}${linha('O que fazer', fazer(m.fazer))}${linha('Resolvido quando', esc(m.resolvido))}
+      ${linha('Como sabemos', lista(m.sabemos))}${linha('Para não acontecer de novo', lista(m.prevenir))}</dl></div><h2>Leitura de agora</h2>` : ''}
+    <dl>${linha('Como está', esc(f.agora))}${linha('No portal agora', esc(f.portal))}${linha('O que aconteceu', esc(f.aconteceu))}${linha('Por quê', esc(f.porque))}
+      ${linha('O que fazer', fazer(f.fazer))}${linha('Resolvido quando', esc(f.resolvido))}${f.extra ? `<dt>Atenção</dt><dd class="ressalva">${esc(f.extra)}</dd>` : ''}${linha('Como sabemos', lista(f.sabemos))}</dl>
+    ${f.link ? `<p><a href="${esc(f.link)}" target="_blank" rel="noopener">Abrir no Atlas</a> <span class="dica">(só a tela; nada é enviado)</span></p>` : ''}
+    <details class="dados"><summary>Dados da pendência</summary><table>${(f.dados || []).filter(([, v]) => v).map(([k, v]) => `<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>`).join('')}</table></details>`;
+  el.classList.add('aberta');
+  document.getElementById('fecharFicha').addEventListener('click', fecharFicha);
+}
+function fecharFicha() {
+  document.getElementById('ficha').classList.remove('aberta');
+  document.querySelectorAll('tr.sel').forEach((t) => t.classList.remove('sel'));
+}
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') fecharFicha(); });
+
+// ---------- eventos ----------
+function ligar() {
+  document.querySelectorAll('tbody tr[data-i]').forEach((tr) => tr.addEventListener('click', (ev) => {
+    if (ev.target.closest('a')) return;
+    const x = estado.vis[Number(tr.dataset.i)];
+    if (!x) return;
+    document.querySelectorAll('tr.sel').forEach((t) => t.classList.remove('sel'));
+    tr.classList.add('sel');
+    mostrarFicha(estado.portal === 'bern' ? fichaBern(x) : estado.abaAtlas === 'Enviados por nós' ? fichaEnviado(x) : fichaAtlas(x));
+  }));
+  document.querySelectorAll('[data-f]').forEach((el) => {
+    const ev = el.type === 'search' ? 'input' : 'change';
+    el.addEventListener(ev, () => {
+      estado.f[el.dataset.f] = el.type === 'checkbox' ? el.checked : el.value;
+      const pos = el.type === 'search' ? el.selectionStart : null;
+      desenhar();
+      if (pos != null) { const n = document.querySelector('[data-f=busca]'); n.focus(); n.setSelectionRange(pos, pos); }
+    });
+  });
+  document.querySelectorAll('[data-ord]').forEach((el) => el.addEventListener('click', () => {
+    const c = el.dataset.ord;
+    estado.ordem = estado.ordem?.[0] === c ? (estado.ordem[1] > 0 ? [c, -1] : null) : [c, 1];
+    desenhar();
+  }));
+  document.querySelectorAll('#abasAtlas button').forEach((b) => b.addEventListener('click', () => { estado.abaAtlas = b.dataset.aba; estado.f = { busca: estado.f.busca }; desenhar(); }));
+  document.querySelectorAll('#statusBern button').forEach((b) => b.addEventListener('click', () => { estado.statusBern = b.dataset.st; desenhar(); }));
+  const vc = document.getElementById('verCpf');
+  if (vc) vc.addEventListener('change', () => { estado.verCpf = vc.checked; desenhar(); });
+  const an = document.getElementById('antiga');
+  if (an) an.addEventListener('change', async () => {
+    const arq = an.value;
+    const chave = estado.portal === 'atlas' ? 'antigaAtlas' : 'antigaBern';
+    if (!arq) { estado[chave] = null; return desenhar(); }
+    try {
+      const j = await api(`/api/${estado.portal}/leitura?arq=${encodeURIComponent(arq)}`);
+      j._arq = arq;
+      estado[chave] = j;
+    } catch (e) { alert('Não deu para abrir essa leitura: ' + e.message); }
+    desenhar();
+  });
+}
+
+document.querySelectorAll('#portal button').forEach((b) => b.addEventListener('click', () => {
+  document.querySelectorAll('#portal button').forEach((x) => x.classList.toggle('on', x === b));
+  estado.portal = b.dataset.p; estado.f = {}; estado.ordem = null;
+  if (estado[estado.portal]) desenhar(); else carregar();
+}));
+document.getElementById('atualizar').addEventListener('click', () => carregar(true));
+carregar();
+</script>
+</body>
+</html>

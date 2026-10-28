@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Histórico da automação · 27/10 à noite e 28/10/2026</title>
+<style>
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif; color: #24292f; font-size: 10.4pt; line-height: 1.52; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .folha { width: 210mm; height: 297mm; padding: 15mm 17mm 12mm; position: relative; page-break-after: always; overflow: hidden; }
+  .folha:last-child { page-break-after: auto; }
+
+  .rodape { position: absolute; left: 17mm; right: 17mm; bottom: 9mm; display: flex; justify-content: space-between; font-size: 7.8pt; color: #8c959f; border-top: 1px solid #e5e8eb; padding-top: 4px; }
+
+  .capa-topo { border-bottom: 1px solid #d0d7de; padding-bottom: 10px; margin-bottom: 14px; }
+  .capa-topo .rotulo { font-size: 8.5pt; color: #1f4e79; font-weight: 600; }
+  .capa-topo h1 { font-size: 21pt; font-weight: 600; margin: 4px 0 2px; color: #1b1f24; }
+  .capa-topo .sub { color: #57606a; font-size: 10pt; }
+  .capa p { margin: 0 0 8px; }
+  .aviso { background: #f6f8fa; border-left: 3px solid #1f4e79; border-radius: 4px; padding: 7px 12px; margin: 8px 0 10px; font-size: 8.9pt; }
+  .aviso h3 { margin: 0 0 4px; font-size: 9.8pt; font-weight: 600; }
+  .aviso ul { margin: 0; padding-left: 17px; }
+  .aviso li { margin: 2px 0; }
+  .numeros { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 2px 0 10px; }
+  .numeros div { border: 1px solid #d0d7de; border-radius: 6px; padding: 7px 10px; }
+  .numeros b { display: block; font-size: 15pt; font-weight: 600; color: #1b1f24; line-height: 1.2; }
+  .numeros span { font-size: 8.3pt; color: #57606a; }
+  h2 { font-size: 11pt; font-weight: 600; margin: 4px 0 6px; color: #1b1f24; }
+  table.indice { width: 100%; border-collapse: collapse; font-size: 8.4pt; }
+  table.indice th { text-align: left; font-weight: 600; color: #57606a; border-bottom: 1px solid #d0d7de; padding: 3px 6px; }
+  table.indice td { border-bottom: 1px solid #eef0f2; padding: 3px 6px; vertical-align: top; }
+  table.indice td:first-child { color: #1f4e79; font-weight: 600; width: 26px; }
+  .nota { font-size: 8.3pt; color: #6e7781; margin-top: 5px !important; }
+  .grupo td { background: #f6f8fa; font-weight: 600; color: #1b1f24 !important; font-size: 8.2pt; padding-top: 4px; }
+  table.tempo td:first-child { width: 44px; white-space: nowrap; }
+  table.tempo td:nth-child(2) { width: 84px; color: #57606a; }
+  .ok { color: #1a7f37; font-weight: 600; }
+  .ruim { color: #b42318; font-weight: 600; }
+
+  .cab { display: flex; gap: 14px; align-items: flex-start; border-bottom: 1px solid #d0d7de; padding-bottom: 10px; margin-bottom: 10px; }
+  .num { flex: 0 0 auto; width: 46px; height: 46px; border-radius: 8px; background: #1f4e79; color: #fff; font-size: 17pt; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+  .cab h1 { font-size: 14.5pt; font-weight: 600; margin: 0 0 3px; color: #1b1f24; line-height: 1.25; }
+  .cab .meta { font-size: 8.6pt; color: #57606a; }
+  .cab .meta b { color: #1f4e79; font-weight: 600; }
+  .dados { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px 14px; background: #f6f8fa; border-radius: 6px; padding: 8px 12px; margin-bottom: 12px; font-size: 8.8pt; }
+  .dados span { display: block; color: #6e7781; font-size: 7.6pt; }
+  .sec { margin: 0 0 12px; }
+  .capa { font-size: 9.4pt; line-height: 1.45; }
+  .capa .sec, .capa p { margin: 0 0 6px; }
+  .sec h3 { font-size: 9.6pt; font-weight: 600; margin: 0 0 2px; color: #1f4e79; }
+  .sec h3 small { font-weight: 400; color: #8c959f; font-size: 8pt; margin-left: 4px; }
+  .sec p { margin: 0 0 3px; }
+  .sec ul { margin: 2px 0 0; padding-left: 17px; }
+  .sec li { margin: 2px 0; }
+  .cit { font-style: italic; color: #424a53; }
+  .assin { position: absolute; left: 17mm; right: 17mm; bottom: 19mm; display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 16px; font-size: 8pt; color: #6e7781; }
+  .assin div { border-top: 1px solid #8c959f; padding-top: 3px; }
+</style>
+</head>
+<body>
+
+<!-- ============ CAPA ============ -->
+<section class="folha capa">
+  <div class="capa-topo">
+    <div class="rotulo">Automação de documentos · Equatorial</div>
+    <h1>Histórico de 27/10 à noite e 28/10</h1>
+    <div class="sub">O que os robôs fizeram, o que travou e o que foi corrigido · das 18:00 de 27/10 às 14:00 de 28/10/2026 (horário de Brasília)</div>
+  </div>
+
+  <p>Este histórico responde a uma pergunta: por que nenhum documento subiu ontem à noite nem hoje? Para responder, lemos os registros dos dois robôs (Atlas e Bernhoeft), da sincronização da Factorial e do painel, e comparamos as leituras do Atlas hora a hora. Na apuração, nenhum documento foi enviado ao Atlas nem ao Bernhoeft. A única mudança foi refazer a sincronização da Factorial (ficha 01).</p>
+
+  <div class="aviso">
+    <h3>Resumo</h3>
+    <ul>
+      <li>Os robôs <b>não pararam</b>. O Atlas leu o portal 19 vezes, uma por hora, e o Bernhoeft leu a cada 30 minutos. O envio continuou liberado e no automático nos dois portais.</li>
+      <li>Nada subiu porque <b>não apareceu nenhum documento novo pronto para envio</b>. As pendências que sobraram dependem de documento que ainda não existe na Factorial ou no SharePoint.</li>
+      <li>A <b>sincronização da Factorial estava parada desde 22/10</b>, porque a imagem dela foi apagada da VPS. Ela foi refeita hoje e voltou a rodar, mas não montou nenhum PDF novo pelo mesmo motivo: faltam documentos na Factorial.</li>
+      <li>Hoje, entre 11:59 e 13:00, a <b>Equatorial reprovou 15 benefícios do Piauí</b> que estavam como entregues. O robô tentou reenviar 7 deles e o Atlas recusou todos com "Documento já importado!".</li>
+    </ul>
+  </div>
+
+  <h2>Os números do período</h2>
+  <div class="numeros">
+    <div><b>0</b><span>documentos enviados</span></div>
+    <div><b>11</b><span>tentativas recusadas pelo Atlas ("já importado")</span></div>
+    <div><b>15</b><span>benefícios do PI reprovados hoje</span></div>
+    <div><b>6 dias</b><span>de sincronização da Factorial parada (corrigido)</span></div>
+  </div>
+
+  <h2>Os 25 envios automáticos de 26/10</h2>
+  <p>Dos 26 envios do robô ao Atlas registrados no histórico (25 automáticos na noite de 26/10 e 1 manual em 15/10), 25 já saíram das abas de pendência, ou seja, estão em validação ou entregues. Só o <b>#297</b> (ASO demissional de Alagoas, 08/2026) está reprovado, como já constava na ficha 14 de 27/10.</p>
+
+  <h2>As fichas</h2>
+  <table class="indice">
+    <tr><th>nº</th><th>assunto</th><th>situação</th></tr>
+    <tr><td>01</td><td>Sincronização da Factorial parada desde 22/10</td><td class="ok">corrigido hoje às 13:55</td></tr>
+    <tr><td>02</td><td>A Equatorial reprovou 15 benefícios do Piauí</td><td>precisa de ação no portal</td></tr>
+    <tr><td>03</td><td>O robô tentou reenviar 7 itens reprovados</td><td class="ok">segurados; regra publicada às 14:12</td></tr>
+    <tr><td>04</td><td>Por que não há nada novo para enviar</td><td>falta documento na origem</td></tr>
+    <tr><td>05</td><td>Bernhoeft: o automático rodou e não enviou nada</td><td>correto; pedido diário do 012 pronto, falta publicar</td></tr>
+  </table>
+  <div class="rodape"><span>Histórico da automação · 27 e 28/10/2026</span><span>Capa</span></div>
+</section>
+
+<!-- ============ LINHA DO TEMPO ============ -->
+<section class="folha capa">
+  <h2 style="font-size:15pt;margin-bottom:10px">Linha do tempo</h2>
+  <table class="indice tempo">
+    <tr><th>hora</th><th>onde</th><th>o que aconteceu</th></tr>
+    <tr class="grupo"><td colspan="3">Antes do período (27/10, para contexto)</td></tr>
+    <tr><td>11:44</td><td>Painel</td><td>#135, #162, #220 e #221 (VT de MA e PI) foram segurados no painel com o motivo "já importado". Desde então o automático não tentou mais esses quatro.</td></tr>
+    <tr><td>16:05</td><td>Painel</td><td>Pedido manual "verificar" do #135, que terminou com o mesmo "já importado".</td></tr>
+    <tr><td>17:00 e 19:00</td><td>Sincronização</td><td>Rodadas da Factorial falharam (imagem não encontrada), como em todas as rodadas desde 22/10. <span class="ok">Resolvido em 28/10 às 13:55 (ficha 01).</span></td></tr>
+    <tr class="grupo"><td colspan="3">Noite de 27/10 e madrugada de 28/10</td></tr>
+    <tr><td>18:41</td><td>Atlas</td><td>Primeira rodada da noite: 168 linhas lidas, 142 pendências gravadas no Neon, Factorial com 0 de 13 achados, SharePoint com 0 de 150 achados, 0 prontas para envio.</td></tr>
+    <tr><td>18:41 a 10:58</td><td>Atlas</td><td>Mais 16 rodadas, uma por hora, todas com o mesmo resultado. O portal não mudou: 60 atrasados, 82 próximas, 26 reprovados.</td></tr>
+    <tr><td>18:28 a 13:41</td><td>Bernhoeft</td><td>Leituras a cada 30 minutos, todas iguais: 39 competências, 9 documentos de empresa "Não Entregue". Às 02:03, uma leitura listou 15 pedidos em vez de 19, sem efeito.</td></tr>
+    <tr class="grupo"><td colspan="3">28/10</td></tr>
+    <tr><td>07:00 a 13:00</td><td>Sincronização</td><td>Mais 4 rodadas falharam. Desde 22/10 foram 34 rodadas seguidas sem rodar. <span class="ok">Resolvido às 13:55: a imagem foi refeita e a rodada terminou sem erro.</span></td></tr>
+    <tr><td>11:59</td><td>Atlas</td><td>A leitura mostra <b>4 reprovações novas</b> do Piauí (plano de saúde 01 e 02/2025, seguro 03/2025 e 01/2026). Atrasados foram de 60 para 64 e entregues de 4144 para 4140.</td></tr>
+    <tr><td>12:00</td><td>Atlas</td><td>A busca no SharePoint já tinha arquivo para esses 4 (#105, #211, #212, #213) e o automático tentou enviar. O Atlas recusou os 4 com "Documento já importado!" (22006). O robô pulou e seguiu, como manda a regra. <span class="ok">Seguradas às 14:00; regra publicada às 14:12 (ficha 03).</span></td></tr>
+    <tr><td>13:00</td><td>Atlas</td><td>Mais <b>11 reprovações</b> do Piauí (VT, VA, saúde e seguro de 11/2025 a 09/2026). Atrasados foram a 75, reprovados a 41, 3 pendências novas no Neon e 1 achado novo no SharePoint.</td></tr>
+    <tr><td>13:02</td><td>Atlas</td><td>Automático com 7 prontas (#105, #106, #158, #211, #212, #213, #474). As 7 foram recusadas com "já importado". 0 enviadas. <span class="ok">As 7 foram seguradas no painel (ficha 03).</span></td></tr>
+    <tr><td>13:45</td><td>Apuração</td><td>Encontrada a causa da sincronização parada: a imagem <code>gesdoc/sincronizacao-factorial:hml</code> não existia mais na VPS.</td></tr>
+    <tr><td>13:54</td><td>Sincronização</td><td class="ok">Imagem refeita com o mesmo código do Evilásio (commit cafc56d), sem alteração.</td></tr>
+    <tr><td>13:55</td><td>Sincronização</td><td class="ok">Rodada manual terminou sem erro: 58 pendências, 0 PDF novo, 0 alerta novo. Volta a rodar sozinha às 15:00.</td></tr>
+    <tr><td>14:00</td><td>Painel</td><td class="ok">Os 7 recusados (#105, #106, #158, #211, #212, #213, #474) foram segurados. O automático para de tentar esses itens.</td></tr>
+    <tr><td>14:12</td><td>Atlas</td><td class="ok">Regra nova publicada no robô: item reprovado não é mais enviado, e "já importado" segura o item sozinho. A simulação seguinte marcou os 11 reprovados como "precisa de ação no portal".</td></tr>
+    <tr><td>14:15</td><td>Bernhoeft</td><td>Pedido diário do relatório 012 (SOLICITAR, 1 vez por dia) pronto e conferido na tela, sem clicar. Falta publicar no robô.</td></tr>
+  </table>
+  <p class="nota">Os registros dos robôs estão em UTC e foram convertidos para o horário de Brasília (3 horas a menos).</p>
+  <div class="rodape"><span>Histórico da automação · 27 e 28/10/2026</span><span>Linha do tempo</span></div>
+</section>
+
+<!-- ============ 01 ============ -->
+<section class="folha">
+  <div class="cab"><div class="num">01</div><div>
+    <h1>A sincronização da Factorial ficou parada por 6 dias</h1>
+    <div class="meta"><b>Corrigido</b> · VPS · sincronização do Evilásio (TRCT, férias, GFD)</div></div></div>
+  <div class="dados">
+    <div><span>Parou em</span>22/10, rodada das 07:00</div>
+    <div><span>Voltou em</span>28/10, às 13:55</div>
+    <div><span>Rodadas perdidas</span>34</div>
+    <div><span>Última que gravou</span>21/10, às 19:00</div>
+    <div><span>Documentos cobertos</span>8 férias, 9 TRCT, 10 GFD</div>
+    <div><span>Agendamento</span>a cada 2 h, das 7 às 19 h</div>
+  </div>
+
+  <div class="sec"><h3>O que aconteceu</h3>
+    <p>Desde 22/10, toda rodada agendada da sincronização terminava em erro em 3 segundos, com a mensagem <span class="cit">"pull access denied for gesdoc/sincronizacao-factorial"</span>. Ela não lia a Factorial nem montava PDF de TRCT, férias ou GFD.</p></div>
+
+  <div class="sec"><h3>Por que aconteceu <small>causa raiz</small></h3>
+    <p>A imagem Docker da sincronização foi apagada da VPS entre 21/10 às 19:00 e 22/10 às 07:00, provavelmente numa limpeza de imagens do Docker. Como ela foi construída na própria VPS e não existe em nenhum repositório, o Docker tentava baixá-la e não conseguia. O erro só ficava no arquivo de registro, e nem o painel nem ninguém foi avisado.</p></div>
+
+  <div class="sec"><h3>Como sabemos <small>evidência</small></h3>
+    <ul>
+      <li>No registro <code>sincronizacao.log</code>, as rodadas terminam com "saída 0" até 21/10 às 19:00 e com "saída 1" de 22/10 às 07:00 em diante.</li>
+      <li>A lista de imagens da VPS tinha só as dos dois robôs. O código e o Dockerfile continuavam em <code>/opt/gesdoc/services/sincronizacao</code>.</li>
+    </ul></div>
+
+  <div class="sec"><h3>O que foi feito <small>correção</small></h3>
+    <p>A imagem foi reconstruída a partir dos arquivos que já estavam na VPS (mesmo código, commit cafc56d). Depois rodamos uma vez o mesmo script do agendamento, que terminou sem erro: 58 pendências lidas, 0 PDF novo, 0 alerta novo. Os motivos são os mesmos de antes: 27 férias sem "Aviso de férias", 22 TRCT sem assinatura, 5 com o empregado ainda ativo na Factorial, 4 sem documento ou com divergência.</p></div>
+
+  <div class="sec"><h3>Para não acontecer de novo <small>regra preventiva</small></h3>
+    <ul>
+      <li>O <code>cron.sh</code> não foi mudado (decisão do usuário em 28/10). As próximas rodadas agendadas serão conferidas no registro.</li>
+      <li>A Visão geral do painel passa a mostrar a última rodada da sincronização e um aviso em vermelho quando ela falhar (proposto).</li>
+    </ul></div>
+
+  <div class="assin"><div>Responsável</div><div>Prazo</div><div>Reteste aprovado em</div></div>
+  <div class="rodape"><span>Histórico da automação · 27 e 28/10/2026</span><span>Ficha 01 de 05</span></div>
+</section>
+
+<!-- ============ 02 ============ -->
+<section class="folha">
+  <div class="cab"><div class="num">02</div><div>
+    <h1>A Equatorial reprovou 15 benefícios do Piauí hoje</h1>
+    <div class="meta"><b>Atlas</b> · Equatorial Piauí · VT, VA, plano de saúde e seguro de vida</div></div></div>
+  <div class="dados">
+    <div><span>Quando</span>28/10, entre 11:59 e 13:00</div>
+    <div><span>Quantos</span>15 (4 na leitura das 11:59, 11 na das 13:00)</div>
+    <div><span>Unidade</span>Equatorial Piauí</div>
+    <div><span>Competências</span>01/2025 a 09/2026</div>
+    <div><span>Quem enviou antes</span>a equipe, não o robô</div>
+    <div><span>Situação agora</span>Reprovado (atrasado)</div>
+  </div>
+
+  <div class="sec"><h3>O que aconteceu</h3>
+    <p>Quinze documentos de benefício do Piauí que estavam como entregues voltaram como reprovados. Nas leituras do Atlas, os entregues caíram de 4144 para 4129 e os reprovados subiram de 26 para 41.</p>
+    <ul>
+      <li><b>Plano de saúde:</b> 01/2025, 02/2025, 12/2025, 02/2026, 07/2026 e 09/2026.</li>
+      <li><b>Seguro de vida:</b> 03/2025 e 01/2026.</li>
+      <li><b>Vale transporte:</b> 11/2025, 12/2025 e 09/2026.</li>
+      <li><b>Vale alimentação:</b> 02, 03, 04 e 05/2026.</li>
+    </ul></div>
+
+  <div class="sec"><h3>Por que aconteceu</h3>
+    <p>Não sabemos ainda. Nenhum desses itens está no histórico de envios do robô, então os arquivos reprovados foram enviados antes pela equipe. Como todos são do Piauí e saíram na mesma hora, parece uma revisão em lote da Equatorial nesse estado. O motivo da reprovação não vem na leitura que o robô faz: precisa ser lido na tela do item no Atlas.</p></div>
+
+  <div class="sec"><h3>O que fazer agora</h3>
+    <ul>
+      <li>Abrir um ou dois itens no Atlas e ler o motivo. Se for o mesmo em todos (por exemplo, falta a relação de beneficiários), resolve-se em lote.</li>
+      <li>Para cada item, a equipe exclui o arquivo reprovado no portal e envia o corrigido. Sem essa exclusão, o Atlas recusa qualquer arquivo novo (ficha 03).</li>
+      <li>Conferir com a Milena se a NIP consegue os documentos certos do Piauí, principalmente as competências de 2025.</li>
+    </ul></div>
+
+  <div class="sec"><h3>Como vamos confirmar</h3>
+    <p>Depois do reenvio, o item sai da aba de reprovados na leitura seguinte do robô, que é de hora em hora.</p></div>
+
+  <div class="assin"><div>Responsável</div><div>Prazo</div><div>Reteste aprovado em</div></div>
+  <div class="rodape"><span>Histórico da automação · 27 e 28/10/2026</span><span>Ficha 02 de 05</span></div>
+</section>
+
+<!-- ============ 03 ============ -->
+<section class="folha">
+  <div class="cab"><div class="num">03</div><div>
+    <h1>O robô tentou reenviar 7 itens reprovados e o Atlas recusou todos</h1>
+    <div class="meta"><b>Atlas</b> · envio automático · mesmo caso da ficha 01 de 27/10</div></div></div>
+  <div class="dados">
+    <div><span>Itens</span>#105 #106 #158 #211 #212 #213 #474</div>
+    <div><span>Tentativas</span>12:00 (4) e 13:02 (7)</div>
+    <div><span>Resposta do Atlas</span>22006 "Documento já importado!"</div>
+    <div><span>Status no Atlas</span>DelayRejected</div>
+    <div><span>Origem do arquivo</span>SharePoint (achado ou unido)</div>
+    <div><span>Enviados</span>0</div>
+  </div>
+
+  <div class="sec"><h3>O que aconteceu</h3>
+    <p>Logo que os benefícios do Piauí foram reprovados (ficha 02), a busca no SharePoint achou arquivo para 7 deles e o painel os marcou como prontos. O automático tentou enviar os 7 e o Atlas recusou cada um. O robô anotou o erro na linha do item e seguiu para o próximo, conforme a regra de 26/10. Nada parou, mas também nada subiu.</p></div>
+
+  <div class="sec"><h3>Por que aconteceu <small>causa raiz</small></h3>
+    <p>É a mesma causa da ficha 01 de 27/10. O item reprovado ainda tem o arquivo antigo, e o Atlas só aceita um novo depois que esse arquivo é excluído na tela do portal. O robô deveria ter pulado esses itens, mas ele confere só se o status começa com "Delay", e "DelayRejected" passa. A regra preventiva proposta naquela ficha só foi feita no <code>enviar.js</code> depois disso, em 28/10 às 14:12.</p></div>
+
+  <div class="sec"><h3>Como sabemos <small>evidência</small></h3>
+    <ul>
+      <li>O <code>envios.log</code> mostra as 11 recusas, todas com o código 22006 e o status "DelayRejected".</li>
+      <li>Os 7 itens aparecem pela primeira vez nas leituras de 11:59 e 13:00, junto com as reprovações.</li>
+    </ul></div>
+
+  <div class="sec"><h3>O que fazer agora <small>correção</small></h3>
+    <p><b>Feito às 14:00:</b> os 7 foram segurados no painel (aba 6, botão Segurar), como em 27/10 com #135, #162, #220 e #221. Assim eles param de ser tentados a cada hora até a equipe excluir o arquivo antigo no portal. Antes de reenviar, conferir se o PDF achado no SharePoint corrige o motivo da reprovação.</p></div>
+
+  <div class="sec"><h3>Para não acontecer de novo <small>regra preventiva, publicada em 28/10 às 14:12</small></h3>
+    <ul>
+      <li>O robô só envia quando o status é exatamente "atrasado" ou "pendente". Item reprovado vai para uma lista "precisa de ação no portal", com o motivo.</li>
+      <li>Quando o Atlas responder "já importado", o item sai do automático sozinho, sem precisar segurar à mão.</li>
+    </ul></div>
+
+  <div class="assin"><div>Responsável</div><div>Prazo</div><div>Reteste aprovado em</div></div>
+  <div class="rodape"><span>Histórico da automação · 27 e 28/10/2026</span><span>Ficha 03 de 05</span></div>
+</section>
+
+<!-- ============ 04 ============ -->
+<section class="folha">
+  <div class="cab"><div class="num">04</div><div>
+    <h1>Por que não há nada novo para enviar</h1>
+    <div class="meta"><b>Atlas</b> · pendências sem documento na origem</div></div></div>
+  <div class="dados">
+    <div><span>Pendências no Atlas</span>157 na leitura das 13:00</div>
+    <div><span>Sem documento achado</span>115</div>
+    <div><span>Já enviadas</span>25</div>
+    <div><span>Busca na Factorial</span>0 de 13 achados, a cada hora</div>
+    <div><span>Busca no SharePoint</span>0 de 150 (1 de 152 às 13:00)</div>
+    <div><span>Sem regra</span>16</div>
+  </div>
+
+  <div class="sec"><h3>O que aconteceu</h3>
+    <p>Em toda rodada da noite e da manhã, o robô buscou documento para as pendências abertas e não achou nenhum novo. Por isso o envio automático começava com "0 pronta(s) para enviar". O único achado novo do período foi o da ficha 03, que já estava reprovado.</p></div>
+
+  <div class="sec"><h3>Onde cada grupo está travado</h3>
+    <ul>
+      <li><b>Factorial, TRCT, férias e GFD (58):</b> 27 férias sem "Aviso de férias", 22 TRCT sem assinatura, 5 com o empregado ainda ativo (a pendência no Atlas parece indevida) e 4 sem documento ou com divergência. Dependem do RH na Factorial.</li>
+      <li><b>Factorial, arquivo único (13):</b> ASO, baixa no eSocial e carta de desligamento que não estão na Factorial. O #301 tem arquivo, mas não é PDF ou está sem assinatura.</li>
+      <li><b>Relatório mensal de ocorrências, doc 66 (25):</b> não vem do SharePoint. A Milena baixa o modelo no Atlas e preenche.</li>
+      <li><b>Convenção coletiva, doc 84 (6):</b> fica em "06 Convenções Coletivas" e ainda não tem regra de busca.</li>
+      <li><b>Cartão de ponto, doc 83:</b> nenhum robô busca esse documento hoje.</li>
+      <li><b>Demais documentos do SharePoint:</b> a pasta do mês ainda não tem o arquivo, ou ele está incompleto para unir.</li>
+    </ul></div>
+
+  <div class="sec"><h3>O que fazer agora</h3>
+    <ul>
+      <li>Levar à Milena a lista dos 27 avisos de férias e dos 22 TRCT sem assinatura. Assim que entrarem na Factorial, a sincronização (agora no ar) monta os PDFs e o robô envia.</li>
+      <li>Conferir os 5 "empregado ativo": se a pendência estiver errada, pedir à Equatorial que a retire.</li>
+      <li>Decidir a regra do doc 84 e quem busca o doc 83.</li>
+    </ul></div>
+
+  <div class="assin"><div>Responsável</div><div>Prazo</div><div>Reteste aprovado em</div></div>
+  <div class="rodape"><span>Histórico da automação · 27 e 28/10/2026</span><span>Ficha 04 de 05</span></div>
+</section>
+
+<!-- ============ 05 ============ -->
+<section class="folha">
+  <div class="cab"><div class="num">05</div><div>
+    <h1>Bernhoeft: o automático rodou e não enviou nada, como devia</h1>
+    <div class="meta"><b>Bernhoeft</b> · documentos de empresa · 9 pendências</div></div></div>
+  <div class="dados">
+    <div><span>Leituras</span>a cada 30 min, sem erro</div>
+    <div><span>Envio</span>liberado e automático</div>
+    <div><span>Confiança mínima</span>média</div>
+    <div><span>Enviados no período</span>0</div>
+    <div><span>Enviados à mão em 26/10</span>00223 PA AVCB e 356 MA Brigada</div>
+    <div><span>Relatório 012 usado</span>de 25/09/2026, 14:34</div>
+  </div>
+
+  <div class="sec"><h3>O que aconteceu</h3>
+    <p>A esteira remontou os PDFs a cada leitura e o automático olhou a fila, mas não havia nada que pudesse sair sozinho:</p>
+    <ul>
+      <li>00223/2025 PA (AVCB) e 356/2026 MA (Brigada) já foram enviados à mão em 26/10 e não são reenviados.</li>
+      <li>6 itens de RS e GO têm confiança "baixa", porque o arquivo é genérico. Pela ficha de 27/10, são declarações de outro contrato. Ficam abaixo do mínimo "média" e não saem.</li>
+      <li>RS AVCB não tem arquivo.</li>
+    </ul>
+    <p>É o comportamento esperado.</p></div>
+
+  <div class="sec"><h3>Ponto de atenção <small>lista desatualizada</small></h3>
+    <p>A lista de pendências do Bernhoeft vem do "012 - Relatório de Documentos Pendentes". O robô baixa o relatório mais recente já pronto no portal, e esse relatório é de <b>25/09/2026</b>. O robô não pede um relatório novo, porque o botão SOLICITAR fica fora da regra de só leitura.</p>
+    <p>Por isso os 2 documentos enviados em 26/10 ainda aparecem como "Não Entregue" na lista, e qualquer mudança no portal depois de 25/09 não chega ao painel. As leituras ao vivo de competências (trabalhista e mobilização) voltam vazias, porque o usuário não tem contrato vinculado.</p></div>
+
+  <div class="sec"><h3>O que fazer agora</h3>
+    <ul>
+      <li><b>Decidido em 28/10:</b> o robô pode clicar em SOLICITAR no relatório 012 uma vez por dia. A mudança está pronta e conferida na tela sem clicar; falta publicar no robô.</li>
+      <li>Até lá, dá para pedir um relatório novo à mão no portal: o robô usa o mais recente na leitura seguinte.</li>
+      <li>Conferir no portal se os 2 envios de 26/10 continuam como "Não Analisado".</li>
+    </ul></div>
+
+  <div class="assin"><div>Responsável</div><div>Prazo</div><div>Reteste aprovado em</div></div>
+  <div class="rodape"><span>Histórico da automação · 27 e 28/10/2026</span><span>Ficha 05 de 05</span></div>
+</section>
+
+</body>
+</html>

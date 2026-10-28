@@ -16,7 +16,7 @@ fi
 id "$APP_USER" >/dev/null 2>&1 || useradd --system --create-home --shell /bin/bash "$APP_USER"
 mkdir -p "$APP_DIR"
 # Copia só o código (nunca profile/ nem out/ do PC)
-cp "$ORIGEM"/{pendencias.js,mobilizacao.js,comentarios.json,login.js,login_auto.py,requirements-captcha.txt,package.json,package-lock.json} "$APP_DIR"/
+cp "$ORIGEM"/{pendencias.js,entregar.js,mobilizacao.js,comentarios.json,login.js,login_auto.py,requirements-captcha.txt,package.json,package-lock.json} "$APP_DIR"/
 chown -R "$APP_USER:$APP_USER" "$APP_DIR"
 
 sudo -u "$APP_USER" bash -c "cd $APP_DIR && npm ci --omit=dev && npx playwright install chromium"

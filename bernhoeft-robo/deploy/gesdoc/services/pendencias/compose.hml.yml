@@ -14,6 +14,7 @@ services:
       HEADLESS: "1"
       INTERVALO_MIN: "30"
       PROFILE_DIR: /data/profile
+      PACOTES: /pacotes
       BERNHOEFT_USER:
       BERNHOEFT_PASSWORD:
       TWOCAPTCHA_API_KEY:
@@ -25,6 +26,8 @@ services:
     volumes:
       - bernhoeft-data:/data
       - /opt/gesdoc/data/hml/pendencias-bernhoeft:/app/out
+      # PDFs montados pela esteira do painel (auto.js), só leitura: o entregar.js sobe daqui (aba 7, interruptor começa desligado).
+      - /opt/gesdoc/data/hml/pacotes-bernhoeft:/pacotes:ro
     shm_size: 1gb
     mem_limit: 2g
     security_opt: ["no-new-privileges:true"]

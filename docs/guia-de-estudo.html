@@ -1,0 +1,561 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Guia de estudo · Automação de documentos da Equatorial</title>
+<style>
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif; color: #24292f; font-size: 9.9pt; line-height: 1.48; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .folha { width: 210mm; height: 297mm; padding: 14mm 17mm 12mm; position: relative; page-break-after: always; overflow: hidden; }
+  .folha:last-child { page-break-after: auto; }
+  .rodape { position: absolute; left: 17mm; right: 17mm; bottom: 9mm; display: flex; justify-content: space-between; font-size: 7.8pt; color: #8c959f; border-top: 1px solid #e5e8eb; padding-top: 4px; }
+
+  .capa-topo { border-bottom: 1px solid #d0d7de; padding-bottom: 10px; margin-bottom: 14px; }
+  .rotulo { font-size: 8.5pt; color: #1f4e79; font-weight: 600; }
+  .capa-topo h1 { font-size: 22pt; font-weight: 600; margin: 4px 0 2px; color: #1b1f24; }
+  .capa-topo .sub { color: #57606a; font-size: 10pt; }
+
+  .cab { display: flex; gap: 14px; align-items: center; border-bottom: 1px solid #d0d7de; padding-bottom: 8px; margin-bottom: 10px; }
+  .num { flex: 0 0 auto; width: 40px; height: 40px; border-radius: 8px; background: #1f4e79; color: #fff; font-size: 15pt; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+  .cab h1 { font-size: 14pt; font-weight: 600; margin: 0; color: #1b1f24; line-height: 1.2; }
+  .cab .meta { font-size: 8.6pt; color: #57606a; }
+
+  h2 { font-size: 10.6pt; font-weight: 600; margin: 10px 0 4px; color: #1f4e79; }
+  p { margin: 0 0 6px; }
+  ul, ol { margin: 2px 0 6px; padding-left: 18px; }
+  li { margin: 2px 0; }
+  code { font-family: Consolas, "Cascadia Mono", monospace; font-size: 8.6pt; background: #f3f4f6; padding: 0 3px; border-radius: 3px; }
+  .aviso { background: #f6f8fa; border-left: 3px solid #1f4e79; border-radius: 4px; padding: 7px 12px; margin: 6px 0 10px; font-size: 9pt; }
+  .aviso b:first-child { color: #1f4e79; }
+  .cuidado { background: #fdf4f3; border-left: 3px solid #b42318; border-radius: 4px; padding: 7px 12px; margin: 6px 0 10px; font-size: 9pt; }
+  .nota { font-size: 8.4pt; color: #6e7781; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 8.6pt; margin: 2px 0 8px; }
+  th { text-align: left; font-weight: 600; color: #57606a; border-bottom: 1px solid #d0d7de; padding: 3px 6px; }
+  td { border-bottom: 1px solid #eef0f2; padding: 3px 6px; vertical-align: top; }
+  td:first-child { font-weight: 600; color: #1b1f24; }
+  table.indice td:first-child { color: #1f4e79; width: 30px; }
+
+  .fluxo { display: flex; align-items: stretch; gap: 0; margin: 8px 0 10px; }
+  .fluxo .passo { flex: 1; border: 1px solid #d0d7de; border-radius: 6px; padding: 6px 7px; font-size: 8.2pt; line-height: 1.35; background: #fff; }
+  .fluxo .passo b { display: block; color: #1f4e79; font-size: 9pt; margin-bottom: 2px; }
+  .fluxo .seta { flex: 0 0 16px; display: flex; align-items: center; justify-content: center; color: #8c959f; font-size: 11pt; }
+  .estados { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 6px 0 8px; font-size: 8.6pt; }
+  .estados span.e { border: 1px solid #1f4e79; color: #1f4e79; border-radius: 4px; padding: 1px 7px; font-weight: 600; font-family: Consolas, monospace; font-size: 8.2pt; }
+  .estados span.r { border-color: #b42318; color: #b42318; }
+  .duas { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .caixa { border: 1px solid #d0d7de; border-radius: 6px; padding: 7px 10px; font-size: 8.8pt; }
+  .caixa h3 { margin: 0 0 3px; font-size: 9.4pt; color: #1b1f24; }
+  .pergunta li { margin: 4px 0; }
+</style>
+</head>
+<body>
+
+<!-- ============ CAPA ============ -->
+<section class="folha">
+  <div class="capa-topo">
+    <div class="rotulo">Automação de documentos · Equatorial</div>
+    <h1>Guia de estudo do projeto</h1>
+    <div class="sub">Como tudo funciona, do portal ao PDF enviado · versão de 28/10/2026</div>
+  </div>
+
+  <p>Este guia explica o projeto inteiro, em linguagem simples, para quem precisa entender e decidir sem ler o código. Cada capítulo responde a uma pergunta. Os nomes entre <code>assim</code> são arquivos ou comandos reais, e servem para você achar a coisa quando precisar.</p>
+
+  <div class="aviso"><b>Como estudar.</b> Leia os capítulos 1 a 3 primeiro: eles dão o mapa. Depois leia os outros na ordem que quiser. No fim há um glossário (capítulo 15) e perguntas para você testar o que aprendeu (capítulo 16). Se uma palavra não fizer sentido, procure no glossário.</div>
+
+  <h2>Capítulos</h2>
+  <table class="indice">
+    <tr><th></th><th>Pergunta</th><th>Capítulo</th></tr>
+    <tr><td>1</td><td>Que problema o projeto resolve e quem está envolvido?</td><td>O problema e as pessoas</td></tr>
+    <tr><td>2</td><td>Qual é o caminho de um documento, do começo ao fim?</td><td>O caminho de um documento</td></tr>
+    <tr><td>3</td><td>Quais sistemas de fora a gente usa?</td><td>Os sistemas de fora</td></tr>
+    <tr><td>4</td><td>Como funciona o robô do Atlas?</td><td>Robô Atlas</td></tr>
+    <tr><td>5</td><td>Como funciona o robô do Bernhoeft?</td><td>Robô Bernhoeft</td></tr>
+    <tr><td>6</td><td>Quem acha e monta os arquivos?</td><td>Factorial, SharePoint e união de PDFs</td></tr>
+    <tr><td>7</td><td>O que fica guardado no banco?</td><td>O banco Neon</td></tr>
+    <tr><td>8</td><td>Onde tudo roda?</td><td>A VPS, o Docker e o cofre</td></tr>
+    <tr><td>9</td><td>Como uma mudança sai deste PC e chega ao servidor?</td><td>Publicar com segurança</td></tr>
+    <tr><td>10</td><td>O que cada aba do painel mostra?</td><td>O painel</td></tr>
+    <tr><td>11</td><td>O que impede que algo errado seja enviado?</td><td>As travas</td></tr>
+    <tr><td>12</td><td>O que acontece quando um documento é reprovado?</td><td>Reprovação e substituição</td></tr>
+    <tr><td>13</td><td>Deu problema: por onde começo?</td><td>Onde olhar quando algo dá errado</td></tr>
+    <tr><td>14</td><td>O que já deu errado e o que aprendemos?</td><td>Lições</td></tr>
+    <tr><td>15</td><td>O que quer dizer cada palavra?</td><td>Glossário</td></tr>
+    <tr><td>16</td><td>Eu entendi mesmo?</td><td>Perguntas para treinar e o que falta no projeto</td></tr>
+  </table>
+
+  <h2>O projeto em quatro frases</h2>
+  <ol>
+    <li>A Equatorial cobra documentos da NIP em dois portais: o <b>Atlas</b> e o <b>Bernhoeft</b>.</li>
+    <li>Dois <b>robôs</b> entram nesses portais, leem o que está pendente e anotam tudo num <b>banco de dados</b> (Neon).</li>
+    <li>Outros programas procuram o arquivo de cada pendência no <b>RH</b> (Factorial e SharePoint) e, se preciso, juntam vários PDFs num só.</li>
+    <li>Quando o arquivo está pronto, o robô o envia ao portal, <b>mas só se você tiver liberado o envio no painel</b>.</li>
+  </ol>
+
+  <div class="rodape"><span>Guia de estudo · Automação de documentos</span><span>capa</span></div>
+</section>
+
+<!-- ============ 1 e 2 ============ -->
+<section class="folha">
+  <div class="cab"><div class="num">1</div><div><h1>O problema e as pessoas</h1><div class="meta">Por que o projeto existe</div></div></div>
+
+  <p>A <b>NIP</b> presta serviço para a <b>Equatorial</b>, a distribuidora de energia, em vários estados: PA, MA, PI, AL, AP, RS, GO e outros. Para manter o contrato, a Equatorial exige que a NIP prove, todo mês, que está em dia com os funcionários e com o governo. As provas são documentos: ASO (exame médico), férias, rescisão (TRCT), FGTS, INSS, vale-transporte, plano de saúde, certidões negativas e outros. No total são <b>36 tipos</b> (capítulo 10, aba 8).</p>
+  <p>A Equatorial não recebe esses documentos por e-mail, e sim por <b>portais de terceiros</b>, que são sites de empresas especializadas em cobrar e conferir documentos de fornecedores. Cada documento que falta vira uma <b>pendência</b>, com prazo. Pendência atrasada pode virar multa ou bloqueio.</p>
+  <p>Antes, uma pessoa da NIP entrava em cada portal, via o que faltava, procurava o arquivo no RH, juntava os PDFs e subia um por um. O projeto automatiza esse trabalho.</p>
+
+  <table>
+    <tr><th>Quem</th><th>Papel</th></tr>
+    <tr><td>Augusto (você)</td><td>Dono do projeto. Decide tudo que sai para fora: ligar o envio, publicar mudança, aprovar regra.</td></tr>
+    <tr><td>Milena</td><td>Departamento pessoal da NIP. Conhece as regras de cada documento (a planilha dela é a fonte das regras) e faz parte dos envios à mão.</td></tr>
+    <tr><td>Evilásio</td><td>Programador que fez a sincronização da Factorial (em Python). O código é dele e roda na VPS sem alteração nossa.</td></tr>
+    <tr><td>Equatorial</td><td>A cliente. A equipe dela analisa e aprova ou reprova os documentos nos portais.</td></tr>
+    <tr><td>Atlas e Bernhoeft</td><td>As empresas donas dos dois portais.</td></tr>
+    <tr><td>Claude</td><td>Escreve o código, testa e publica quando você autoriza. Nunca liga o envio.</td></tr>
+  </table>
+
+  <div class="cab" style="margin-top:14px"><div class="num">2</div><div><h1>O caminho de um documento</h1><div class="meta">Os 5 passos, do portal de volta ao portal</div></div></div>
+
+  <div class="fluxo">
+    <div class="passo"><b>1. Ler</b>O robô entra no portal e lista o que falta.</div><div class="seta">→</div>
+    <div class="passo"><b>2. Guardar</b>Cada pendência vira uma linha no banco Neon.</div><div class="seta">→</div>
+    <div class="passo"><b>3. Achar</b>Procura o arquivo na Factorial ou no SharePoint.</div><div class="seta">→</div>
+    <div class="passo"><b>4. Montar</b>Se o documento tem várias partes, une num PDF só.</div><div class="seta">→</div>
+    <div class="passo"><b>5. Enviar</b>Sobe o PDF no portal, só com o envio liberado.</div>
+  </div>
+
+  <p>Pense numa pendência como uma <b>ficha que anda por uma esteira</b>. Em cada passo ela ganha uma informação nova, e o <b>estado</b> no banco diz em que ponto ela está:</p>
+  <div class="estados">
+    <span class="e">PENDENTE_ENVIO</span> falta achar o arquivo →
+    <span class="e">LOCALIZADO</span> achou 1 arquivo, ou <span class="e">COMPOSTO</span> uniu várias partes →
+    <span class="e">ENVIADO</span> subiu no portal → aprovado, ou <span class="e r">REJEITADO</span>
+  </div>
+
+  <h2>Um exemplo real</h2>
+  <p>O vale-transporte de agosto de uma unidade do Piauí aparece como atrasado no Atlas. O robô Atlas lê e grava no Neon como <code>PENDENTE_ENVIO</code>. A busca no SharePoint acha a pasta de agosto, pega a relação, o boleto e o comprovante, une os três (relação → boleto → comprovante) e grava como <code>LOCALIZADO</code>. O painel mostra a ficha do PDF na aba 6. Com o envio liberado, o robô sobe o arquivo e a pendência vira <code>ENVIADO</code>. Dias depois, a Equatorial analisa: aprova (a pendência some do portal) ou reprova (capítulo 12).</p>
+
+  <div class="rodape"><span>Guia de estudo · Automação de documentos</span><span>capítulos 1 e 2</span></div>
+</section>
+
+<!-- ============ 3 ============ -->
+<section class="folha">
+  <div class="cab"><div class="num">3</div><div><h1>Os sistemas de fora</h1><div class="meta">O que não é nosso, mas a gente usa</div></div></div>
+
+  <table>
+    <tr><th style="width:21%">Sistema</th><th>O que é</th><th style="width:34%">Como a gente fala com ele</th></tr>
+    <tr><td>Atlas (AFM)</td><td>Portal onde a Equatorial cobra a maior parte dos documentos, por funcionário, unidade e mês (competência). Tem abas de Atrasados, Pendentes e Reprovados.</td><td>Pela mesma API que o site usa por trás, depois do login com código de 2 fatores que chega por e-mail.</td></tr>
+    <tr><td>Bernhoeft (ContractWeb)</td><td>Portal onde a Equatorial cobra principalmente documentos <b>da empresa</b>, por contrato (AVCB, brigada, etc.).</td><td>Pelo navegador (Playwright), clicando na tela como uma pessoa. O login tem reCAPTCHA.</td></tr>
+    <tr><td>Factorial</td><td>Sistema de RH da NIP. Guarda os documentos de cada funcionário: férias, TRCT, ASO, pedidos de desligamento.</td><td>API com chave. Quem usa: a sincronização do Evilásio e o <code>factorial.js</code>.</td></tr>
+    <tr><td>SharePoint</td><td>Pastas do departamento pessoal na Microsoft (site "Gestão de DP"). Guarda o que é mensal e da empresa: FGTS, INSS, benefícios, certidões, folha.</td><td>Microsoft Graph, com um aplicativo do Azure (AppRHBrasilSP) que só enxerga os sites liberados para ele.</td></tr>
+    <tr><td>Neon</td><td>Banco de dados Postgres na nuvem. É a memória central do projeto (capítulo 7).</td><td>Pela internet, com um usuário diferente para cada programa.</td></tr>
+    <tr><td>Gotenberg</td><td>Programa que une PDFs. Roda dentro da nossa VPS, não na internet.</td><td>Em <code>127.0.0.1:3010</code>, só de dentro do servidor.</td></tr>
+    <tr><td>Anti-Captcha</td><td>Serviço pago que resolve o reCAPTCHA do Bernhoeft quando o truque do áudio falha.</td><td>Chave no cofre. Leva cerca de 45 s.</td></tr>
+    <tr><td>Tailscale</td><td>Rede privada que liga este PC à VPS. O painel só abre por ela.</td><td><code>tailscale ssh augusto@100.103.196.93</code></td></tr>
+  </table>
+
+  <h2>Três palavras que aparecem em todo lugar</h2>
+  <div class="duas">
+    <div class="caixa"><h3>API</h3>Uma "porta de serviço" de um sistema: em vez de clicar na tela, o programa pede os dados diretamente e recebe uma resposta organizada (JSON). É mais rápido e mais estável que clicar.</div>
+    <div class="caixa"><h3>Playwright</h3>Biblioteca que controla um Chrome de verdade: abre páginas, preenche campos e clica. Usamos quando não há API, como no Bernhoeft.</div>
+  </div>
+  <div class="caixa" style="margin-top:10px"><h3>Competência</h3>O mês a que o documento se refere. A competência 08/2026 é o documento de agosto, mesmo que ele seja enviado em outubro. Uma pendência é identificada por documento + funcionário (CPF) ou unidade + competência.</div>
+
+  <h2>Por que dois portais tão diferentes</h2>
+  <p>O Atlas tem uma API organizada, então o robô dele é rápido e preciso. O Bernhoeft não tem API pública de envio, então o robô dele imita uma pessoa no navegador, que é mais lento e quebra quando a tela muda. Por isso o Bernhoeft tem mais cuidados (login com captcha, leitura de relatório em planilha, ensaio antes de enviar).</p>
+
+  <div class="rodape"><span>Guia de estudo · Automação de documentos</span><span>capítulo 3</span></div>
+</section>
+
+<!-- ============ 4 ============ -->
+<section class="folha">
+  <div class="cab"><div class="num">4</div><div><h1>Robô Atlas</h1><div class="meta">Pasta <code>atlas-robo/</code> · roda no container <code>gesdoc-pendencias-hml-atlas-1</code></div></div></div>
+
+  <p>É um programa em <b>Node.js</b> (JavaScript fora do navegador) que fica rodando em laço, uma rodada por hora. Quem comanda o laço é o <code>robo.js</code>. Ele chama os outros arquivos nesta ordem:</p>
+
+  <table>
+    <tr><th style="width:22%">Arquivo</th><th>O que faz</th></tr>
+    <tr><td><code>robo.js</code></td><td>O maestro. Roda a fila: coleta → grava → busca → lista de envio → envio automático, se estiver ligado. Também atende os pedidos do painel ("verificar", "enviar", "buscar").</td></tr>
+    <tr><td><code>login.js</code> e <code>comum.js</code></td><td>Entram no Atlas. O Atlas manda um código por e-mail (2 fatores) que tem <b>letras e números</b>. Você digita esse código no painel, aba Operação, e o robô usa.</td></tr>
+    <tr><td><code>pendencias.js</code></td><td>Lê as abas do Atlas (atrasados, pendentes, reprovados) e gera a lista em <code>out/</code>.</td></tr>
+    <tr><td><code>neon.js</code></td><td>Grava a lista no banco. Cria pendência nova e atualiza a situação das que já existem, sem apagar o avanço feito por outro programa.</td></tr>
+    <tr><td><code>factorial.js</code></td><td>Procura na Factorial os documentos 67 (ASO), 68 e 69 (pedido de desligamento) quando eles são um arquivo único, e grava como <code>LOCALIZADO</code>.</td></tr>
+    <tr><td><code>sharepoint.js</code></td><td>Procura no SharePoint os 20 tipos que moram lá, une os benefícios e grava como <code>LOCALIZADO</code> (capítulo 6).</td></tr>
+    <tr><td><code>enviar.js</code></td><td>Monta a lista do que está pronto (simulação) e, com o envio liberado, envia. Antes de cada envio, confere no Atlas se a pendência ainda existe, se o nome bate e se o status permite.</td></tr>
+    <tr><td><code>compor.js</code>, <code>unir-pdfs.js</code></td><td>União de PDFs pelo Gotenberg (reserva).</td></tr>
+    <tr><td><code>ciclo.js</code>, <code>explorar*.js</code></td><td>Versão antiga do laço e scripts de exploração só de leitura.</td></tr>
+  </table>
+
+  <h2>Como o envio ao Atlas funciona por dentro</h2>
+  <ol>
+    <li>O robô pergunta ao Atlas as informações da pendência (<code>general-information</code>): nome do documento, status e formato aceito.</li>
+    <li>Só segue se o status for exatamente <b>Delay</b> (atrasado) ou <b>Pending</b> (pendente). Status como <b>DelayRejected</b> (atrasado e reprovado) param aqui, com o motivo "precisa de ação no portal". Essa regra foi publicada em 28/10.</li>
+    <li>Envia o PDF (o mesmo pedido que o botão "Salvar e enviar" do site faz).</li>
+    <li>Grava o resultado em <code>out/envio/resultados.json</code> e no histórico, que nunca é apagado.</li>
+  </ol>
+
+  <h2>Códigos de erro que você vai ver</h2>
+  <table>
+    <tr><th style="width:16%">Código</th><th>Significado</th><th style="width:36%">O que o robô faz</th></tr>
+    <tr><td>22006</td><td>"Documento já importado!": o item ainda tem um arquivo, normalmente o reprovado.</td><td>Segura a pendência sozinho e segue para a próxima.</td></tr>
+    <tr><td>81005</td><td>O Atlas pede para aceitar um termo.</td><td>Para e avisa: uma pessoa precisa aceitar.</td></tr>
+  </table>
+
+  <div class="aviso"><b>Por que não recriar o container do Atlas à toa.</b> Recriar apaga a sessão e exige um código de 2 fatores novo, que chega no e-mail. Por isso as correções do Atlas são publicadas copiando só o arquivo mudado (<code>docker cp</code>) para dentro do container que está rodando.</div>
+
+  <div class="rodape"><span>Guia de estudo · Automação de documentos</span><span>capítulo 4</span></div>
+</section>
+
+<!-- ============ 5 ============ -->
+<section class="folha">
+  <div class="cab"><div class="num">5</div><div><h1>Robô Bernhoeft</h1><div class="meta">Pasta <code>bernhoeft-robo/</code> · container <code>gesdoc-pendencias-hml-bernhoeft-1</code> · uma leitura a cada 30 min</div></div></div>
+
+  <table>
+    <tr><th style="width:22%">Arquivo</th><th>O que faz</th></tr>
+    <tr><td><code>pendencias.js</code></td><td>A leitura. Lista as competências dos contratos, baixa o relatório 012 (planilha de documentos pendentes) e compara com a leitura anterior para avisar o que é novo. Com <code>--loop</code>, fica rodando e atende os pedidos do painel entre as leituras.</td></tr>
+    <tr><td><code>login_auto.py</code></td><td>Login automático em Python. Tenta resolver o reCAPTCHA pelo áudio (grátis). No servidor o Google recusa, então usa o Anti-Captcha.</td></tr>
+    <tr><td><code>login.js</code></td><td>Login à mão, se o automático falhar.</td></tr>
+    <tr><td><code>entregar.js</code></td><td>O envio de documento de empresa: <b>verificar</b> (só olha), <b>ensaio</b> (vai até o botão final e fecha sem clicar) e <b>enviar</b> (só com o envio liberado).</td></tr>
+    <tr><td><code>mobilizacao.js</code></td><td>Fluxo de mobilização de funcionário, feito a partir do vídeo da reunião de 22/10. <b>Nunca foi testado.</b></td></tr>
+    <tr><td><code>deploy/</code></td><td>Tudo que instala a VPS, inclusive o painel (capítulo 8).</td></tr>
+  </table>
+
+  <h2>O caminho do envio no Bernhoeft</h2>
+  <p>Carregamento Mobilização → competência <b>"Documentos da empresa"</b> do contrato → Etapa 6 → painel do documento (pelo título exato) → ícone de nuvem → janela "Próximo" → escolhe o arquivo → <b>"Enviar para análise"</b>. O arquivo só sobe nesse último clique. Por isso o ensaio consegue ir até ali e fechar sem enviar nada.</p>
+
+  <h2>O relatório 012</h2>
+  <p>É a planilha que diz, documento por documento, se ele está "Não Entregue" (falta enviar), "Não Analisado" (enviado e esperando) ou "Analisado". Ela só traz a situação <b>do dia em que foi pedida</b>, no botão SOLICITAR. Desde 28/10 você autorizou o robô a pedir um relatório novo <b>no máximo uma vez por dia</b>. A mudança está pronta neste PC e falta publicar.</p>
+
+  <h2>Por que o Bernhoeft é mais delicado</h2>
+  <ul>
+    <li>A conta usada é <b>da NIP</b> (operador 83205). Em 19/10 parecia sem permissão para enviar. No vídeo de 22/10 o mesmo usuário criou mobilização e subiu arquivo, e em 26/10 você enviou dois documentos à mão com ela.</li>
+    <li>As competências de PA, MA e RS estão "Finalizando carregamento": não se sabe se o upload nelas entra em análise sem "Concluir carregamento". O robô <b>nunca</b> clica em "Concluir carregamento".</li>
+    <li>A maioria dos arquivos prontos tem confiança "baixa" ou "média" (arquivo genérico), então convém olhar o PDF antes. O automático só envia a partir da confiança mínima que você escolheu (hoje: média).</li>
+  </ul>
+
+  <div class="aviso"><b>Fonte única.</b> O mesmo código roda no seu PC (Windows) e na VPS (Linux). Toda mudança é feita uma vez, nesta pasta, e o que muda de um lugar para o outro (caminho do Chrome, sem janela) fica em variáveis de ambiente. Nunca existe "versão só da VPS".</div>
+
+  <div class="rodape"><span>Guia de estudo · Automação de documentos</span><span>capítulo 5</span></div>
+</section>
+
+<!-- ============ 6 ============ -->
+<section class="folha">
+  <div class="cab"><div class="num">6</div><div><h1>Factorial, SharePoint e união de PDFs</h1><div class="meta">O passo 3 (achar) e o passo 4 (montar)</div></div></div>
+
+  <p>Cada tipo de documento tem uma <b>origem</b> anotada no banco (<code>documento_regras.origem</code>): Factorial ou SharePoint. Isso define quem procura.</p>
+
+  <table>
+    <tr><th style="width:24%">Quem procura</th><th style="width:28%">Quais documentos</th><th>Como</th></tr>
+    <tr><td>Sincronização do Evilásio</td><td>8 férias, 9 TRCT, 10 GFD</td><td>Programa em Python (<code>rodar.py</code> chama o código dele) que roda a cada 2 horas, das 07h às 19h, pelo cron. Acha as partes na Factorial, une com pypdf e grava <code>COMPOSTO</code>.</td></tr>
+    <tr><td><code>factorial.js</code> (robô Atlas)</td><td>67 ASO, 68, 69 pedido de desligamento</td><td>Busca um arquivo único por funcionário e grava <code>LOCALIZADO</code>. Trava quando o mesmo arquivo aparece em CPFs diferentes.</td></tr>
+    <tr><td><code>sharepoint.js</code> (robô Atlas)</td><td>20 tipos mensais e da empresa (benefícios 2/3/4/7, GFD 24, RE 25, salários 56, DARF 59/65, DCTFWeb 60/61, FOPAG 63, CRF 64…)</td><td>Anda nas pastas do mês em "13 Auditorias". Os benefícios são unidos na ordem relação → boleto → comprovante pelo Gotenberg.</td></tr>
+    <tr><td>Ninguém</td><td>83 cartão de ponto</td><td>Vem da Factorial, mas nenhum programa tem regra para ele. Fica no grupo "sem robô que busque".</td></tr>
+  </table>
+
+  <h2>Como a busca no SharePoint acha a pasta certa</h2>
+  <p>As pastas dos meses têm nomes soltos ("01.2026", "04 -Abril", "09-SETEMBRO"). O programa reconhece pelo número ou pelo nome do mês. Dentro do mês ele procura a subpasta do assunto (FGTS, INSS, V.T, plano de saúde…) e decide o "papel" de cada arquivo pelo nome. Se faltar uma parte, ou se uma parte aparecer repetida, ele <b>não une</b>, e o painel mostra o motivo em "não deu para unir".</p>
+
+  <h2>Quando um documento é unido</h2>
+  <div class="duas">
+    <div class="caixa"><h3>Arquivo único</h3>Um PDF já é o documento inteiro (ASO, certidão, GFD). Estado <code>LOCALIZADO</code>.</div>
+    <div class="caixa"><h3>Várias partes</h3>O documento exigido é a soma de vários PDFs (TRCT + comprovante; relação + boleto + comprovante do benefício). Estado <code>COMPOSTO</code>, ou <code>LOCALIZADO</code> no caso do SharePoint.</div>
+  </div>
+
+  <h2>Regras de negócio que vieram da Milena</h2>
+  <ul>
+    <li>69 vale para "pedido de desligamento", não para "aviso prévio" do empregador. Mesmo assim, 13 documentos 69 antigos são aviso prévio e precisam ser confirmados com ela.</li>
+    <li>No ASO (67), só a página do ASO pode ir. Ficha clínica e anamnese são dados de saúde (LGPD) e não podem ir.</li>
+    <li>59 e 63 "já sobem automático" pelo lado da Milena, então há risco de envio em dobro.</li>
+    <li>Tudo isso está em <code>docs/documentos-36.md</code>, que deve ser lido antes de mexer num tipo.</li>
+  </ul>
+
+  <div class="cuidado"><b>Ponto fraco conhecido.</b> Quando o documento ainda não existe no RH (aviso de férias sem assinatura, pasta do seguro vazia, Amapá sem RE), nenhum programa resolve: alguém precisa colocar o arquivo. A maior parte das pendências paradas hoje está nessa situação.</div>
+
+  <div class="rodape"><span>Guia de estudo · Automação de documentos</span><span>capítulo 6</span></div>
+</section>
+
+<!-- ============ 7 ============ -->
+<section class="folha">
+  <div class="cab"><div class="num">7</div><div><h1>O banco Neon</h1><div class="meta">A memória central: tudo que um programa descobre, os outros leem daqui</div></div></div>
+
+  <p>Um banco de dados é um conjunto de <b>tabelas</b>, como planilhas, em que cada linha é um registro. O Neon é um Postgres (um tipo de banco) hospedado na nuvem. As tabelas principais:</p>
+
+  <table>
+    <tr><th style="width:26%">Tabela</th><th>O que guarda</th></tr>
+    <tr><td><code>documentos</code></td><td>Uma linha por pendência: tipo (doc_id), funcionário (CPF), unidade, competência, prazo, <b>estado</b>, situação no portal e onde está o arquivo (<code>caminho_origem</code>).</td></tr>
+    <tr><td><code>documento_regras</code></td><td>Uma linha por tipo de documento: de onde vem (origem), para onde vai e como identificar.</td></tr>
+    <tr><td><code>documento_envios</code></td><td>Histórico do que foi montado e enviado, com a resposta recebida.</td></tr>
+    <tr><td><code>documento_destinos</code>, <code>documento_protocolos</code></td><td>Para qual portal vai cada documento e os números de protocolo.</td></tr>
+    <tr><td><code>alerta</code></td><td>Motivos e avisos da sincronização (por exemplo, "férias sem aviso de férias").</td></tr>
+  </table>
+
+  <h2>Duas proteções dentro do próprio banco</h2>
+  <ul>
+    <li><b>Chave natural</b> (<code>documentos_chave_natural</code>): o banco recusa duas linhas iguais para a mesma pendência (cliente, documento, CPF, filial, competência, nome, pedido e prazo). Assim uma leitura repetida não duplica nada.</li>
+    <li><b>Gatilho de rejeição</b> (<code>documentos_rejeicao</code>): quando a situação do portal vira "Reprovado…", o estado passa sozinho para <code>REJEITADO</code>.</li>
+  </ul>
+
+  <h2>Um usuário para cada programa (roles)</h2>
+  <p>Em vez de todo mundo usar a senha do dono, cada programa tem seu usuário, com o mínimo de permissão de que precisa. Se a senha de um vazar, o estrago é pequeno.</p>
+  <table>
+    <tr><th style="width:26%">Usuário</th><th>Quem usa</th><th style="width:36%">Pode</th></tr>
+    <tr><td><code>robo_atlas</code></td><td>Robô Atlas</td><td>Ler e gravar só as colunas de que ele precisa.</td></tr>
+    <tr><td><code>sinc_factorial</code></td><td>Sincronização na VPS</td><td>Gravar estados, alertas e envios.</td></tr>
+    <tr><td><code>painel_leitura</code></td><td>Painel</td><td>Só ler.</td></tr>
+    <tr><td><code>gesdoc_sync</code></td><td>Cópia antiga do Evilásio</td><td>Tudo (é superusuário). Precisa sair ou ser apagado.</td></tr>
+    <tr><td><code>neondb_owner</code></td><td>Dono do banco</td><td>Tudo. Só para manutenção; a senha precisa ser trocada.</td></tr>
+  </table>
+  <p class="nota">Nenhum usuário de programa consegue apagar linhas (DELETE). Isso foi testado em 20/10.</p>
+
+  <div class="cuidado"><b>Cuidado com o horário.</b> O Neon guarda as horas em UTC, 3 horas à frente de Brasília. O painel converte com a função <code>utc()</code>. Se uma hora parecer errada em 3 horas, é isso.</div>
+
+  <div class="rodape"><span>Guia de estudo · Automação de documentos</span><span>capítulo 7</span></div>
+</section>
+
+<!-- ============ 8 e 9 ============ -->
+<section class="folha">
+  <div class="cab"><div class="num">8</div><div><h1>A VPS, o Docker e o cofre</h1><div class="meta">Onde tudo roda, 24 horas por dia</div></div></div>
+
+  <p>A <b>VPS</b> é um computador alugado na Hostinger, com Linux (Ubuntu), ligado o tempo todo. Você entra nele pelo Tailscale. Lá dentro, cada programa roda num <b>container Docker</b>, uma caixa isolada que já vem com tudo que o programa precisa. A receita da caixa é o <code>Dockerfile</code>, a caixa pronta é a <b>imagem</b> e a caixa rodando é o <b>container</b>.</p>
+
+  <table>
+    <tr><th style="width:26%">Container</th><th>O que é</th><th style="width:22%">Quando roda</th></tr>
+    <tr><td>atlas</td><td>Robô Atlas</td><td>Laço, 1 rodada por hora</td></tr>
+    <tr><td>bernhoeft</td><td>Robô Bernhoeft</td><td>Laço, a cada 30 min</td></tr>
+    <tr><td>painel</td><td>O site do painel, na porta 3020</td><td>Sempre</td></tr>
+    <tr><td>sincronizacao</td><td>Código do Evilásio</td><td>Cron: 07h, 09h … 19h</td></tr>
+    <tr><td>navegacao</td><td>Chrome sem janela, para os robôs</td><td>Sempre</td></tr>
+    <tr><td>pdf</td><td>Gotenberg, que une PDFs</td><td>Sempre</td></tr>
+  </table>
+  <ul>
+    <li><b>Pastas importantes na VPS:</b> <code>/opt/gesdoc</code> (instalação), <code>/opt/gesdoc/data/hml/…</code> (dados e PDFs) e <code>/opt/gesdoc/services/…</code> (receitas e compose de cada serviço).</li>
+    <li><b>Compose</b> (<code>compose.hml.yml</code>): arquivo que diz como subir os containers: imagem, pastas ligadas e variáveis.</li>
+    <li><b>Cofre</b> (<code>infra/secrets/hml.enc.env</code>, SOPS): as senhas ficam criptografadas e só são abertas na hora de subir o container. Nada de senha no código.</li>
+    <li><b>"hml"</b> quer dizer homologação. É o nome do ambiente, mas hoje os dados são reais.</li>
+  </ul>
+
+  <div class="cab" style="margin-top:12px"><div class="num">9</div><div><h1>Publicar com segurança</h1><div class="meta">Como uma mudança sai deste PC e chega ao servidor</div></div></div>
+
+  <ol>
+    <li><b>Muda aqui:</b> o código-fonte fica neste PC (<code>ACERVO/GESDOC/GESDOC</code>).</li>
+    <li><b>Testa isolado:</b> num container descartável, com uma cópia da sessão e sem enviar nada. Os testes ficam em <code>%TEMP%/gesdoc-teste/</code>.</li>
+    <li><b>Pede o seu OK:</b> nada de produção muda sem você autorizar.</li>
+    <li><b>Publica com script</b> (<code>publicar-*.sh</code>). Antes de tudo, o script trava o envio quando é preciso, faz backup do que estava rodando (<code>*.bak-AAAAMMDDHHMM</code>), copia o novo e reinicia.</li>
+    <li><b>Confere o md5:</b> o md5 é uma "impressão digital" do arquivo. Se o md5 do container for igual ao do PC, o que roda lá é exatamente o que foi testado aqui.</li>
+    <li><b>Anota:</b> o que foi publicado, quando e com qual backup fica no <code>CLAUDE.md</code> do projeto.</li>
+  </ol>
+  <p class="nota">Se der errado, o backup permite voltar à versão anterior em um minuto.</p>
+
+  <div class="rodape"><span>Guia de estudo · Automação de documentos</span><span>capítulos 8 e 9</span></div>
+</section>
+
+<!-- ============ 10 ============ -->
+<section class="folha">
+  <div class="cab"><div class="num">10</div><div><h1>O painel</h1><div class="meta">http://100.103.196.93:3020, só pelo Tailscale · arquivos <code>server.js</code> e <code>pagina.html</code></div></div></div>
+
+  <p>O painel tem duas partes: o <b>servidor</b> (<code>server.js</code>), que lê o banco e os arquivos dos robôs, e a <b>página</b> (<code>pagina.html</code>), que desenha as telas no navegador. A página conversa com o servidor pelas rotas <code>/api/…</code>. A tecla <code>?</code> abre a ajuda da tela em que você está.</p>
+
+  <table>
+    <tr><th style="width:24%">Aba</th><th>Para que serve</th></tr>
+    <tr><td>1 Visão geral</td><td>Os números do momento: prontas, com problema, na fila, enviadas, e a saúde de cada robô.</td></tr>
+    <tr><td>2 Como funciona</td><td>A esteira desenhada e "de onde vem cada documento".</td></tr>
+    <tr><td>3 Pendências</td><td>Todas as pendências, com filtro, e o detalhe de cada uma: por que está na fila, os arquivos usados e para onde vai.</td></tr>
+    <tr><td>4 Documentos montados</td><td>Visor dos PDFs achados e unidos, com as partes de cada um. Mostra em vermelho PDF vazio, quebrado ou sem permissão.</td></tr>
+    <tr><td>5 Ao vivo</td><td>O que os robôs estão fazendo agora, linha a linha.</td></tr>
+    <tr><td>6 Envio ao Atlas</td><td>O interruptor "Envio liberado", o modo automático, a lista de prontas com a <b>ficha de cada PDF</b> (o que vai, de onde veio, como foi montado), Verificar, Enviar, Segurar/Soltar e o histórico de envios. Também traz o diagnóstico dos casos com problema.</td></tr>
+    <tr><td>7 Envio ao Bernhoeft</td><td>O mesmo para o Bernhoeft, mais a confiança mínima do automático.</td></tr>
+    <tr><td>8 Os 36 documentos</td><td>Como cada tipo é tratado e a situação de cada um agora.</td></tr>
+    <tr><td>Operação</td><td>Campo para o código de 2 fatores do Atlas, controle dos serviços e pacotes.</td></tr>
+    <tr><td>Ajuda</td><td>Guia de cada tela, cores, estados, problemas comuns e glossário.</td></tr>
+  </table>
+
+  <h2>Como o painel conversa com os robôs</h2>
+  <p>O painel não entra nos portais. Quando você clica em "Verificar" ou "Enviar", ele grava um <b>pedido</b> (um pequeno arquivo em <code>out/envio/pedidos/</code>). O robô lê esse pedido entre uma tarefa e outra, executa e grava o resultado, que o painel mostra. Os interruptores funcionam do mesmo jeito: ficam no arquivo <code>out/envio/modo.json</code> de cada robô.</p>
+
+  <div class="duas">
+    <div class="caixa"><h3>Arquivos de controle (por robô)</h3>
+      <code>modo.json</code>: envio liberado e automático<br>
+      <code>segurar.json</code>: pendências seguradas<br>
+      <code>pedidos/*.json</code>: o que o painel pediu<br>
+      <code>resultados.json</code>: a última ação de cada item<br>
+      <code>historico-envios.json</code>: todo envio ok, nunca apagado</div>
+    <div class="caixa"><h3>Regra de ouro</h3>Sem o <code>modo.json</code>, o envio fica <b>bloqueado</b>. Toda publicação grava o bloqueio antes de qualquer outra coisa. Quem libera é sempre você, pelo painel.</div>
+  </div>
+
+  <div class="rodape"><span>Guia de estudo · Automação de documentos</span><span>capítulo 10</span></div>
+</section>
+
+<!-- ============ 11 e 12 ============ -->
+<section class="folha">
+  <div class="cab"><div class="num">11</div><div><h1>As travas</h1><div class="meta">O que impede que algo errado seja enviado</div></div></div>
+
+  <table>
+    <tr><th style="width:30%">Trava</th><th>O que faz</th></tr>
+    <tr><td>Envio liberado</td><td>Sem ele, nada sai. O robô confere de novo antes de <b>cada</b> item.</td></tr>
+    <tr><td>Modo automático</td><td>Um segundo interruptor. Com ele desligado, só sai o que você mandar um por um.</td></tr>
+    <tr><td>Segurar</td><td>Tira uma pendência do automático. O robô também segura sozinho quando recebe 22006.</td></tr>
+    <tr><td>Conferência no portal</td><td>Antes de enviar, o robô confirma o nome, o status e o local exato (schedule_id). Se algo for ambíguo, ele não envia.</td></tr>
+    <tr><td>Mesmo arquivo em CPFs diferentes</td><td>O SHA-256 (impressão digital) repetido aparece em vermelho na ficha e trava o envio.</td></tr>
+    <tr><td>Status exato</td><td>Só envia com status atrasado ou pendente (desde 28/10).</td></tr>
+    <tr><td>Pular, não parar</td><td>Um arquivo com erro é pulado e anotado; os outros seguem. A rodada só para se o envio for bloqueado ou se a sessão cair. É regra sua desde 26/10.</td></tr>
+  </table>
+  <p class="nota">O que nunca se faz: o Claude ligar o envio ou rodar envio por conta própria; clicar "Exportar relatório" no Atlas; mandar documento real para serviço público de teste; mostrar senha ou endereço do banco.</p>
+
+  <div class="cab" style="margin-top:12px"><div class="num">12</div><div><h1>Reprovação e substituição</h1><div class="meta">O que acontece quando a Equatorial recusa um documento</div></div></div>
+
+  <p>Depois do envio, a equipe da Equatorial analisa o arquivo. Se reprovar, a pendência volta para o portal com status <b>DelayRejected</b>, e <b>o arquivo reprovado continua preso ao item</b>. Enquanto ele estiver lá, o Atlas recusa qualquer arquivo novo com o erro 22006.</p>
+
+  <div class="duas">
+    <div class="caixa"><h3>Como é hoje</h3>
+      <ul>
+        <li>O banco marca <code>REJEITADO</code> sozinho (gatilho).</li>
+        <li>O robô não tenta enviar: "precisa de ação no portal".</li>
+        <li>Uma pessoa lê o motivo no Atlas, exclui o arquivo velho e manda o novo à mão.</li>
+      </ul></div>
+    <div class="caixa"><h3>O que falta para substituir sozinho</h3>
+      <ul>
+        <li>Ler o <b>motivo</b> da reprovação.</li>
+        <li>Guardar a impressão digital do arquivo reprovado, para <b>não achar o mesmo de novo</b>.</li>
+        <li>Saber quando o arquivo velho foi excluído (status volta a atrasado).</li>
+        <li>Só então tratar como pronta, passando pelas mesmas travas.</li>
+      </ul></div>
+  </div>
+  <p style="margin-top:8px">Ainda precisa estudar, só lendo o portal: onde o Atlas mostra o motivo e se a exclusão do arquivo reprovado pode ser feita pelo robô. Se puder, quem decide se ele faz é você. Quando o motivo é "documento errado", a correção depende de uma pessoa da NIP colocar o certo no RH.</p>
+
+  <div class="rodape"><span>Guia de estudo · Automação de documentos</span><span>capítulos 11 e 12</span></div>
+</section>
+
+<!-- ============ 13 ============ -->
+<section class="folha">
+  <div class="cab"><div class="num">13</div><div><h1>Onde olhar quando algo dá errado</h1><div class="meta">Do sintoma até a causa</div></div></div>
+
+  <table>
+    <tr><th style="width:30%">Sintoma</th><th>Primeira coisa a olhar</th><th style="width:30%">Causa comum</th></tr>
+    <tr><td>Nada sobe há dias</td><td>Aba 1 (prontas = 0?) e aba 3 (por que está na fila). Depois o <code>sincronizacao.log</code> (linhas "saída 1").</td><td>Documento faltando no RH, ou a sincronização parada.</td></tr>
+    <tr><td>Sincronização falha em toda rodada</td><td><code>docker images</code> na VPS: a imagem <code>gesdoc/sincronizacao-factorial:hml</code> existe?</td><td>Imagem apagada por limpeza do Docker (aconteceu de 22 a 28/10).</td></tr>
+    <tr><td>"Documento já importado!" (22006)</td><td>Abrir o item no Atlas.</td><td>Arquivo reprovado ainda preso ao item (capítulo 12).</td></tr>
+    <tr><td>Robô Atlas parado esperando</td><td>Aba Operação: está pedindo código?</td><td>Sessão caiu; precisa do código de 2 fatores do e-mail.</td></tr>
+    <tr><td>Bernhoeft não loga</td><td>Aba 5 (ao vivo) e log do container.</td><td>reCAPTCHA; saldo ou chave do Anti-Captcha.</td></tr>
+    <tr><td>PDF não abre no painel</td><td>Aba 4 mostra o motivo em vermelho.</td><td>Arquivo gravado como root, sem permissão para o painel.</td></tr>
+    <tr><td>Painel "Failed to fetch"</td><td><code>docker ps</code>: o painel está reiniciando?</td><td>Erro ao ler um arquivo derrubava o servidor (corrigido em 19/10).</td></tr>
+    <tr><td>Hora errada em 3 h</td><td>A coluna veio do Neon?</td><td>UTC sem conversão.</td></tr>
+    <tr><td>Correção "sumiu" na VPS</td><td>Comparar o md5 do container com o do PC.</td><td>Container recriado a partir de uma imagem antiga.</td></tr>
+    <tr><td>Bernhoeft com lista vazia por uns minutos</td><td>Esperar a leitura terminar.</td><td>A esteira remonta a pasta <code>auto/</code> a cada leitura.</td></tr>
+  </table>
+
+  <h2>Comandos úteis na VPS</h2>
+  <p class="nota">Rodar depois de <code>tailscale ssh augusto@100.103.196.93</code>. Todos só olham; nenhum muda nada.</p>
+  <table>
+    <tr><th style="width:52%">Comando</th><th>Mostra</th></tr>
+    <tr><td><code>docker ps</code></td><td>Quais containers estão rodando e há quanto tempo.</td></tr>
+    <tr><td><code>docker logs --tail 50 gesdoc-pendencias-hml-atlas-1</code></td><td>As últimas linhas do robô Atlas.</td></tr>
+    <tr><td><code>tail -30 /opt/gesdoc/data/hml/sincronizacao/sincronizacao.log</code></td><td>As últimas rodadas da sincronização e a saída de cada uma (0 = ok).</td></tr>
+    <tr><td><code>crontab -l</code></td><td>O agendamento da sincronização.</td></tr>
+    <tr><td><code>docker images | grep gesdoc</code></td><td>As imagens que existem.</td></tr>
+  </table>
+
+  <div class="rodape"><span>Guia de estudo · Automação de documentos</span><span>capítulo 13</span></div>
+</section>
+
+<!-- ============ 14 ============ -->
+<section class="folha">
+  <div class="cab"><div class="num">14</div><div><h1>Lições</h1><div class="meta">O que já deu errado e o que cada caso ensinou</div></div></div>
+
+  <table>
+    <tr><th style="width:34%">O que aconteceu</th><th>O que ensinou</th></tr>
+    <tr><td>O <code>neon.js</code> reescrevia o estado das pendências e apagava o avanço da sincronização (14/10).</td><td>Quem lê o portal só atualiza o que é do portal. O estado é de quem achou o arquivo.</td></tr>
+    <tr><td>O código de 2 fatores do Atlas era cortado, porque o programa aceitava só dígitos.</td><td>Antes de culpar o código, conferir se o que roda na VPS é igual ao do PC (md5).</td></tr>
+    <tr><td>Um SQL com o marcador errado viraria "atualize a linha 22" fixo.</td><td>Testar SQL num banco falso (PGlite) antes de rodar no Neon.</td></tr>
+    <tr><td>O robô gravava PDF como root e o painel não conseguia ler; o painel caía em loop.</td><td>Ajustar o dono dos arquivos e fazer o painel responder com erro em vez de cair.</td></tr>
+    <tr><td>Role criada pelo console do Neon virou superusuário sem ninguém perceber.</td><td>Usuário de serviço só se cria por SQL, com permissões escritas.</td></tr>
+    <tr><td>O SharePoint recusa busca geral com a permissão que temos.</td><td>Andar pelas pastas, uma a uma, e reconhecer o mês pelo nome.</td></tr>
+    <tr><td>O automático parou na 1ª recusa e saíram 0 de 28 (26/10).</td><td>Regra "pular, não parar".</td></tr>
+    <tr><td>O robô achava que "DelayRejected" era "Delay" porque o começo é igual (26 e 28/10).</td><td>Comparar o status exato, nunca só o começo.</td></tr>
+    <tr><td>A sincronização ficou 6 dias parada e ninguém viu (22 a 28/10).</td><td>Erro que fica só no log não é visto. Conferir o log quando "nada sobe" e pensar num aviso no painel.</td></tr>
+    <tr><td>O mesmo <code>eSocial.pdf</code> estava ligado a 4 funcionários diferentes.</td><td>Comparar a impressão digital (SHA-256) entre pendências e travar repetido.</td></tr>
+    <tr><td>Ficha clínica e anamnese iriam junto com o ASO.</td><td>Conferir o PDF por dentro, página a página, nos tipos com dado de saúde.</td></tr>
+    <tr><td>A conclusão de 19/10 ("a conta Bernhoeft não envia") estava errada.</td><td>Olhar a tela certa antes de concluir: lá foi o Carregamento Mensal, e o envio é pela Mobilização.</td></tr>
+  </table>
+
+  <div class="aviso"><b>O padrão por trás de quase todas.</b> Os problemas raramente estão no "código difícil". Eles aparecem em três lugares: (1) no mundo real, quando o documento não existe ou a pasta está vazia; (2) numa regra de negócio que ninguém escreveu, como o que conta como desligamento; (3) numa coisa que falha em silêncio. Por isso o projeto tem tantas fichas, avisos e conferências.</div>
+
+  <div class="rodape"><span>Guia de estudo · Automação de documentos</span><span>capítulo 14</span></div>
+</section>
+
+<!-- ============ 15 ============ -->
+<section class="folha">
+  <div class="cab"><div class="num">15</div><div><h1>Glossário</h1><div class="meta">As palavras em ordem alfabética</div></div></div>
+
+  <table>
+    <tr><td style="width:24%">2FA</td><td>Segundo fator de login: além da senha, um código que chega por e-mail.</td></tr>
+    <tr><td>API</td><td>Porta de serviço de um sistema, para programas pedirem dados sem clicar na tela.</td></tr>
+    <tr><td>Backup</td><td>Cópia do arquivo antes de trocar, com data e hora no nome.</td></tr>
+    <tr><td>Competência</td><td>O mês a que o documento se refere.</td></tr>
+    <tr><td>Compose</td><td>Arquivo que descreve como subir os containers.</td></tr>
+    <tr><td>COMPOSTO</td><td>Estado: o PDF foi montado juntando várias partes.</td></tr>
+    <tr><td>Container</td><td>Programa rodando dentro de uma caixa isolada (Docker).</td></tr>
+    <tr><td>Cron</td><td>Agendador do Linux. <code>0 7-19/2 * * *</code> = no minuto 0, das 7h às 19h, de 2 em 2 horas.</td></tr>
+    <tr><td>doc_id</td><td>Número do tipo de documento (9 = TRCT, 67 = ASO…).</td></tr>
+    <tr><td>Imagem</td><td>A caixa pronta, a partir da qual o container nasce. Se for apagada, o container não sobe.</td></tr>
+    <tr><td>JSON</td><td>Formato de texto para dados organizados (<code>{"liberado": false}</code>).</td></tr>
+    <tr><td>LOCALIZADO</td><td>Estado: achou o arquivo pronto.</td></tr>
+    <tr><td>md5 / SHA-256</td><td>Impressões digitais de um arquivo. Arquivos iguais têm o mesmo valor, e qualquer mudança gera outro.</td></tr>
+    <tr><td>Neon / Postgres</td><td>O banco de dados na nuvem e o tipo de banco.</td></tr>
+    <tr><td>Node.js</td><td>Programa que roda JavaScript fora do navegador. Os robôs são feitos nele.</td></tr>
+    <tr><td>Pendência</td><td>Um documento que o portal está cobrando.</td></tr>
+    <tr><td>Playwright</td><td>Biblioteca que controla um Chrome de verdade.</td></tr>
+    <tr><td>Publicar</td><td>Levar uma mudança do PC para a VPS.</td></tr>
+    <tr><td>reCAPTCHA</td><td>O "não sou um robô" do Google, no login do Bernhoeft.</td></tr>
+    <tr><td>REJEITADO</td><td>Estado: a Equatorial reprovou o arquivo enviado.</td></tr>
+    <tr><td>Role</td><td>Usuário do banco com permissões próprias.</td></tr>
+    <tr><td>root</td><td>O superusuário do Linux. Arquivo de root pode ficar ilegível para os outros programas.</td></tr>
+    <tr><td>schedule_id</td><td>Número do "local" de uma pendência no Atlas, onde o arquivo entra.</td></tr>
+    <tr><td>Segurar</td><td>Tirar uma pendência do envio automático.</td></tr>
+    <tr><td>SOPS / cofre</td><td>Arquivo de senhas criptografado na VPS.</td></tr>
+    <tr><td>SQL</td><td>A linguagem para ler e gravar no banco.</td></tr>
+    <tr><td>Tailscale</td><td>Rede privada entre o PC e a VPS.</td></tr>
+    <tr><td>UTC</td><td>Horário mundial, 3 horas à frente de Brasília.</td></tr>
+    <tr><td>VPS</td><td>Servidor alugado, ligado o tempo todo.</td></tr>
+  </table>
+
+  <div class="rodape"><span>Guia de estudo · Automação de documentos</span><span>capítulo 15</span></div>
+</section>
+
+<!-- ============ 16 ============ -->
+<section class="folha">
+  <div class="cab"><div class="num">16</div><div><h1>Perguntas para treinar e o que falta</h1><div class="meta">Responda sem olhar; as respostas estão nos capítulos indicados</div></div></div>
+
+  <ol class="pergunta">
+    <li>Uma pendência está como <code>PENDENTE_ENVIO</code> há uma semana. Quais são as três explicações possíveis? (cap. 6 e 13)</li>
+    <li>Por que o robô do Atlas é publicado com <code>docker cp</code>, e não recriando o container? (cap. 4)</li>
+    <li>O Atlas respondeu 22006. O que isso quer dizer e o que o robô faz? (cap. 4 e 12)</li>
+    <li>Se um documento reprovado voltar para a fila, por que o robô poderia mandar o mesmo arquivo de novo? (cap. 12)</li>
+    <li>Qual é a diferença entre "Envio liberado" e "Modo automático"? (cap. 11)</li>
+    <li>O que garante que o código que roda na VPS é o mesmo que foi testado aqui? (cap. 9)</li>
+    <li>Quem procura o documento 9 (TRCT)? E o 67 (ASO)? E o vale-transporte? (cap. 6)</li>
+    <li>Por que o painel usa a role <code>painel_leitura</code>, e não a do dono do banco? (cap. 7)</li>
+    <li>A sincronização falhou em todas as rodadas do dia. Qual comando você roda primeiro? (cap. 13)</li>
+    <li>Por que o relatório 012 do Bernhoeft pode estar desatualizado? (cap. 5)</li>
+  </ol>
+
+  <h2>O que ainda falta no projeto</h2>
+  <table>
+    <tr><th style="width:30%">Assunto</th><th>Situação</th></tr>
+    <tr><td>Substituição de reprovados</td><td>Por desenhar. Primeiro, estudar o motivo e a exclusão no Atlas (cap. 12).</td></tr>
+    <tr><td>Relatório 012 diário</td><td>Pronto neste PC, falta publicar no robô Bernhoeft.</td></tr>
+    <tr><td>Segurança do banco</td><td>Falta trocar a senha do dono, liberar acesso só por IP e tirar a <code>gesdoc_sync</code> do superusuário.</td></tr>
+    <tr><td>Perguntas para a Milena</td><td>Documento atrasado é aceito? 69 na dispensa pela empresa; os 13 avisos prévios; VT com 2 fornecedores; onde entra o aditamento do seguro.</td></tr>
+    <tr><td>Cartão de ponto (83)</td><td>Ninguém busca; falta definir a regra.</td></tr>
+    <tr><td>Certidão vencida</td><td>A certidão achada não é reconferida antes do envio: conferir a validade na ficha.</td></tr>
+    <tr><td>Bernhoeft</td><td>Confirmar se o envio em "Finalizando carregamento" entra em análise. A mobilização de funcionário nunca foi testada.</td></tr>
+    <tr><td>Teste e produção juntos</td><td>Falta um banco separado para testes (branch "hml" no Neon).</td></tr>
+    <tr><td>Aviso de falha silenciosa</td><td>A sincronização parada não aparece no painel; hoje só se vê pelo log.</td></tr>
+  </table>
+
+  <div class="aviso"><b>Onde está cada coisa escrita.</b> <code>CLAUDE.md</code> (raiz do projeto): estado atual, publicações e lições. <code>docs/HANDOFF.md</code>: a passagem de bastão, para ler primeiro. <code>docs/documentos-36.md</code>: as regras de cada tipo. <code>docs/fichas.html</code> e <code>docs/historico-*.html</code>: os casos analisados. <code>bernhoeft-robo/CLAUDE.md</code>: os detalhes do Bernhoeft.</div>
+
+  <div class="rodape"><span>Guia de estudo · Automação de documentos</span><span>capítulo 16</span></div>
+</section>
+
+</body>
+</html>

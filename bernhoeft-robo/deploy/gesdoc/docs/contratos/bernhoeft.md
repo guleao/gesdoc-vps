@@ -46,7 +46,7 @@ Menu lateral em árvore (metisMenu): Carregamento de Documentos, Relatórios, Ut
 
 ### Relatório 012 (xlsx)
 
-- O botão **SOLICITAR** gera um relatório novo. Isso tem efeito no portal, por isso **o robô não clica**. Ele só baixa o último pedido com status "Concluido".
+- O botão **SOLICITAR** gera um relatório novo. Desde 28/10 (autorizado pelo usuário) o robô clica **no máximo 1 vez por dia**, com o contratante Equatorial e sem outro filtro (igual ao pedido de 25/09), só se a lista não tiver pedido de hoje; espera até 10 min ("ATUALIZAR LISTAGEM") e baixa o último pedido com status "Concluido". `SOLICITAR_012=0` desliga.
 - Status dos pedidos: "Concluido" (tem download) e "Sem Conteúdo" (sem arquivo).
 - Linha de cabeçalho: a primeira célula é "Contrato". Colunas lidas: contrato (1), contratada (2), risco (3), competência (4), área (5), descrição do documento (6), colaborador (8 e 9), **status (14)**, unidade (15) e tipo (16).
 - **Status do documento:**

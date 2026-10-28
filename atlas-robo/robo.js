@@ -2,11 +2,12 @@
 // Substitui o laço em shell do Dockerfile. Faz, em ordem e nunca duas coisas juntas:
 //   - a cada INTERVALO_MIN (ou quando o painel grava out/rodar-agora): rodada completa
 //       coleta (pendencias.js, que grava no Neon) -> busca na Factorial (factorial.js)
-//       -> busca no SharePoint (sharepoint.js --baixar: só baixa para o painel mostrar, NÃO grava no Neon) -> lista de envio (enviar.js, simulação)
-//       -> se o ENVIO AUTOMÁTICO estiver ligado: enviar.js --auto (envia as prontas, uma por vez, para na primeira recusa);
+//       -> busca no SharePoint (sharepoint.js --gravar: baixa/une e grava LOCALIZADO/COMPOSTO no Neon, entra na lista de envio) -> lista de envio (enviar.js, simulação)
+//       -> se o ENVIO AUTOMÁTICO estiver ligado: enviar.js --auto (envia as prontas, uma por vez, pula a que der erro e segue);
 //   - entre as rodadas, a cada 5 s: os pedidos do painel em out/envio/pedidos/*.json
 //       { acao: 'verificar' | 'enviar' | 'buscar' | 'atualizar', id, confirmo }.
-// O botão do painel grava out/envio/modo.json { automatico: true|false, alterado_em }. Começa DESLIGADO (sem o arquivo = desligado).
+// O painel grava out/envio/modo.json { liberado, automatico, alterado_em }. Sem o arquivo = envio BLOQUEADO.
+// liberado = interruptor geral (sem ele o enviar.js recusa qualquer envio, até o botão "Enviar"); automatico só vale com liberado.
 // Ao ligar, roda uma rodada na hora (busca e envia sem esperar a próxima leitura).
 // Estado para o painel: out/envio/robo.json. Saída dos scripts vai para o log do container (o painel mostra ao vivo).
 const fs = require('fs');
@@ -37,7 +38,7 @@ function prepararPastas() {
 const estado = { iniciado_em: new Date().toISOString(), fazendo: null, desde: null, ultima_rodada: null, proxima: null, ultimo_pedido: null };
 function gravarEstado() {
   const modo = lerJson(ARQ_MODO) || {};
-  fs.writeFileSync(ARQ_ESTADO, JSON.stringify({ ...estado, automatico: modo.automatico === true, agora: new Date().toISOString() }, null, 2));
+  fs.writeFileSync(ARQ_ESTADO, JSON.stringify({ ...estado, liberado: modo.liberado === true, automatico: modo.liberado === true && modo.automatico === true, agora: new Date().toISOString() }, null, 2));
 }
 function fazendo(t) { estado.fazendo = t; estado.desde = t ? new Date().toISOString() : null; gravarEstado(); }
 
@@ -49,13 +50,14 @@ function rodar(script, args = []) {
     p.on('error', () => ok(1));
   });
 }
-const automatico = () => (lerJson(ARQ_MODO) || {}).automatico === true;
+const liberado = () => (lerJson(ARQ_MODO) || {}).liberado === true;
+const automatico = () => liberado() && (lerJson(ARQ_MODO) || {}).automatico === true;
 // Sem as variáveis do app do Azure no cofre, a busca no SharePoint é pulada.
 const temSharepoint = () => !!(process.env.SHAREPOINT_TENANT_ID && process.env.SHAREPOINT_CLIENT_ID && process.env.SHAREPOINT_CLIENT_SECRET);
 async function buscarSharepoint() {
   if (!temSharepoint()) return null;
-  fazendo('buscando documentos no SharePoint (só para o painel)');
-  return rodar('sharepoint.js', ['--baixar']);
+  fazendo('buscando documentos no SharePoint');
+  return rodar('sharepoint.js', ['--gravar']);
 }
 
 async function rodada(porque) {
@@ -101,11 +103,12 @@ async function atenderPedidos() {
   prepararPastas();
   let proxima = Date.now();
   let modoVisto = (lerJson(ARQ_MODO) || {}).alterado_em || null;
-  log(`Robô Atlas: coleta a cada ${INTERVALO_MIN} min; envio automático ${automatico() ? 'LIGADO' : 'desligado'}.`);
+  log(`Robô Atlas: coleta a cada ${INTERVALO_MIN} min; envio ${liberado() ? 'LIBERADO' : 'BLOQUEADO'} no painel, automático ${automatico() ? 'LIGADO' : 'desligado'}.`);
   for (;;) {
     const modo = lerJson(ARQ_MODO) || {};
-    const ligouAgora = modo.alterado_em && modo.alterado_em !== modoVisto && modo.automatico === true;
-    if (modo.alterado_em !== modoVisto) { log(`Envio automático ${modo.automatico === true ? 'LIGADO' : 'DESLIGADO'} pelo painel.`); modoVisto = modo.alterado_em; }
+    const auto = modo.liberado === true && modo.automatico === true;
+    const ligouAgora = modo.alterado_em && modo.alterado_em !== modoVisto && auto;
+    if (modo.alterado_em !== modoVisto) { log(`Painel: envio ${modo.liberado === true ? 'LIBERADO' : 'BLOQUEADO'}, automático ${auto ? 'LIGADO' : 'desligado'}.`); modoVisto = modo.alterado_em; }
     const pedida = fs.existsSync(SINAL);
     if (pedida || ligouAgora || Date.now() >= proxima) {
       if (pedida) { fs.rmSync(SINAL, { force: true }); log('leitura pedida pelo painel'); }

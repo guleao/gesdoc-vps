@@ -4,6 +4,8 @@
 // - Lê as telas "Carregamento Trabalhista/Mensal" (TipoCompetencia=0) e "Mobilização" (=1) pelo mesmo endpoint
 //   JSON que a tela usa (ListarCompetenciasAjax), com paginação completa, e a quantidade de documentos pendentes.
 // - Grava out/pendencias.json (estado atual), out/historico/ (cópias datadas) e out/mudancas.txt (novas/resolvidas).
+// - Com --loop, entre as leituras atende os pedidos da aba 7 do painel e o envio automático (entregar.js). Enviar só com o
+//   interruptor "Envio liberado" ligado (o automático, também com "Modo de envio" em Automático); a leitura continua só leitura.
 // Uso: node pendencias.js            (uma leitura)
 //      node pendencias.js --loop     (repete a cada INTERVALO_MIN, padrão 30)
 //      node pendencias.js --concluidos  (inclui também as competências concluídas)
@@ -12,6 +14,7 @@ const fs = require('fs');
 const ExcelJS = require('exceljs');
 const path = require('path');
 const { spawnSync } = require('child_process');
+const entrega = require('./entregar');
 
 const BASE = process.env.BERNHOEFT_URL || 'https://newcontract.contractweb.com.br';
 const OUT = path.join(__dirname, 'out');
@@ -57,6 +60,14 @@ async function avisar(texto, extra = {}) {
 
 const estaLogado = async (page) => (await page.$('#password')) === null;
 
+// Desde 24/10 o login é em duas etapas: Login → "Continuar" → aparecem senha, reCAPTCHA e o botão Login.
+async function preencherLogin(page) {
+  await page.fill('#Login', process.env.BERNHOEFT_USER || '').catch(() => {});
+  if (await page.isVisible('#BotaoContinuar').catch(() => false)) await page.click('#BotaoContinuar').catch(() => {});
+  await page.waitForSelector('#password', { state: 'visible', timeout: 30000 }).catch(() => {});
+  await page.fill('#password', process.env.BERNHOEFT_PASSWORD || '').catch(() => {});
+}
+
 async function garantirLogin(page) {
   await page.goto(BASE + '/Home', { waitUntil: 'domcontentloaded' });
   await page.waitForLoadState('networkidle').catch(() => {});
@@ -67,8 +78,7 @@ async function garantirLogin(page) {
     e.precisaLogin = true;
     throw e;
   }
-  await page.fill('#Login', process.env.BERNHOEFT_USER || '').catch(() => {});
-  await page.fill('#password', process.env.BERNHOEFT_PASSWORD || '').catch(() => {});
+  await preencherLogin(page);
   if (HEADLESS) {
     await avisar('Bernhoeft: sessão expirada. Faça login manual (node login.js) para renovar.');
     const e = new Error('Sessão expirada (modo headless).');
@@ -137,7 +147,80 @@ async function lerTela(page, { nome, tipo }) {
 }
 
 // Relatório 012 (app.contractweb.com.br): lista TODOS os pedidos (paginando) e baixa o último "Concluido".
-// Não clica em SOLICITAR: só lê o que já foi gerado.
+// Pedido novo do 012 (OK do usuário em 28/10): no máximo 1 SOLICITAR por dia, e só se não houver pedido de hoje na lista.
+// A data do pedido fica gravada ANTES do clique, para uma falha no meio não virar vários pedidos no mesmo dia.
+// SOLICITAR_012=0 desliga.
+const SOLICITAR_012 = process.env.SOLICITAR_012 !== '0';
+const MARCA_012 = path.join(OUT, 'relatorios', 'solicitado-012.json');
+const hojeBR = () => new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+
+async function lerPedidos012(rel) {
+  const pedidos = [];
+  const primeira = rel.locator('button:has(i.mdi-chevron-double-left)');
+  if (await primeira.count()) await primeira.first().click().catch(() => {});
+  for (let pag = 0; pag < 50; pag++) {
+    const linhas = await rel.$$eval('table.q-table tbody tr', (trs) =>
+      trs.map((tr) => {
+        const c = Array.from(tr.cells).map((x) => x.innerText.trim().replace(/\s+/g, ' '));
+        return { status: c[0], solicitado_em: c[1], contratante: c[2], grupo_area: c[3], unidade: c[4], tem_download: !!tr.querySelector('button i.material-icons') };
+      })
+    );
+    pedidos.push(...linhas.map((l, i) => ({ ...l, _pagina: pag, _linha: i })));
+    const prox = rel.locator('button:has(i.mdi-chevron-right)');
+    if (!(await prox.count()) || (await prox.first().isDisabled())) break;
+    await prox.first().click();
+    await rel.waitForTimeout(500);
+  }
+  return pedidos;
+}
+
+// Pede o relatório com o mesmo filtro do pedido de 25/09 (só o contratante) e espera ele sair da fila (até ~10 min).
+async function solicitar012(rel, pedidos) {
+  const hoje = hojeBR();
+  if (!SOLICITAR_012) return pedidos;
+  if (pedidos.some((p) => (p.solicitado_em || '').startsWith(hoje))) return pedidos;
+  let marca = {};
+  try { marca = JSON.parse(fs.readFileSync(MARCA_012, 'utf8')); } catch {}
+  if (marca.dia === hoje) return pedidos;
+  fs.mkdirSync(path.dirname(MARCA_012), { recursive: true });
+  gravar(MARCA_012, JSON.stringify({ dia: hoje, em: new Date().toISOString() }));
+  try {
+    const campo = rel.locator('.q-field', { hasText: 'Contratante' }).first();
+    if (!/Equatorial/i.test(await campo.innerText().catch(() => ''))) {
+      await campo.click();
+      await rel.waitForTimeout(1500);
+      await rel.locator('.q-menu .q-item', { hasText: 'Equatorial' }).first().click();
+      await rel.waitForTimeout(800);
+      await rel.keyboard.press('Escape').catch(() => {});
+    }
+    await rel.locator('button:visible', { hasText: /^\s*solicitar\s*$/i }).first().click();
+    await rel.waitForTimeout(1500);
+    const ok = rel.locator('.q-dialog button:visible', { hasText: /^\s*(ok|sim|confirmar)\s*$/i });
+    if (await ok.count()) await ok.first().click().catch(() => {});
+    log('Relatório 012: pedido novo feito (SOLICITAR).');
+  } catch (e) {
+    log(`Relatório 012: não consegui solicitar (${e.message.split('\n')[0]}); sigo com o último pronto.`);
+    return pedidos;
+  }
+  for (let t = 0; t < 20; t++) {
+    await rel.waitForTimeout(30000);
+    const atualizar = rel.locator('button:visible', { hasText: /atualizar listagem/i });
+    if (await atualizar.count()) await atualizar.first().click().catch(() => {});
+    else await rel.reload({ waitUntil: 'domcontentloaded' }).catch(() => {});
+    await rel.waitForTimeout(1500);
+    await rel.waitForSelector('table.q-table tbody tr', { timeout: 30000 }).catch(() => {});
+    const novos = await lerPedidos012(rel).catch(() => []);
+    const deHoje = novos.find((p) => (p.solicitado_em || '').startsWith(hoje));
+    if (deHoje && (deHoje.status === 'Concluido' || deHoje.status === 'Sem Conteúdo')) {
+      log(`Relatório 012 de ${deHoje.solicitado_em}: ${deHoje.status}.`);
+      return novos;
+    }
+  }
+  log('Relatório 012: o pedido de hoje não ficou pronto em 10 min; sigo com o último pronto (ele é baixado na próxima leitura).');
+  return lerPedidos012(rel).catch(() => pedidos);
+}
+
+// Lê a lista de pedidos do 012, pede um novo se precisar (solicitar012) e baixa o mais novo pronto.
 async function lerRelatorio012(page, ctx) {
   await page.goto(BASE + '/Home', { waitUntil: 'domcontentloaded' });
   await page.waitForLoadState('networkidle').catch(() => {});
@@ -155,20 +238,7 @@ async function lerRelatorio012(page, ctx) {
   const rel = aba || page;
   await rel.waitForSelector('table.q-table tbody tr', { timeout: 30000 });
 
-  const pedidos = [];
-  for (let pag = 0; pag < 50; pag++) {
-    const linhas = await rel.$$eval('table.q-table tbody tr', (trs) =>
-      trs.map((tr) => {
-        const c = Array.from(tr.cells).map((x) => x.innerText.trim().replace(/\s+/g, ' '));
-        return { status: c[0], solicitado_em: c[1], contratante: c[2], grupo_area: c[3], unidade: c[4], tem_download: !!tr.querySelector('button i.material-icons') };
-      })
-    );
-    pedidos.push(...linhas.map((l, i) => ({ ...l, _pagina: pag, _linha: i })));
-    const prox = rel.locator('button:has(i.mdi-chevron-right)');
-    if (!(await prox.count()) || (await prox.first().isDisabled())) break;
-    await prox.first().click();
-    await rel.waitForTimeout(500);
-  }
+  const pedidos = await solicitar012(rel, await lerPedidos012(rel));
 
   // Baixa o mais recente com status Concluido (primeira ocorrência: a lista vem do mais novo para o mais antigo)
   let arquivo = null;
@@ -381,8 +451,7 @@ const abrir = async () => {
           } else {
             // Com janela: cai no login manual (a pessoa marca o reCAPTCHA).
             await page.goto(BASE + '/Home', { waitUntil: 'domcontentloaded' });
-            await page.fill('#Login', process.env.BERNHOEFT_USER || '').catch(() => {});
-            await page.fill('#password', process.env.BERNHOEFT_PASSWORD || '').catch(() => {});
+            await preencherLogin(page);
             log('Login automático falhou. Marque o reCAPTCHA e clique em Login na janela (até 15 min).');
             await page.waitForSelector('#password', { state: 'detached', timeout: 900000 });
             await ciclo(page);
@@ -397,7 +466,19 @@ const abrir = async () => {
         log(`Próxima leitura em ${INTERVALO_MIN} min (Ctrl+C para parar).`);
         // O painel pede leitura imediata criando out/rodar-agora (botão "Reiniciar").
         const SINAL = path.join(OUT, 'rodar-agora');
-        for (let t = 0; t < INTERVALO_MIN * 12 && !fs.existsSync(SINAL); t++) await dormir(5000);
+        for (let t = 0; t < INTERVALO_MIN * 12 && !fs.existsSync(SINAL); t++) {
+          await dormir(5000);
+          // Pedidos da aba 7 do painel (verificar/enviar documento de empresa), com esta mesma sessão. Ver entregar.js.
+          // Depois, o envio automático (só com "Envio liberado" + "Automático" ligados no painel; sem fila, sai na hora).
+          try {
+            if (entrega.temPedidos()) await entrega.processarPedidos(page);
+            await entrega.automatico(page);
+          } catch (e) {
+            // Sessão caiu: a leitura refaz o login e o pedido continua na fila.
+            if (e.precisaLogin) { fs.writeFileSync(SINAL, ''); break; }
+            console.error('ERRO nos pedidos do painel:', e.message.split('\n')[0]);
+          }
+        }
         if (fs.existsSync(SINAL)) { fs.rmSync(SINAL, { force: true }); log('Leitura pedida pelo painel: lendo agora.'); }
       }
     } while (LOOP);

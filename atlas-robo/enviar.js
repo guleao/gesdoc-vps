@@ -25,8 +25,10 @@
 //
 //   node enviar.js --verificar --id 119   faz só a conferência no Atlas (nada é anexado) e diz se pode enviar
 //   node enviar.js --auto [--max N]       ENVIA todas as prontas, uma por vez (botão "envio automático" do painel, via robo.js);
-//                                         para na primeira recusa. Padrão: até ENVIO_MAX_POR_RODADA (30) por rodada.
+//                                         pula a que der erro e segue com as outras. Padrão: até ENVIO_MAX_POR_RODADA (30) por rodada.
 //   O resultado da última ação de cada pendência vai para out/envio/resultados.json (o painel mostra).
+//   --enviar e --auto só enviam com o interruptor "Envio liberado" LIGADO no painel (out/envio/modo.json liberado: true;
+//   sem o arquivo = bloqueado). Pendência segurada no painel (out/envio/segurar.json) nunca fica pronta.
 //   PDF montado nesta máquina (COMPOSTO com caminho de outra máquina): o tamanho/SHA-256 do Neon são do arquivo antigo e
 //   não são comparados; ao enviar, o Neon passa a guardar os do arquivo enviado.
 const fs = require('fs');
@@ -51,16 +53,28 @@ function idsDaColeta() {
   const db = new DatabaseSync(DB, { readOnly: true });
   const coleta = db.prepare('SELECT id FROM coletas ORDER BY id DESC LIMIT 1').get();
   if (!coleta) throw new Error('Nenhuma coleta no banco local. Rode node pendencias.js antes.');
-  const linhas = db.prepare(`SELECT documento, cpf, cnpj_filial, pedido, unidades, competencia, prazo_envio, document_schedule_id FROM pendencias WHERE coleta_id = ? AND aba <> 'Reprovados'`).all(coleta.id);
+  const linhas = db.prepare(`SELECT documento, cpf, cnpj_filial, pedido, unidades, competencia, prazo_envio, document_schedule_id, status FROM pendencias WHERE coleta_id = ? AND aba <> 'Reprovados'`).all(coleta.id);
   db.close();
   // Chave que aparece com mais de um document_schedule_id fica AMBÍGUA (null): melhor não enviar do que enviar no lugar errado.
   const mapa = new Map();
+  const status = new Map();
   for (const l of linhas) {
     const k = chave({ nome: l.documento, cpf: l.cpf, cnpj_filial: l.cnpj_filial, pedido: l.pedido, unidade: l.unidades, competencia: l.competencia, prazo_envio: l.prazo_envio });
     mapa.set(k, mapa.has(k) && mapa.get(k) !== l.document_schedule_id ? AMBIGUA : l.document_schedule_id);
+    status.set(l.document_schedule_id, l.status);
   }
-  return { mapa, coletaId: coleta.id };
+  return { mapa, status, coletaId: coleta.id };
 }
+
+// Só sai pendência atrasada ou pendente SEM arquivo no Atlas (coleta: DelayNotSent/PendingNotSent; general-information: Delay/Pending).
+// Reprovada (DelayRejected) ainda tem o arquivo antigo: o Atlas só aceita outro depois que a equipe exclui esse na tela, e
+// responde 22006 "Documento já importado!" (ficha 01 de 27/10; em 28/10 o automático tentou 7 reprovadas do PI).
+const STATUS_ENVIAVEL = /^(Delay|Pending)(NotSent)?$/i;
+const PRECISA_PORTAL = 'precisa de ação no portal';
+const motivoStatus = (s) => (/Rejected/i.test(s || '')
+  ? `${PRECISA_PORTAL}: reprovada no Atlas (${s}); excluir o arquivo antigo no portal antes de reenviar`
+  : `${PRECISA_PORTAL}: status no Atlas "${s}" (só envio atrasada/pendente sem arquivo)`);
+const JA_IMPORTADO = /"code":\s*22006/;
 
 // Caminho gravado por outra máquina (ex.: "downloads\factorial\120\doc9_...pdf") vira <pasta>/factorial/120/doc9_...pdf.
 // original = é o mesmo arquivo que o Neon descreve (então tamanho e SHA-256 do Neon valem para ele).
@@ -129,6 +143,11 @@ async function abrirTela(prontas) {
   return res;
 }
 
+// Liberação do envio: só o painel decide. Lida antes de cada envio, então desligar no painel para o automático na próxima pendência.
+const DIR_ENVIO = path.join(OUT, 'envio');
+const lerEnvio = (nome) => { try { return JSON.parse(fs.readFileSync(path.join(DIR_ENVIO, nome), 'utf8')) || {}; } catch { return {}; } };
+const liberado = () => lerEnvio('modo.json').liberado === true;
+const BLOQUEADO = 'envio bloqueado no painel (interruptor "Envio liberado" desligado): nada foi enviado';
 const registro = (m) => { log(m); fs.mkdirSync(OUT, { recursive: true }); fs.appendFileSync(path.join(OUT, 'envios.log'), `[${new Date().toISOString()}] ${m}\n`, 'utf8'); };
 // Última ação em cada pendência (verificar/enviar), para o painel mostrar na aba Envio. Sem nome de arquivo (tem CPF).
 const ARQ_RESULTADOS = path.join(OUT, 'envio', 'resultados.json');
@@ -138,6 +157,19 @@ function resultado(id, r) {
   t[id] = { ...r, em: new Date().toISOString() };
   fs.mkdirSync(path.dirname(ARQ_RESULTADOS), { recursive: true });
   fs.writeFileSync(ARQ_RESULTADOS, JSON.stringify(t, null, 2), 'utf8');
+}
+
+// Atlas respondeu "já importado" (22006): a pendência é segurada sozinha (mesmo segurar.json do botão do painel), para não
+// ser tentada a cada rodada. Volta a sair quando alguém clicar em Soltar, depois de excluir o arquivo antigo no portal.
+function segurarJaImportado(id, msg) {
+  if (!JA_IMPORTADO.test(msg)) return false;
+  const seg = lerEnvio('segurar.json');
+  if (seg[id]) return false;
+  seg[id] = { motivo: 'já importado no Atlas (22006): excluir o arquivo antigo no portal e soltar', em: new Date().toISOString(), auto: true };
+  fs.mkdirSync(DIR_ENVIO, { recursive: true });
+  fs.writeFileSync(path.join(DIR_ENVIO, 'segurar.json'), JSON.stringify(seg, null, 2), 'utf8');
+  registro(`#${id} segurada sozinha: o Atlas respondeu "já importado" (22006).`);
+  return true;
 }
 
 // Abre o portal, garante o login e o token, roda fn(ctx) e fecha. Uma sessão serve para várias pendências.
@@ -157,7 +189,7 @@ async function conferirNoAtlas(ctx, item) {
   const antes = await api(ctx, `enc/document-schedules/${item.schedule_id}/general-information`).then((r) => r.data || r);
   const problemas = [];
   if (normalizar(antes.name) !== normalizar(item.nome)) problemas.push(`nome no Atlas "${antes.name}" diferente do Neon "${item.nome}"`);
-  if (!/^(Delay|Pending)/i.test(antes.status || '')) problemas.push(`status no Atlas "${antes.status}" (só envio atrasada/pendente)`);
+  if (!STATUS_ENVIAVEL.test(antes.status || '')) problemas.push(motivoStatus(antes.status));
   // allows_document_upload NÃO vale para nós: no JS do portal ele só decide o upload de usuário da organização (Equatorial);
   // fornecedor e admin sempre podem (canUploadDocuments = true). Vem false em todas as pendências da nossa conta (15/10).
   // A trava que vale é quem sobe o arquivo: só envia se a pendência for de envio manual pelo fornecedor.
@@ -171,6 +203,7 @@ async function conferirNoAtlas(ctx, item) {
 
 // Envia UMA pendência ao local exato (document_schedule_id). Para sem enviar se qualquer conferência falhar.
 async function enviarUma(ctx, item, sql) {
+  if (!liberado()) throw new Error(BLOQUEADO);
   const { problemas } = await conferirNoAtlas(ctx, item);
   if (problemas.length) throw new Error('NÃO ENVIEI: ' + problemas.join('; '));
   const ext = path.extname(item.arquivo).toLowerCase().slice(1);
@@ -215,7 +248,7 @@ async function enviarUma(ctx, item, sql) {
   const url = conexao();
   if (!url) throw new Error('Sem conexão com o Neon (defina ROBO_DATABASE_URL ou ROBO_ENV_FILE).');
   const pasta = opc.pasta || process.env.FACTORIAL_PASTA_DOWNLOAD || path.join(__dirname, 'out', 'downloads');
-  const { mapa, coletaId } = idsDaColeta();
+  const { mapa, status: statusColeta, coletaId } = idsDaColeta();
   const filtro = opc.id ? 'and id = $2' : '';
   const linhas = await neon(url).query(
     `select id, doc_id, nome, cpf, cnpj_filial, numero_pedido, unidade, competencia, prazo_envio, estado, caminho_origem, tamanho_bytes, hash_arquivo
@@ -223,6 +256,8 @@ async function enviarUma(ctx, item, sql) {
     opc.id ? [['COMPOSTO', 'LOCALIZADO'], Number(opc.id)] : [['COMPOSTO', 'LOCALIZADO']],
   );
 
+  // Seguradas no painel ({ "<id>": { motivo, em } }): arquivo conhecido como errado, não sai nem no automático.
+  const segurar = lerEnvio('segurar.json');
   const itens = linhas.map((l) => {
     const item = { id: l.id, doc_id: l.doc_id, nome: l.nome, competencia: l.competencia, estado: l.estado, pronta: false, motivos: [] };
     item.schedule_id = mapa.get(chave({ ...l, pedido: l.numero_pedido })) || null;
@@ -235,6 +270,10 @@ async function enviarUma(ctx, item, sql) {
       item.motivos.push(...item.avisos);
     }
     item.pronta = !!item.schedule_id && !!item.arquivo && !item.avisos?.length;
+    const st = item.schedule_id && statusColeta.get(item.schedule_id);
+    if (st && !STATUS_ENVIAVEL.test(st)) { item.status_atlas = st; item.acao_portal = true; item.pronta = false; item.motivos.push(motivoStatus(st)); }
+    const seg = segurar[l.id];
+    if (seg) { item.segurada = true; item.pronta = false; item.motivos.push(`segurada no painel${seg.motivo ? ': ' + seg.motivo : ''}`); }
     return item;
   });
   // O mesmo arquivo em pendências de funcionários diferentes = arquivo errado em alguém (19/10: o mesmo "eSocial.pdf" de 23 páginas
@@ -268,6 +307,7 @@ async function enviarUma(ctx, item, sql) {
   if (opc.enviar) {
     const item = itens[0];
     try {
+      if (!liberado()) throw new Error(BLOQUEADO);
       if (!item) throw new Error(`#${opc.id} não está COMPOSTO/LOCALIZADO no Neon.`);
       if (!item.pronta) throw new Error(`#${item.id} não está pronta: ${item.motivos.join('; ')}`);
       if (item.schedule_id !== opc.confirmo) throw new Error(`--confirmo não confere: o local desta pendência é ${item.schedule_id}. Nada enviado.`);
@@ -275,35 +315,41 @@ async function enviarUma(ctx, item, sql) {
       resultado(item.id, { acao: 'enviar', ok: true, status_atlas: status, schedule_id: item.schedule_id, msg: `ENVIADO; status no Atlas agora: ${status ?? '?'}` });
     } catch (e) {
       resultado(opc.id, { acao: 'enviar', ok: false, msg: String(e.message).slice(0, 400) });
+      if (item) segurarJaImportado(item.id, String(e.message));
       throw e;
     }
     return;
   }
 
   // Envio automático (botão ligado no painel): todas as prontas, uma por vez, cada uma conferida no Atlas antes.
-  // Para na primeira recusa do Atlas (melhor parar e alguém olhar do que errar em série). --max limita quantas por rodada.
+  // Pendência que dá erro é PULADA e a rodada segue com as outras (regra do usuário, 26/10: um arquivo com problema não para
+  // a automação). O erro fica no resultado dela, para alguém olhar. Só para tudo se o envio for bloqueado no painel.
+  // --max limita quantas por rodada.
   if (opc.auto) {
+    if (!liberado()) { log(`Envio automático: ${BLOQUEADO}.`); process.exitCode = 6; return; }
     const max = Number(opc.max || process.env.ENVIO_MAX_POR_RODADA || 30);
     const fila = itens.filter((i) => i.pronta).slice(0, max);
     log(`Envio automático: ${fila.length} pronta(s) para enviar${itens.filter((i) => i.pronta).length > max ? ` (limite de ${max} por rodada)` : ''}.`);
     if (!fila.length) return;
     const sql = neon(url);
-    let enviadas = 0;
+    let enviadas = 0, puladas = 0;
     await comSessao(async (ctx) => {
       for (const item of fila) {
+        if (!liberado()) { registro(`Envio automático PAROU antes de #${item.id}: o envio foi bloqueado no painel.`); break; }
         try {
           const status = await enviarUma(ctx, item, sql);
           resultado(item.id, { acao: 'enviar', auto: true, ok: true, status_atlas: status, schedule_id: item.schedule_id, msg: `ENVIADO (automático); status no Atlas agora: ${status ?? '?'}` });
           enviadas++;
         } catch (e) {
           resultado(item.id, { acao: 'enviar', auto: true, ok: false, schedule_id: item.schedule_id, msg: String(e.message).slice(0, 400) });
-          registro(`Envio automático PAROU em #${item.id}: ${e.message}`);
-          process.exitCode = 5;
-          break;
+          if (e.message === BLOQUEADO) { registro(`Envio automático PAROU em #${item.id}: ${e.message}`); break; }
+          registro(`Envio automático PULOU #${item.id} e seguiu: ${e.message}`);
+          segurarJaImportado(item.id, String(e.message));
+          puladas++;
         }
       }
     });
-    log(`Envio automático: ${enviadas} de ${fila.length} enviada(s).`);
+    log(`Envio automático: ${enviadas} de ${fila.length} enviada(s)${puladas ? `, ${puladas} pulada(s)` : ''}.`);
     return;
   }
 

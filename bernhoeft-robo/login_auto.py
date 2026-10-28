@@ -115,7 +115,11 @@ def servicos_disponiveis():
 
 
 def preencher(page, user, senha):
+    # Desde 24/10 o login é em duas etapas: Login → "Continuar" → aparecem senha, reCAPTCHA e o botão Login.
     page.fill('#Login', user)
+    if page.is_visible('#BotaoContinuar'):
+        page.click('#BotaoContinuar')
+    page.wait_for_selector('#password', state='visible', timeout=30000)
     page.fill('#password', senha)
 
 

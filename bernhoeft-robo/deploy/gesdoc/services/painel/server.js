@@ -117,7 +117,8 @@ async function estadoAtlas() {
   const out = path.join(DADOS, 'pendencias-atlas');
   const r = { login: 'desconhecido' };
   let ls = [];
-  try { ls = await logs(ATLAS, 400); } catch (e) { r.erro_log = e.message; }
+  // 3000 linhas: uma rodada com a busca do SharePoint passa de 500, e o "Login feito" fica no começo dela.
+  try { ls = await logs(ATLAS, 3000); } catch (e) { r.erro_log = e.message; }
   // Último evento que diz algo sobre o login.
   for (let i = ls.length - 1; i >= 0; i--) {
     const t = ls[i].texto;
@@ -152,14 +153,21 @@ async function estadoAtlas() {
   if (ciclo) r.ciclo = ciclo.trim().split('\n').slice(-40).map(limpar);
   const sim = lerJson(path.join(out, 'enviar-simulacao.json'));
   if (sim) {
-    const lista = (sim.itens || []).filter((i) => !foraDoAtlas(i));
-    r.simulacao = { gerado_em: sim.gerado_em, itens: lista.length, prontas: lista.filter((i) => i.pronta).length };
+    const res = lerJson(path.join(out, 'envio', 'resultados.json')) || {};
+    const hist = lerJson(path.join(out, 'envio', 'historico-envios.json'));
+    const foi = new Set([...(Array.isArray(hist) ? hist : []).map((x) => String(x.id)),
+      ...Object.entries(res).filter(([, x]) => x.acao === 'enviar' && x.ok).map(([id]) => id)]);
+    const lista = (sim.itens || []).filter((i) => !foraDoAtlas(i) && !foi.has(String(i.id)));
+    const seg = lerJson(path.join(out, 'envio', 'segurar.json')) || {};
+    r.simulacao = { gerado_em: sim.gerado_em, itens: lista.length, prontas: lista.filter((i) => i.pronta && !seg[i.id]).length };
   }
   // Busca do robô na Factorial (67/68/69): as não achadas continuam PENDENTE_ENVIO no banco, mas já foram buscadas.
   const bf = lerJson(path.join(out, 'envio', 'busca.json'));
   if (bf) r.busca_factorial = { em: bf.em || null, buscadas: (bf.itens || []).length, nao: (bf.itens || []).filter((i) => !i.achou).length };
-  // Botão do envio automático (aba Envio): sem o arquivo = desligado.
-  r.envio_automatico = (lerJson(path.join(out, 'envio', 'modo.json')) || {}).automatico === true;
+  // Interruptores da aba Envio: sem o arquivo = envio bloqueado e automático desligado.
+  const modo = lerJson(path.join(out, 'envio', 'modo.json')) || {};
+  r.envio_liberado = modo.liberado === true;
+  r.envio_automatico = r.envio_liberado && modo.automatico === true;
   try { r.pdfs_unidos = fs.readdirSync(path.join(out, 'unidos'), { recursive: true }).filter((f) => /\.pdf$/i.test(f)).length; } catch { r.pdfs_unidos = 0; }
   return r;
 }
@@ -234,11 +242,21 @@ async function estadoNeon() {
   if (!NEON) return { erro: 'ROBO_DATABASE_URL não configurada no painel.' };
   if (Date.now() - cacheNeon.em < 60000 && cacheNeon.dados) return cacheNeon.dados;
   try {
-    const estados = await sql('SELECT coalesce(estado, \'(vazio)\') AS estado, count(*)::int AS n FROM documentos GROUP BY 1 ORDER BY 2 DESC');
+    // Contagem só do que ainda aparece no Atlas (e das enviadas); sem coleta para comparar, conta tudo.
+    const docs = await documentosNeon();
+    if (docs.erro) throw new Error(docs.erro);
+    const conta = {};
+    let fora = 0;
+    for (const x of docs.linhas) {
+      if (x.no_atlas === false && x.estado !== 'ENVIADO') { fora++; continue; }
+      const e = x.estado || '(vazio)';
+      conta[e] = (conta[e] || 0) + 1;
+    }
+    const estados = Object.entries(conta).map(([estado, n]) => ({ estado, n })).sort((a, b) => b.n - a.n);
     const recentes = await sql(`SELECT nome, competencia, unidade, estado, funcionario, atualizado_em, enviado_em
       FROM documentos WHERE atualizado_em IS NOT NULL ORDER BY atualizado_em DESC LIMIT 30`);
     // Com Neon-Raw-Text-Output os números chegam como texto.
-    cacheNeon = { em: Date.now(), dados: { estados: estados.map((x) => ({ estado: x.estado, n: Number(x.n) })),
+    cacheNeon = { em: Date.now(), dados: { estados, fora_do_atlas: fora,
       recentes: recentes.map((x) => ({ ...x, funcionario: limpar(x.funcionario || ''), atualizado_em: utc(x.atualizado_em), enviado_em: utc(x.enviado_em) })) } };
   } catch (e) {
     cacheNeon = { em: Date.now(), dados: { erro: e.message } };
@@ -450,6 +468,20 @@ function destinoDe(x, rastro, regras, envioRobo) {
   };
 }
 
+// O Neon guarda toda pendência que o Atlas já mostrou; a que saiu do portal (entregue por outro meio, prazo mudou…) continua lá.
+// Mesma chave do enviar.js: documento, CPF, CNPJ, pedido, unidade, competência e prazo, contra o pendencias.json da última coleta.
+const normalizarAtlas = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[–—]/g, '-').replace(/\s+/g, ' ').trim().toLowerCase();
+const digitosAtlas = (s) => (s ? String(s).replace(/\D/g, '') : '');
+const diaAtlas = (d) => (d == null ? '' : d instanceof Date ? d.toISOString().slice(0, 10) : String(d).slice(0, 10));
+const chaveAtlas = (r) => [normalizarAtlas(r.nome), digitosAtlas(r.cpf), digitosAtlas(r.cnpj_filial), r.numero_pedido ?? r.pedido ?? null,
+  normalizarAtlas(r.unidade), r.competencia, diaAtlas(r.prazo_envio)].join('|');
+function chavesColetaAtlas() {
+  const p = lerJson(path.join(DADOS, 'pendencias-atlas', 'pendencias.json'));
+  if (!p || !Array.isArray(p.pendencias) || !p.pendencias.length) return null;
+  return new Set(p.pendencias.map((l) => chaveAtlas({ nome: l.documento, cpf: l.cpf, cnpj_filial: l.cnpj_filial, pedido: l.pedido,
+    unidade: l.unidades, competencia: l.competencia, prazo_envio: l.prazo_envio })));
+}
+
 // Pendências do Atlas no Neon (inclui as enviadas, para mostrar para onde foram), com todas as colunas menos as de identificação.
 const COLUNAS_FORA = /^(cpf|colaborador_id|cnpj|cnpj_filial|rg|senha|token)$/i;
 let cacheDocsNeon = { em: 0, dados: null };
@@ -466,6 +498,7 @@ async function documentosNeon() {
     const alertas = new Map((await sql(`SELECT DISTINCT ON (documento_id) documento_id, descricao, criado_em FROM alerta
       ORDER BY documento_id, criado_em DESC`).catch(() => [])).map((a) => [String(a.documento_id), a]));
     arquivosAtlas.clear();
+    const naColeta = chavesColetaAtlas();
     const shp = buscaSharepoint();
     const porIdShp = new Map((shp?.itens || []).map((i) => [String(i.id), i]));
     for (const x of linhas) {
@@ -476,12 +509,14 @@ async function documentosNeon() {
       if (sp) x.sharepoint = resumoShp(sp, shp.em);
       const arq = pdfAtlas(x) || (sp?.achou ? existe(pdfShp(sp.local)) : null);
       if (arq) { arquivosAtlas.set(String(x.id), arq); x.pdf_atlas = `atlas-doc/${x.id}`; const t = tamanho(arq); x.pdf_kb = t?.kb ?? null; x.pdf_erro = t?.erro || null; }
+      // Ainda aparece na última coleta do Atlas? (null = sem coleta para comparar)
+      x.no_atlas = naColeta ? naColeta.has(chaveAtlas(x)) : null;
       x.montagem = montagemDe(x, rastro, shp);
       x.destino = destinoDe(x, rastro, rg.regras || [], envioRobo);
     }
     cacheDocsNeon = { em: Date.now(), dados: { linhas: linhas.map((x) => Object.fromEntries(Object.entries(x)
       .filter(([k]) => !COLUNAS_FORA.test(k))
-      .map(([k, v]) => [k, v == null ? null : typeof v === 'object' ? v : utc(limpar(v))]))) } };
+      .map(([k, v]) => [k, v == null ? null : typeof v === 'object' || typeof v === 'boolean' ? v : utc(limpar(v))]))) } };
   } catch (e) {
     cacheDocsNeon = { em: Date.now(), dados: { erro: e.message, linhas: [] } };
   }
@@ -559,7 +594,10 @@ async function pendencias() {
   // no banco, mas já foi buscado; o motivo vem de envio/busca.json.
   const buscaF = lerJson(path.join(DIR_ENVIO, 'busca.json'));
   const porIdF = new Map((buscaF?.itens || []).map((b) => [String(b.id), b]));
-  const atlas = (n.linhas || []).map((x) => {
+  // Pendência que não aparece mais na última coleta do Atlas sai da tabela (as enviadas ficam, para o rastro).
+  const saiu = (x) => x.no_atlas === false && x.estado !== 'ENVIADO';
+  const foraAtlas = (n.linhas || []).filter(saiu).length;
+  const atlas = (n.linhas || []).filter((x) => !saiu(x)).map((x) => {
     const regra = regraDe.get(String(x.doc_id)), b = x.estado === 'PENDENTE_ENVIO' ? porIdF.get(String(x.id)) : null;
     const l = { origem: 'Atlas', ...x, documento: x.nome, estado: x.estado || '(vazio)', fonte: regra?.origem || null };
     if (b) l.busca_factorial = { em: buscaF.em || null, achou: !!b.achou, motivo: limpar(b.motivo || ''), factorial_id: b.factorial_id || null };
@@ -569,7 +607,7 @@ async function pendencias() {
   return {
     agora: new Date().toISOString(),
     bernhoeft: { coletado_em: b.coletado_em, leituras_guardadas: b.leituras_guardadas, esteira: { inicio: st.inicio, fim: st.fim, rodando: st.rodando, erro: st.erro } },
-    atlas: { erro: n.erro || null },
+    atlas: { erro: n.erro || null, fora_do_atlas: foraAtlas },
     linhas: [...bern, ...atlas],
   };
 }
@@ -929,7 +967,8 @@ function estadoAuto() {
 
 // ---------- Envio ao Atlas (aba Envio) ----------
 // O painel NÃO envia nada: grava a escolha e os pedidos em /codigo/envio (= out/envio do robô Atlas) e o robo.js,
-// dentro do container do Atlas, executa em fila. modo.json = botão automático; pedidos/*.json = verificar/enviar um por um.
+// dentro do container do Atlas, executa em fila. modo.json = interruptores "Envio liberado" (geral) e automático;
+// pedidos/*.json = verificar/enviar um por um; segurar.json = pendências que não saem (nem no automático).
 const DIR_ENVIO = path.join(path.dirname(ARQ_CODIGO), 'envio');
 const PEDIDOS_ENVIO = path.join(DIR_ENVIO, 'pedidos');
 const SIM_ATLAS = path.join(path.dirname(ARQ_CODIGO), 'enviar-simulacao.json');
@@ -938,7 +977,12 @@ const SIM_ATLAS = path.join(path.dirname(ARQ_CODIGO), 'enviar-simulacao.json');
 function foraDoAtlas(i) {
   return !i.schedule_id && (i.motivos || []).some((m) => /^sem document_schedule_id na coleta/.test(m));
 }
-const lerModo = () => ({ automatico: false, ...(lerJson(path.join(DIR_ENVIO, 'modo.json')) || {}) });
+function lerModo() {
+  const m = lerJson(path.join(DIR_ENVIO, 'modo.json')) || {};
+  const liberado = m.liberado === true;
+  return { liberado, automatico: liberado && m.automatico === true, alterado_em: m.alterado_em || null };
+}
+const lerSegurar = () => lerJson(path.join(DIR_ENVIO, 'segurar.json')) || {};
 function pedidosPendentes() {
   try { return fs.readdirSync(PEDIDOS_ENVIO).filter((f) => f.endsWith('.json')).sort().map((f) => lerJson(path.join(PEDIDOS_ENVIO, f))).filter(Boolean); } catch { return []; }
 }
@@ -973,6 +1017,34 @@ function fichaEnvio(i, l, regra, r) {
     aviso: m?.aviso || null, deixados: m?.deixados || [],
   };
 }
+// Histórico dos envios ao Atlas: resultados.json guarda só a última ação de cada pendência (um "verificar" depois
+// apagaria o envio), então todo envio ok é copiado para historico-envios.json e nunca sai de lá. Sem CPF nem arquivo.
+const ARQ_HISTORICO = path.join(DIR_ENVIO, 'historico-envios.json');
+function historicoEnvios(res, todos, porId) {
+  const hist = lerJson(ARQ_HISTORICO);
+  const lista = Array.isArray(hist) ? hist : [];
+  const tem = new Set(lista.map((x) => `${x.id}|${x.em}`));
+  const doSim = new Map(todos.map((i) => [String(i.id), i]));
+  let novos = 0;
+  for (const [id, r] of Object.entries(res)) {
+    if (r.acao !== 'enviar' || !r.ok || !r.em || tem.has(`${id}|${r.em}`)) continue;
+    const i = doSim.get(String(id)), l = porId.get(String(id));
+    lista.push({ id: Number(id) || id, nome: i?.nome || l?.nome || null, competencia: i?.competencia || l?.competencia || null,
+      em: r.em, auto: !!r.auto, status_atlas: r.status_atlas ?? null, schedule_id: r.schedule_id || i?.schedule_id || null, msg: limpar(r.msg || '') });
+    novos++;
+  }
+  if (novos) {
+    try {
+      fs.mkdirSync(DIR_ENVIO, { recursive: true });
+      fs.writeFileSync(ARQ_HISTORICO + '.tmp', JSON.stringify(lista, null, 2));
+      fs.renameSync(ARQ_HISTORICO + '.tmp', ARQ_HISTORICO);
+    } catch (e) { console.error('histórico de envios:', e.message); }
+  }
+  // situacao/estado = como está agora no Neon (a coleta do Atlas atualiza): mostra se o enviado foi reprovado depois.
+  return lista.map((x) => ({ ...x, funcionario: porId.get(String(x.id))?.funcionario || null,
+    situacao: porId.get(String(x.id))?.situacao || null, estado: porId.get(String(x.id))?.estado || null }))
+    .sort((a, b) => String(b.em).localeCompare(String(a.em)));
+}
 async function estadoEnvio() {
   const sim = lerJson(SIM_ATLAS) || {};
   const res = lerJson(path.join(DIR_ENVIO, 'resultados.json')) || {};
@@ -985,6 +1057,7 @@ async function estadoEnvio() {
     id: i.id, doc_id: i.doc_id, nome: i.nome, competencia: i.competencia, estado: i.estado, schedule_id: i.schedule_id, pronta: i.pronta,
     motivos: (i.motivos || []).map(limpar), kb: i.tamanho ? Math.round(i.tamanho / 1024) : null, montado_aqui: !!i.montado_aqui,
     funcionario: porId.get(String(i.id))?.funcionario || null, pdf: arquivosAtlas.has(String(i.id)) ? `atlas-doc/${i.id}` : null,
+    situacao: porId.get(String(i.id))?.situacao || null, unidade: porId.get(String(i.id))?.unidade || null,
     resultado: res[i.id] ? { ...res[i.id], msg: limpar(res[i.id].msg || '') } : null,
     ficha: fichaEnvio(i, porId.get(String(i.id)), regraDe.get(String(i.doc_id)), res[i.id]),
     hash: i.hash || null,
@@ -999,21 +1072,63 @@ async function estadoEnvio() {
     if (outros.length) i.ficha.aviso = [i.ficha.aviso, `o mesmo arquivo (mesmo SHA-256) está na pendência de outro funcionário: #${outros.map((x) => x.id).join(', #')}. Conferir de quem é antes de enviar`].filter(Boolean).join('; ');
   }
   for (const i of todos) delete i.hash;
-  const itens = todos.filter((i) => !foraDoAtlas(i));
-  const fora_do_atlas = todos.length - itens.length;
-  // Enviadas saem da lista (estado ENVIADO no Neon); o resultado delas continua aqui.
-  const enviados = Object.entries(res).filter(([, r]) => r.acao === 'enviar' && r.ok).map(([id, r]) => ({ id, ...r, msg: limpar(r.msg || '') }))
-    .sort((a, b) => b.em.localeCompare(a.em)).slice(0, 50);
+  // Segurada no painel: vale na hora (o enviar.js também lê o segurar.json antes de montar a fila).
+  const seg = lerSegurar();
+  for (const i of todos) {
+    const s = seg[i.id];
+    if (!s) continue;
+    i.segurada = { motivo: limpar(s.motivo || ''), em: s.em || null };
+    i.pronta = false;
+    if (!i.motivos.some((m) => /^segurada no painel/.test(m))) i.motivos.unshift(`segurada no painel${s.motivo ? ': ' + limpar(s.motivo) : ''}`);
+  }
+  // Enviadas saem da lista na hora (a simulação do robô só é refeita na próxima rodada) e vão para o histórico.
+  const enviados = historicoEnvios(res, todos, porId);
+  const jaFoi = new Set(enviados.map((x) => String(x.id)));
+  const ativos = todos.filter((i) => !jaFoi.has(String(i.id)) && porId.get(String(i.id))?.estado !== 'ENVIADO');
+  const itens = ativos.filter((i) => !foraDoAtlas(i));
+  const fora_do_atlas = ativos.length - itens.length;
   // robo.json é regravado a cada 5 s; parado há mais de 2 min sem estar ocupado = robô antigo ou fora do ar.
   const vivo = robo && (robo.fazendo || Date.now() - new Date(robo.agora) < 120000);
-  return { agora: new Date().toISOString(), modo: lerModo(), robo, robo_ok: !!vivo, lista_em: sim.gerado_em || null, itens, fora_do_atlas, enviados, pedidos: pedidosPendentes(),
+  // Situação agora das que já saíram (enviadas ou reprovadas), para o diagnóstico dos "enviados com erro" na página.
+  const situacoes = Object.fromEntries((n.linhas || []).filter((l) => ['ENVIADO', 'REJEITADO'].includes(l.estado))
+    .map((l) => [l.id, { situacao: l.situacao || null, estado: l.estado, atualizado_em: l.atualizado_em || null }]));
+  return { agora: new Date().toISOString(), modo: lerModo(), robo, robo_ok: !!vivo, lista_em: sim.gerado_em || null, itens, fora_do_atlas, enviados, situacoes, pedidos: pedidosPendentes(),
     busca: busca ? { em: busca.em, itens: (busca.itens || []).map((x) => ({ ...x, motivo: limpar(x.motivo || '') })) } : null };
 }
-function gravarNoEnvio(nome, obj) {
-  fs.mkdirSync(PEDIDOS_ENVIO, { recursive: true });
-  const tmp = path.join(DIR_ENVIO, `.${nome.replace(/\//g, '_')}.tmp`);
+function gravarNoEnvio(nome, obj, dir = DIR_ENVIO) {
+  fs.mkdirSync(path.join(dir, 'pedidos'), { recursive: true });
+  const tmp = path.join(dir, `.${nome.replace(/\//g, '_')}.tmp`);
   fs.writeFileSync(tmp, JSON.stringify(obj, null, 2));
-  fs.renameSync(tmp, path.join(DIR_ENVIO, nome)); // troca inteira: o robô nunca lê um arquivo pela metade
+  fs.renameSync(tmp, path.join(dir, nome)); // troca inteira: o robô nunca lê um arquivo pela metade
+}
+
+// ---------- Envio ao Bernhoeft (aba 7) ----------
+// Mesmo desenho do Atlas: o painel só grava a escolha e os pedidos em /sinal-bernhoeft/envio (= out/envio do robô Bernhoeft);
+// o pendencias.js --loop atende com o entregar.js entre as leituras. modo.json { liberado, automatico, confianca } começa DESLIGADO
+// (sem o arquivo = bloqueado). segurar.json (por chave) = não sai no automático. auto.json = rodada automática da última leitura.
+// Enviar exige: envio liberado, PDF pronto na esteira e uma verificação "pode enviar" recente do MESMO documento (objeto_id = confirmo).
+const DIR_ENVIO_BERN = path.join(path.dirname(SINAL_BERNHOEFT), 'envio');
+const VERIF_BERN_MAX_H = 6;
+// Automático (entregar.js automatico()): só vale com liberado; confianca = a menor que sai sozinha (alta | media | baixa).
+const CONF_BERN = ['alta', 'media', 'baixa'];
+const lerModoBern = () => {
+  const m = lerJson(path.join(DIR_ENVIO_BERN, 'modo.json')) || {};
+  const liberado = m.liberado === true;
+  return { liberado, automatico: liberado && m.automatico === true, confianca: CONF_BERN.includes(m.confianca) ? m.confianca : 'alta', alterado_em: m.alterado_em || null };
+};
+const lerSegurarBern = () => lerJson(path.join(DIR_ENVIO_BERN, 'segurar.json')) || {};
+function pedidosBern() {
+  try { const d = path.join(DIR_ENVIO_BERN, 'pedidos'); return fs.readdirSync(d).filter((f) => f.endsWith('.json')).sort().map((f) => lerJson(path.join(d, f))).filter(Boolean); } catch { return []; }
+}
+function estadoEnvioBern() {
+  const res = lerJson(path.join(DIR_ENVIO_BERN, 'resultados.json')) || {};
+  const resultados = Object.fromEntries(Object.entries(res).map(([k, r]) => [k, { ...r, msg: limpar(r.msg || ''), motivos: (r.motivos || []).map(limpar) }]));
+  const enviados = Object.entries(resultados).filter(([, r]) => r.acao === 'enviar' && r.ok).map(([chave, r]) => ({ chave, ...r }))
+    .sort((a, b) => b.em.localeCompare(a.em)).slice(0, 50);
+  const a = lerJson(path.join(DIR_ENVIO_BERN, 'auto.json'));
+  const autoBern = a ? { coletado_em: a.coletado_em || null, tentados: Object.keys(a.tentados || {}).length, parado: a.parado ? limpar(a.parado) : null, parado_em: a.parado_em || null } : null;
+  return { agora: new Date().toISOString(), modo: lerModoBern(), resultados, enviados, segurar: lerSegurarBern(), auto: autoBern,
+    pedidos: pedidosBern().map((p) => ({ acao: p.acao, chave: p.chave, pedido_em: p.pedido_em })) };
 }
 
 // POST só da própria página (evita que outro site acione pelo navegador).
@@ -1115,11 +1230,32 @@ const servidor = http.createServer(async (req, res) => {
     if (req.method === 'GET' && url.pathname === '/api/envio') return json(res, 200, await estadoEnvio());
     if (req.method === 'POST' && url.pathname === '/api/envio/modo') {
       if (!origemOk(req)) return json(res, 403, { erro: 'origem não permitida' });
-      const automatico = JSON.parse((await corpo(req)) || '{}').automatico === true;
-      gravarNoEnvio('modo.json', { automatico, alterado_em: new Date().toISOString() });
-      console.log(`[${new Date().toISOString()}] envio automático ${automatico ? 'LIGADO' : 'desligado'} pelo painel`);
-      evento('Painel', automatico ? 'Envio automático LIGADO: o robô Atlas busca na Factorial e envia sozinho as prontas' : 'Envio automático DESLIGADO: nada sai sozinho; envio só um por um', automatico ? 'aviso' : 'ok');
-      return json(res, 200, { ok: true, automatico });
+      // Corpo { liberado } e/ou { automatico }: o que não vier fica como está. Bloquear o envio desliga o automático junto.
+      const b = JSON.parse((await corpo(req)) || '{}');
+      const antes = lerModo();
+      const liberado = 'liberado' in b ? b.liberado === true : antes.liberado;
+      const pediuAuto = 'automatico' in b ? b.automatico === true : liberado && antes.automatico;
+      if (pediuAuto && !liberado) return json(res, 400, { erro: 'Libere o envio primeiro (interruptor "Envio liberado").' });
+      const automatico = liberado && pediuAuto;
+      gravarNoEnvio('modo.json', { liberado, automatico, alterado_em: new Date().toISOString() });
+      console.log(`[${new Date().toISOString()}] painel: envio ${liberado ? 'LIBERADO' : 'BLOQUEADO'}, automático ${automatico ? 'LIGADO' : 'desligado'}`);
+      if (liberado !== antes.liberado) evento('Painel', liberado ? 'Envio ao Atlas LIBERADO: o botão "Enviar" passa a funcionar' : 'Envio ao Atlas BLOQUEADO: nada sai, nem pelo botão nem no automático', liberado ? 'aviso' : 'ok');
+      if (automatico !== antes.automatico) evento('Painel', automatico ? 'Envio automático LIGADO: o robô Atlas busca na Factorial e envia sozinho as prontas' : 'Envio automático DESLIGADO: nada sai sozinho; envio só um por um', automatico ? 'aviso' : 'ok');
+      return json(res, 200, { ok: true, liberado, automatico });
+    }
+    if (req.method === 'POST' && url.pathname === '/api/envio/segurar') {
+      if (!origemOk(req)) return json(res, 403, { erro: 'origem não permitida' });
+      const b = JSON.parse((await corpo(req)) || '{}');
+      const id = String(b.id || '');
+      if (!/^\d+$/.test(id)) return json(res, 400, { erro: 'id inválido' });
+      const seg = lerSegurar();
+      if (b.segurar === false) delete seg[id];
+      else seg[id] = { motivo: String(b.motivo || '').replace(/\s+/g, ' ').trim().slice(0, 200), em: new Date().toISOString() };
+      gravarNoEnvio('segurar.json', seg);
+      // O robô refaz a lista (a segurada sai das prontas; a solta volta, se estiver pronta).
+      if (!pedidosPendentes().some((x) => x.acao === 'atualizar')) gravarNoEnvio(`pedidos/${Date.now()}-atualizar.json`, { acao: 'atualizar', pedido_em: new Date().toISOString() });
+      evento('Painel', b.segurar === false ? `#${id} solto: pode voltar a sair` : `#${id} segurado: não sai nem no automático`, 'info');
+      return json(res, 200, { ok: true });
     }
     if (req.method === 'POST' && url.pathname === '/api/envio/pedido') {
       if (!origemOk(req)) return json(res, 403, { erro: 'origem não permitida' });
@@ -1132,7 +1268,9 @@ const servidor = http.createServer(async (req, res) => {
         const item = ((lerJson(SIM_ATLAS) || {}).itens || []).find((i) => String(i.id) === id);
         if (!item) return json(res, 404, { erro: `#${id} não está na lista de envio.` });
         if (acao === 'enviar') {
-          // Mesma trava do enviar.js: só a pronta, e o local tem que ser o que a pessoa viu na tela.
+          // Mesma trava do enviar.js: envio liberado, não segurada, só a pronta, e o local tem que ser o que a pessoa viu na tela.
+          if (!lerModo().liberado) return json(res, 409, { erro: 'O envio está bloqueado: ligue "Envio liberado" na aba Envio ao Atlas.' });
+          if (lerSegurar()[id]) return json(res, 400, { erro: `#${id} está segurada no painel: solte antes de enviar.` });
           if (!item.pronta) return json(res, 400, { erro: `#${id} não está pronta: ${limpar((item.motivos || []).join('; '))}` });
           if (String(p.confirmo || '') !== item.schedule_id) return json(res, 400, { erro: 'O local no Atlas mudou desde que a lista foi carregada: atualize a página.' });
           pedido.confirmo = item.schedule_id;
@@ -1142,6 +1280,62 @@ const servidor = http.createServer(async (req, res) => {
       if (pedidosPendentes().some((x) => x.acao === acao && String(x.id ?? '') === String(pedido.id ?? ''))) return json(res, 409, { erro: 'Esse pedido já está na fila do robô.' });
       gravarNoEnvio(`pedidos/${Date.now()}-${acao}${pedido.id ? '-' + pedido.id : ''}.json`, pedido);
       evento('Painel', `Pedido ao robô Atlas: ${{ verificar: 'verificar', enviar: 'ENVIAR', buscar: 'buscar na Factorial', atualizar: 'atualizar a lista' }[acao]}${pedido.id ? ` #${pedido.id}` : ''}`, acao === 'enviar' ? 'aviso' : 'info');
+      return json(res, 200, { ok: true });
+    }
+    if (req.method === 'GET' && url.pathname === '/api/envio-bern') return json(res, 200, estadoEnvioBern());
+    if (req.method === 'POST' && url.pathname === '/api/envio-bern/modo') {
+      if (!origemOk(req)) return json(res, 403, { erro: 'origem não permitida' });
+      // Corpo { liberado } e/ou { automatico } e/ou { confianca }: o que não vier fica como está. Bloquear desliga o automático junto.
+      const b = JSON.parse((await corpo(req)) || '{}');
+      const antes = lerModoBern();
+      const liberado = 'liberado' in b ? b.liberado === true : antes.liberado;
+      const pediuAuto = 'automatico' in b ? b.automatico === true : liberado && antes.automatico;
+      if (pediuAuto && !liberado) return json(res, 400, { erro: 'Libere o envio primeiro (interruptor "Envio liberado").' });
+      if ('confianca' in b && !CONF_BERN.includes(b.confianca)) return json(res, 400, { erro: 'confiança inválida' });
+      const automatico = liberado && pediuAuto, confianca = b.confianca || antes.confianca;
+      gravarNoEnvio('modo.json', { liberado, automatico, confianca, alterado_em: new Date().toISOString() }, DIR_ENVIO_BERN);
+      console.log(`[${new Date().toISOString()}] painel: envio ao Bernhoeft ${liberado ? 'LIBERADO' : 'BLOQUEADO'}, automático ${automatico ? `LIGADO (confiança ${confianca} ou mais)` : 'desligado'}`);
+      if (liberado !== antes.liberado) evento('Painel', liberado ? 'Envio ao Bernhoeft LIBERADO: o botão "Enviar" da aba 7 passa a funcionar' : 'Envio ao Bernhoeft BLOQUEADO: nada sai, nem pelo botão nem no automático', liberado ? 'aviso' : 'ok');
+      const quais = { alta: 'só confiança alta', media: 'confiança alta e média', baixa: 'todas as prontas, até confiança baixa' };
+      if (automatico !== antes.automatico) evento('Painel', automatico ? `Envio automático ao Bernhoeft LIGADO (${quais[confianca]}): o robô envia sozinho a cada leitura` : 'Envio automático ao Bernhoeft DESLIGADO: só um por um', automatico ? 'aviso' : 'ok');
+      else if (automatico && confianca !== antes.confianca) evento('Painel', `Envio automático ao Bernhoeft: agora saem ${quais[confianca]}`, 'aviso');
+      return json(res, 200, { ok: true, liberado, automatico, confianca });
+    }
+    if (req.method === 'POST' && url.pathname === '/api/envio-bern/segurar') {
+      if (!origemOk(req)) return json(res, 403, { erro: 'origem não permitida' });
+      const b = JSON.parse((await corpo(req)) || '{}');
+      const chave = String(b.chave || '');
+      const seg = lerSegurarBern();
+      const item = (auto.estado().itens || []).find((i) => i.pendencia?.chave === chave);
+      if (!item && !seg[chave]) return json(res, 404, { erro: 'Essa pendência não está na lista da esteira.' });
+      if (b.segurar === false) delete seg[chave];
+      else seg[chave] = { motivo: String(b.motivo || '').replace(/\s+/g, ' ').trim().slice(0, 150), em: new Date().toISOString() };
+      gravarNoEnvio('segurar.json', seg, DIR_ENVIO_BERN);
+      const nome = item ? `${limpar(item.pendencia.contrato)} · ${limpar(item.tipo || item.pendencia.descricao)}` : 'pendência';
+      evento('Painel', b.segurar === false ? `Bernhoeft: ${nome} solto, pode sair no automático` : `Bernhoeft: ${nome} segurado, não sai no automático`, 'info');
+      return json(res, 200, { ok: true });
+    }
+    if (req.method === 'POST' && url.pathname === '/api/envio-bern/pedido') {
+      if (!origemOk(req)) return json(res, 403, { erro: 'origem não permitida' });
+      const p = JSON.parse((await corpo(req)) || '{}');
+      const acao = String(p.acao || ''), chave = String(p.chave || '');
+      if (!['verificar', 'enviar'].includes(acao)) return json(res, 400, { erro: 'ação inválida' });
+      const item = (auto.estado().itens || []).find((i) => i.pendencia?.chave === chave);
+      if (!item) return json(res, 404, { erro: 'Essa pendência não está na lista da esteira: clique em "Buscar na Factorial".' });
+      const pedido = { acao, chave, pedido_em: new Date().toISOString() };
+      if (acao === 'enviar') {
+        // Mesmas travas do entregar.js (ele confere tudo de novo no portal antes de subir).
+        if (!lerModoBern().liberado) return json(res, 409, { erro: 'O envio está bloqueado: ligue "Envio liberado" no alto da aba 7.' });
+        if (item.estado !== 'pronto' || !item.pdf) return json(res, 400, { erro: 'A esteira não montou o PDF desta pendência.' });
+        const v = (lerJson(path.join(DIR_ENVIO_BERN, 'resultados.json')) || {})[chave];
+        if (!v || v.acao !== 'verificar' || !v.ok) return json(res, 400, { erro: 'Clique em "Verificar" antes: o robô precisa conferir o documento no portal.' });
+        if (Date.now() - new Date(v.em) > VERIF_BERN_MAX_H * 3600000) return json(res, 400, { erro: `A verificação tem mais de ${VERIF_BERN_MAX_H} h: verifique de novo.` });
+        if (String(p.confirmo || '') !== String(v.objeto_id)) return json(res, 400, { erro: 'O documento no portal mudou desde que a tela foi carregada: atualize a página.' });
+        pedido.confirmo = v.objeto_id;
+      }
+      if (pedidosBern().some((x) => x.chave === chave)) return json(res, 409, { erro: 'Já há um pedido desta pendência na fila do robô.' });
+      gravarNoEnvio(`pedidos/${Date.now()}-${acao}.json`, pedido, DIR_ENVIO_BERN);
+      evento('Painel', `Pedido ao robô Bernhoeft: ${acao === 'enviar' ? 'ENVIAR' : 'verificar'} ${limpar(item.pendencia.contrato)} · ${limpar(item.tipo || item.pendencia.descricao)}`, acao === 'enviar' ? 'aviso' : 'info');
       return json(res, 200, { ok: true });
     }
     if (req.method === 'POST' && url.pathname === '/api/codigo') {

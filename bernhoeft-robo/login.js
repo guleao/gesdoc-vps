@@ -17,7 +17,10 @@ const CHROME = process.env.CHROME_PATH || (process.platform === 'win32' ? 'C:/Pr
   const page = ctx.pages()[0] || (await ctx.newPage());
   await page.goto(BASE + '/Home', { waitUntil: 'domcontentloaded' });
   if (await page.$('#password')) {
+    // Login em duas etapas (desde 24/10): Login → "Continuar" → senha, reCAPTCHA e botão Login.
     await page.fill('#Login', process.env.BERNHOEFT_USER || '').catch(() => {});
+    if (await page.isVisible('#BotaoContinuar').catch(() => false)) await page.click('#BotaoContinuar').catch(() => {});
+    await page.waitForSelector('#password', { state: 'visible', timeout: 30000 }).catch(() => {});
     await page.fill('#password', process.env.BERNHOEFT_PASSWORD || '').catch(() => {});
     console.log('Usuário e senha preenchidos. Marque o reCAPTCHA e clique em Login (até 15 min).');
     await page.waitForSelector('#password', { state: 'detached', timeout: 900000 });

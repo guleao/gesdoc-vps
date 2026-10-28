@@ -1,6 +1,6 @@
 # Robô Bernhoeft (ContractWeb)
 
-Robô em Node + Playwright que lê o portal Bernhoeft (`https://newcontract.contractweb.com.br/`) e lista documentos pendentes. **Somente leitura**: não envia documentos nem clica em SOLICITAR sem o usuário pedir.
+Robô em Node + Playwright que lê o portal Bernhoeft (`https://newcontract.contractweb.com.br/`) e lista documentos pendentes. **A leitura é só leitura**, com uma exceção: desde 28/10 (OK do usuário) o `pendencias.js` clica em SOLICITAR no "012 - Relatório de Documentos Pendentes" **no máximo 1 vez por dia** (`solicitar012()`: só se não houver pedido de hoje na lista; contratante Equatorial, sem outro filtro; a data fica em `out/relatorios/solicitado-012.json` ANTES do clique; espera até 10 min e baixa; `SOLICITAR_012=0` desliga). Nenhum outro SOLICITAR. Envio de documento só pelo `entregar.js`, com o interruptor "Envio liberado" do painel ligado pelo usuário.
 
 ## Regra principal: duas versões, sempre juntas
 - **Local (Windows):** esta pasta, `Documents\bernhoeft-robo`. É onde o usuário testa.
@@ -12,6 +12,7 @@ Robô em Node + Playwright que lê o portal Bernhoeft (`https://newcontract.cont
 
 ## Arquivos
 - `pendencias.js`: leitura principal (competências, relatório 012, xlsx, comparação com a leitura anterior). Flags: `--loop`, `--concluidos`.
+- `entregar.js` (26/10): entrega do documento de EMPRESA (Etapa 6 da competência "Documentos da empresa" do contrato → "Enviar para análise"), com o PDF da esteira do painel (`PACOTES/auto`). **Só envia com o interruptor "Envio liberado" da aba 7 ligado (`out/envio/modo.json`; começa desligado, quem liga é o usuário).** `--verificar` é só leitura; `--ensaio` vai até o botão final sem clicar. O `pendencias.js --loop` atende os pedidos do painel (`out/envio/pedidos/`) entre as leituras e roda o `automatico()` (só com "Envio liberado" + "Modo de envio" Automático, também ligados só pelo usuário). Detalhes no CLAUDE.md do GESDOC.
 - `login_auto.py`: login automático (reCAPTCHA v2 resolvido primeiro pelo áudio com `playwright-recaptcha`, grátis; se falhar, pelos serviços pagos que tiverem chave). O `pendencias.js` chama quando a sessão expira (fecha o contexto, roda o Python, reabre). Código de saída 3 = falhou.
 - `mobilizacao.js` (22/10, **NUNCA TESTADO**, teste com o time Bernhoeft em 23/10): faz o fluxo do vídeo (Factorial → Nova Mobilização → etapa 2 cadastro → etapa 5 arquivo ou comentário de `comentarios.json` → etapa 8 com `--concluir`). Padrão = ensaio (não grava); `--descobrir` salva HTML+XHR de cada tela para acertar seletores; `--executar [--passo]` grava. Entrada `plano.json` (fora do repo, tem CPF). Saída `out/mobilizacao/<data>/`.
 - `login.js`: login manual (fallback) para renovar a sessão.

@@ -1,0 +1,811 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Fichas de diagnóstico · envios de 26/10/2026</title>
+<style>
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif; color: #24292f; font-size: 10.4pt; line-height: 1.52; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .folha { width: 210mm; height: 297mm; padding: 15mm 17mm 12mm; position: relative; page-break-after: always; overflow: hidden; }
+  .folha:last-child { page-break-after: auto; }
+
+  .rodape { position: absolute; left: 17mm; right: 17mm; bottom: 9mm; display: flex; justify-content: space-between; font-size: 7.8pt; color: #8c959f; border-top: 1px solid #e5e8eb; padding-top: 4px; }
+
+  .capa-topo { border-bottom: 1px solid #d0d7de; padding-bottom: 10px; margin-bottom: 14px; }
+  .capa-topo .rotulo { font-size: 8.5pt; color: #1f4e79; font-weight: 600; }
+  .capa-topo h1 { font-size: 21pt; font-weight: 600; margin: 4px 0 2px; color: #1b1f24; }
+  .capa-topo .sub { color: #57606a; font-size: 10pt; }
+  .capa p { margin: 0 0 8px; }
+  .aviso { background: #f6f8fa; border-left: 3px solid #1f4e79; border-radius: 4px; padding: 7px 12px; margin: 8px 0 10px; font-size: 8.9pt; }
+  .aviso h3 { margin: 0 0 4px; font-size: 9.8pt; font-weight: 600; }
+  .aviso ul { margin: 0; padding-left: 17px; }
+  .aviso li { margin: 2px 0; }
+  .numeros { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 2px 0 10px; }
+  .numeros div { border: 1px solid #d0d7de; border-radius: 6px; padding: 7px 10px; }
+  .numeros b { display: block; font-size: 15pt; font-weight: 600; color: #1b1f24; line-height: 1.2; }
+  .numeros span { font-size: 8.3pt; color: #57606a; }
+  h2 { font-size: 11pt; font-weight: 600; margin: 4px 0 6px; color: #1b1f24; }
+  table.indice { width: 100%; border-collapse: collapse; font-size: 8.4pt; }
+  table.indice th { text-align: left; font-weight: 600; color: #57606a; border-bottom: 1px solid #d0d7de; padding: 3px 6px; }
+  table.indice td { border-bottom: 1px solid #eef0f2; padding: 3px 6px; vertical-align: top; }
+  table.indice td:first-child { color: #1f4e79; font-weight: 600; width: 26px; }
+  .nota { font-size: 8.3pt; color: #6e7781; margin-top: 5px !important; }
+  table.certos td:nth-child(3) { text-align: right; padding-right: 14px; } table.certos th:nth-child(3) { text-align: right; padding-right: 14px; }
+  table.certos td:first-child { color: #24292f; font-weight: 400; width: auto; }
+  .grupo td { background: #f6f8fa; font-weight: 600; color: #1b1f24 !important; font-size: 8.2pt; padding-top: 4px; }
+
+  .cab { display: flex; gap: 14px; align-items: flex-start; border-bottom: 1px solid #d0d7de; padding-bottom: 10px; margin-bottom: 10px; }
+  .num { flex: 0 0 auto; width: 46px; height: 46px; border-radius: 8px; background: #1f4e79; color: #fff; font-size: 17pt; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+  .cab h1 { font-size: 14.5pt; font-weight: 600; margin: 0 0 3px; color: #1b1f24; line-height: 1.25; }
+  .cab .meta { font-size: 8.6pt; color: #57606a; }
+  .cab .meta b { color: #1f4e79; font-weight: 600; }
+  .dados { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px 14px; background: #f6f8fa; border-radius: 6px; padding: 8px 12px; margin-bottom: 12px; font-size: 8.8pt; }
+  .dados span { display: block; color: #6e7781; font-size: 7.6pt; }
+  .sec { margin: 0 0 12px; }
+  .capa { font-size: 9.4pt; line-height: 1.45; }
+  .capa .sec, .capa p { margin: 0 0 6px; }
+  .sec h3 { font-size: 9.6pt; font-weight: 600; margin: 0 0 2px; color: #1f4e79; }
+  .sec h3 small { font-weight: 400; color: #8c959f; font-size: 8pt; margin-left: 4px; }
+  .sec p { margin: 0 0 3px; }
+  .sec ul { margin: 2px 0 0; padding-left: 17px; }
+  .sec li { margin: 2px 0; }
+  .cit { font-style: italic; color: #424a53; }
+  .assin { position: absolute; left: 17mm; right: 17mm; bottom: 19mm; display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 16px; font-size: 8pt; color: #6e7781; }
+  .assin div { border-top: 1px solid #8c959f; padding-top: 3px; }
+</style>
+</head>
+<body>
+
+<!-- ============ CAPA ============ -->
+<section class="folha capa">
+  <div class="capa-topo">
+    <div class="rotulo">Automação de documentos · Equatorial</div>
+    <h1>Fichas de diagnóstico dos envios de 26/10</h1>
+    <div class="sub">Uma ficha por ocorrência, com causa, evidência, correção, reteste e prevenção · 27/10/2026</div>
+  </div>
+
+  <p>Montamos estas fichas a partir do que aconteceu nos envios ao Atlas e ao Bernhoeft no dia 26/10. Para cada caso, abrimos o PDF que seria enviado (ou que foi enviado), lemos o conteúdo e comparamos com o que o portal pedia, com os registros de envio e com a situação no banco de pendências. Durante essa análise nenhum documento foi enviado, alterado ou apagado.</p>
+  <p>Cada ficha responde às mesmas perguntas: o que aconteceu, por que aconteceu, como sabemos, o que fazer agora, como vamos confirmar que ficou resolvido e o que muda para não acontecer de novo. No pé de cada página ficou espaço para o responsável e o prazo.</p>
+
+  <div class="aviso">
+    <h3>Ajustes em relação ao relatório de ontem</h3>
+    <ul>
+      <li>Os itens <b>#284</b> e <b>#117</b> apareceram como enviados em 26/10 por engano: foram enviados em 20/10 e 15/10. No dia 26, o Atlas recebeu <b>24</b> documentos, não 26.</li>
+      <li>Os quatro casos do Bernhoeft que chamamos de "arquivo genérico" são, na verdade, declarações de outro contrato (00757/2025-GO). Passaram para a família 4, e a família 2 (arquivo não identificado com segurança) ficou vazia.</li>
+      <li>Ao abrir os dois PDFs que subiram para o Bernhoeft, vimos que os dois têm conteúdo errado. Pelo mesmo critério dos ASO, eles viraram as fichas 15 e 16.</li>
+    </ul>
+  </div>
+
+  <h2>O que foi enviado sem problema</h2>
+  <p>No dia 26, o envio automático mandou 24 documentos ao Atlas. Tirando o ASO #297 (ficha 14), não encontramos problema nos outros 23:</p>
+  <table class="indice certos">
+    <tr><th>documento</th><th>competência</th><th>qtd</th><th>situação no Atlas</th></tr>
+    <tr><td>FGTS · guia e comprovante</td><td>09/2026</td><td>2</td><td>aguardando anteriores</td></tr>
+    <tr><td>Certidão de Regularidade do FGTS</td><td>10/2026</td><td>1</td><td>em validação</td></tr>
+    <tr><td>ASO Demissional (#322)</td><td>08/2026</td><td>1</td><td>em validação</td></tr>
+    <tr><td>Vale Alimentação</td><td>10/2026</td><td>7</td><td>1 em validação · 6 aguardando anteriores</td></tr>
+    <tr><td>Vale Transporte</td><td>10/2026</td><td>7</td><td>aguardando anteriores</td></tr>
+    <tr><td>Plano de Saúde</td><td>10/2026</td><td>5</td><td>1 em validação · 4 aguardando anteriores</td></tr>
+    <tr class="grupo"><td>Total</td><td></td><td>23</td><td>4 em validação · 19 aguardando anteriores</td></tr>
+  </table>
+  <p class="nota">"Aguardando anteriores" quer dizer que o Atlas recebeu o arquivo, mas só vai analisá-lo depois que os meses anteriores do mesmo item forem resolvidos. Nenhum foi aprovado ainda. Então "sem problema" quer dizer que, até agora, não apareceu nada de errado. Resolver as fichas 01 a 04 deve destravar parte dos VT de outubro.</p>
+
+  <h2>As 16 ocorrências</h2>
+  <div class="numeros">
+    <div><b>4</b><span>já importado ou reprovado no portal</span></div>
+    <div><b>1</b><span>arquivo que não existe na origem</span></div>
+    <div><b>7</b><span>arquivo de outro documento, contrato ou pessoa</span></div>
+    <div><b>4</b><span>enviados, mas com conteúdo errado</span></div>
+  </div>
+  <div class="rodape"><span>Fichas de diagnóstico · envios de 26/10/2026</span><span>Capa</span></div>
+</section>
+
+<section class="folha capa">
+  <h2 style="font-size:15pt;margin-bottom:10px">Índice das fichas</h2>
+  <table class="indice">
+    <tr><th>nº</th><th>portal</th><th>item</th><th>documento</th><th>situação hoje</th></tr>
+    <tr class="grupo"><td colspan="5">Família 1 · já importado / reprovado</td></tr>
+    <tr><td>01</td><td>Atlas</td><td>#135 · MA · 06/2026</td><td>Vale Transporte</td><td>não enviado</td></tr>
+    <tr><td>02</td><td>Atlas</td><td>#162 · PI · 07/2026</td><td>Vale Transporte</td><td>não enviado</td></tr>
+    <tr><td>03</td><td>Atlas</td><td>#220 · MA · 08/2026</td><td>Vale Transporte</td><td>não enviado</td></tr>
+    <tr><td>04</td><td>Atlas</td><td>#221 · PI · 08/2026</td><td>Vale Transporte</td><td>não enviado</td></tr>
+    <tr class="grupo"><td colspan="5">Família 3 · arquivo ausente na origem</td></tr>
+    <tr><td>08</td><td>Bernhoeft</td><td>4600029828/2024 RS</td><td>Projeto de Prevenção e Combate a Incêndio e AVCB</td><td>não enviado</td></tr>
+    <tr class="grupo"><td colspan="5">Família 4 · arquivo incompatível com o documento, contrato ou pessoa</td></tr>
+    <tr><td>05</td><td>Atlas</td><td>#273 · RS · 08/2026</td><td>Baixa na CTPS / eSocial</td><td>travado pelo robô</td></tr>
+    <tr><td>06</td><td>Bernhoeft</td><td>4600029828/2024 RS</td><td>Brigada de Incêndio</td><td>não enviado</td></tr>
+    <tr><td>07</td><td>Bernhoeft</td><td>4600029828/2024 RS</td><td>Plano de Emergência Contra Incêndio</td><td>não enviado</td></tr>
+    <tr><td>09</td><td>Bernhoeft</td><td>5000000897/2025 GO</td><td>Análise Ergonômica do Trabalho (AET)</td><td>não enviado</td></tr>
+    <tr><td>10</td><td>Bernhoeft</td><td>5000000897/2025 GO</td><td>Brigada de Incêndio</td><td>não enviado</td></tr>
+    <tr><td>11</td><td>Bernhoeft</td><td>5000000897/2025 GO</td><td>Laudo de Insalubridade / Periculosidade</td><td>não enviado</td></tr>
+    <tr><td>12</td><td>Bernhoeft</td><td>5000000897/2025 GO</td><td>Plano de Emergência Contra Incêndio</td><td>não enviado</td></tr>
+    <tr class="grupo"><td colspan="5">Enviados com conteúdo errado</td></tr>
+    <tr><td>13</td><td>Atlas</td><td>#284 · RS · 08/2026</td><td>ASO Demissional</td><td>em validação no Atlas</td></tr>
+    <tr><td>14</td><td>Atlas</td><td>#297 · AL · 08/2026</td><td>ASO Demissional</td><td>reprovado pelo Atlas</td></tr>
+    <tr><td>15</td><td>Bernhoeft</td><td>00223/2025 PA</td><td>Projeto de Prevenção e Combate a Incêndio e AVCB</td><td>aguardando análise</td></tr>
+    <tr><td>16</td><td>Bernhoeft</td><td>356/2026 MA</td><td>Brigada de Incêndio</td><td>aguardando análise</td></tr>
+  </table>
+  <div class="rodape"><span>Fichas de diagnóstico · envios de 26/10/2026</span><span>Índice</span></div>
+</section>
+
+<!-- ============ 01 ============ -->
+<section class="folha">
+  <div class="cab"><div class="num">01</div><div>
+    <h1>O Atlas não aceita reenviar um Vale Transporte já reprovado</h1>
+    <div class="meta"><b>Família 1</b> · já importado / reprovado · Atlas</div></div></div>
+  <div class="dados">
+    <div><span>Item</span>#135 · pedido 00293</div>
+    <div><span>Documento</span>Vale Transporte (relação, boleto e comprovante)</div>
+    <div><span>Competência</span>06/2026 · Equatorial Maranhão</div>
+    <div><span>Prazo do portal</span>10/07/2026</div>
+    <div><span>Situação no Atlas</span>Reprovado (atrasado)</div>
+    <div><span>Primeiro envio</span>23/07/2026, pela equipe</div>
+  </div>
+
+  <div class="sec"><h3>O que aconteceu</h3>
+    <p>O envio automático tentou mandar o PDF do VT de junho, e o Atlas recusou com a mensagem <span class="cit">"Documento já importado!"</span>. Como o item continuou na lista, a tentativa se repetiu em toda rodada, das 17:31 às 22:19.</p></div>
+
+  <div class="sec"><h3>Por que aconteceu <small>causa raiz</small></h3>
+    <p>Esse item já tinha um arquivo enviado em julho, que foi reprovado. O Atlas só aceita um arquivo novo depois que o antigo é excluído, e a exclusão é manual, na tela do portal.</p>
+    <p>O robô deveria ter percebido isso e não tentado. Ele confere se o status começa com "Delay" (atrasado), e o status deste item é "DelayRejected" (atrasado e reprovado). Como o começo é igual, ele passou.</p>
+    <p>Além disso, à tarde a busca no SharePoint achou o VT de junho e marcou a pendência como "pronta para enviar", sem olhar que ela já estava reprovada.</p></div>
+
+  <div class="sec"><h3>Como sabemos <small>evidência</small></h3>
+    <ul>
+      <li>O registro de envio mostra a mesma recusa (código 22006) às 17:31, 19:16, 20:17 e 22:19, sempre com status "DelayRejected".</li>
+      <li>No banco, a pendência estava como pronta, com situação "Reprovado (atrasado)", envio anterior em 23/07 e atualização da busca no SharePoint às 13:52 de 26/10.</li>
+      <li>No código do próprio portal, o botão de enviar só aparece quando o item não tem arquivo, e o de excluir só aparece se o arquivo ainda não foi validado.</li>
+    </ul></div>
+
+  <div class="sec"><h3>O que fazer agora <small>correção</small></h3>
+    <p>Abrir o item no Atlas e ler o motivo da reprovação. Se o PDF de hoje resolve o motivo, alguém da equipe exclui o arquivo antigo e envia o novo. Se não resolve, pedimos à NIP o documento correto. Enquanto isso, o item fica segurado no painel para o robô não tentar de novo.</p></div>
+
+  <div class="sec"><h3>Como vamos confirmar <small>reteste</small></h3>
+    <p>Com o robô corrigido, a verificação deste item deve parar antes de enviar e avisar "reprovado: excluir o arquivo no portal primeiro". Depois do reenvio manual, o Atlas deve mostrar "Em análise".</p></div>
+
+  <div class="sec"><h3>Para não acontecer de novo <small>regra preventiva</small></h3>
+    <ul>
+      <li>O robô só envia quando o status é exatamente "atrasado" ou "pendente". Item reprovado ou que já tem arquivo vai para uma lista própria no painel, "precisa de ação no portal", com o motivo.</li>
+      <li>As buscas no SharePoint e na Factorial deixam de marcar como pronta uma pendência já reprovada.</li>
+      <li>Se o Atlas recusar um item como "já importado", ele sai do automático até alguém resolver, em vez de ser tentado a cada rodada.</li>
+    </ul></div>
+
+  <div class="assin"><div>Responsável</div><div>Prazo</div><div>Reteste aprovado em</div></div>
+  <div class="rodape"><span>Fichas de diagnóstico · envios de 26/10/2026</span><span>Ficha 01 de 16</span></div>
+</section>
+
+<!-- ============ 02 ============ -->
+<section class="folha">
+  <div class="cab"><div class="num">02</div><div>
+    <h1>O Atlas não aceita reenviar um Vale Transporte já reprovado</h1>
+    <div class="meta"><b>Família 1</b> · já importado / reprovado · Atlas</div></div></div>
+  <div class="dados">
+    <div><span>Item</span>#162 · pedido 00007</div>
+    <div><span>Documento</span>Vale Transporte (relação, boleto e comprovante)</div>
+    <div><span>Competência</span>07/2026 · Equatorial Piauí</div>
+    <div><span>Prazo do portal</span>10/08/2026</div>
+    <div><span>Situação no Atlas</span>Reprovado (atrasado)</div>
+    <div><span>Primeiro envio</span>13/08/2026, pela equipe</div>
+  </div>
+
+  <div class="sec"><h3>O que aconteceu</h3>
+    <p>É o mesmo caso da ficha 01, agora com o VT de julho do Piauí. O automático tentou enviar e o Atlas respondeu <span class="cit">"Documento já importado!"</span> em todas as rodadas a partir das 17:31.</p></div>
+
+  <div class="sec"><h3>Por que aconteceu <small>causa raiz</small></h3>
+    <p>O arquivo enviado em agosto foi reprovado e continua anexado ao item. Enquanto ele estiver lá, o Atlas não aceita outro.</p>
+    <p>O robô não barrou porque confunde "atrasado e reprovado" com "atrasado". E a busca no SharePoint marcou a pendência como pronta sem considerar a reprovação.</p></div>
+
+  <div class="sec"><h3>Como sabemos <small>evidência</small></h3>
+    <ul>
+      <li>Registro de envio: recusa com código 22006 às 17:31, 19:16, 20:17 e 22:19, status "DelayRejected".</li>
+      <li>Banco: pendência pronta para envio, situação "Reprovado (atrasado)", envio anterior em 13/08, atualizada pela busca no SharePoint às 13:52 de 26/10.</li>
+    </ul></div>
+
+  <div class="sec"><h3>O que fazer agora <small>correção</small></h3>
+    <p>Ler no Atlas por que o VT de julho foi reprovado. Se o PDF atual resolve, excluir o arquivo antigo na tela e reenviar. Se não, pedir à NIP o documento certo. Até lá, o item fica segurado no painel.</p></div>
+
+  <div class="sec"><h3>Como vamos confirmar <small>reteste</small></h3>
+    <p>O robô deve parar este item na verificação, sem tentar o envio. Depois do reenvio manual, o status no Atlas deve passar para "Em análise".</p></div>
+
+  <div class="sec"><h3>Para não acontecer de novo <small>regra preventiva</small></h3>
+    <p>As mesmas três mudanças da ficha 01: o robô só envia com status exato, as buscas não marcam como pronta uma pendência reprovada, e uma recusa de "já importado" tira o item do automático.</p></div>
+
+  <div class="assin"><div>Responsável</div><div>Prazo</div><div>Reteste aprovado em</div></div>
+  <div class="rodape"><span>Fichas de diagnóstico · envios de 26/10/2026</span><span>Ficha 02 de 16</span></div>
+</section>
+
+<!-- ============ 03 ============ -->
+<section class="folha">
+  <div class="cab"><div class="num">03</div><div>
+    <h1>O Atlas não aceita reenviar um Vale Transporte já reprovado</h1>
+    <div class="meta"><b>Família 1</b> · já importado / reprovado · Atlas</div></div></div>
+  <div class="dados">
+    <div><span>Item</span>#220 · pedido 00293</div>
+    <div><span>Documento</span>Vale Transporte (relação, boleto e comprovante)</div>
+    <div><span>Competência</span>08/2026 · Equatorial Maranhão</div>
+    <div><span>Prazo do portal</span>10/09/2026</div>
+    <div><span>Situação no Atlas</span>Reprovado (atrasado)</div>
+    <div><span>Primeiro envio</span>02/10/2026, pela equipe</div>
+  </div>
+
+  <div class="sec"><h3>O que aconteceu</h3>
+    <p>VT de agosto do Maranhão. O automático tentou enviar o PDF montado a partir do SharePoint e o Atlas recusou com <span class="cit">"Documento já importado!"</span>, de novo em todas as rodadas desde as 17:31.</p></div>
+
+  <div class="sec"><h3>Por que aconteceu <small>causa raiz</small></h3>
+    <p>A equipe enviou um arquivo em 02/10, que foi reprovado e continua no item. O Atlas exige excluir esse arquivo antes de aceitar outro. O robô deixou passar pelo mesmo erro de leitura do status descrito na ficha 01.</p></div>
+
+  <div class="sec"><h3>Como sabemos <small>evidência</small></h3>
+    <ul>
+      <li>Registro de envio: recusa com código 22006 às 17:31, 19:16, 20:17 e 22:19, status "DelayRejected".</li>
+      <li>Banco: pendência pronta, situação "Reprovado (atrasado)", envio anterior em 02/10, atualização do SharePoint às 13:52 de 26/10.</li>
+      <li>Na conferência de 19/10, o valor do boleto de agosto (R$ 5.699,30, mais o complementar de R$ 386,40) batia com o comprovante. É possível que o PDF de hoje resolva a reprovação, mas isso depende do motivo informado pelo Atlas.</li>
+    </ul></div>
+
+  <div class="sec"><h3>O que fazer agora <small>correção</small></h3>
+    <p>Ler o motivo da reprovação. Se for algo que o PDF novo corrige, excluir o arquivo antigo no portal e reenviar. O item fica segurado no painel até lá.</p></div>
+
+  <div class="sec"><h3>Como vamos confirmar <small>reteste</small></h3>
+    <p>Verificação do robô barrando o item sem enviar. Depois do reenvio manual, status "Em análise" no Atlas.</p></div>
+
+  <div class="sec"><h3>Para não acontecer de novo <small>regra preventiva</small></h3>
+    <p>As mesmas da ficha 01.</p></div>
+
+  <div class="assin"><div>Responsável</div><div>Prazo</div><div>Reteste aprovado em</div></div>
+  <div class="rodape"><span>Fichas de diagnóstico · envios de 26/10/2026</span><span>Ficha 03 de 16</span></div>
+</section>
+
+<!-- ============ 04 ============ -->
+<section class="folha">
+  <div class="cab"><div class="num">04</div><div>
+    <h1>O Atlas não aceita reenviar um Vale Transporte já reprovado</h1>
+    <div class="meta"><b>Família 1</b> · já importado / reprovado · Atlas</div></div></div>
+  <div class="dados">
+    <div><span>Item</span>#221 · pedido 00007</div>
+    <div><span>Documento</span>Vale Transporte (relação, boleto e comprovante)</div>
+    <div><span>Competência</span>08/2026 · Equatorial Piauí</div>
+    <div><span>Prazo do portal</span>10/09/2026</div>
+    <div><span>Situação no Atlas</span>Reprovado (atrasado)</div>
+    <div><span>Primeiro envio</span>02/10/2026, pela equipe</div>
+  </div>
+
+  <div class="sec"><h3>O que aconteceu</h3>
+    <p>VT de agosto do Piauí, com o mesmo PDF usado na ficha 03. O Atlas recusou com <span class="cit">"Documento já importado!"</span> em todas as tentativas.</p></div>
+
+  <div class="sec"><h3>Por que aconteceu <small>causa raiz</small></h3>
+    <p>Igual às fichas anteriores: há um arquivo reprovado preso ao item desde 02/10, o Atlas não aceita outro por cima, e o robô não reconheceu o status de reprovado.</p></div>
+
+  <div class="sec"><h3>Como sabemos <small>evidência</small></h3>
+    <ul>
+      <li>Registro de envio: recusa com código 22006 às 17:31, 19:16, 20:17 e 22:19, status "DelayRejected".</li>
+      <li>Banco: pendência pronta, situação "Reprovado (atrasado)", envio anterior em 02/10, atualização do SharePoint às 13:52 de 26/10.</li>
+      <li>Os itens #220 (MA) e #221 (PI) usam o mesmo VT de agosto da NIP. Se o motivo da reprovação for o mesmo, a correção serve para os dois.</li>
+    </ul></div>
+
+  <div class="sec"><h3>O que fazer agora <small>correção</small></h3>
+    <p>Resolver junto com a ficha 03: ler o motivo, excluir o arquivo antigo e reenviar, se o PDF atual estiver certo. Item segurado no painel até lá.</p></div>
+
+  <div class="sec"><h3>Como vamos confirmar <small>reteste</small></h3>
+    <p>Mesmo critério das fichas 01 a 03.</p></div>
+
+  <div class="sec"><h3>Para não acontecer de novo <small>regra preventiva</small></h3>
+    <p>As mesmas da ficha 01.</p></div>
+
+  <div class="assin"><div>Responsável</div><div>Prazo</div><div>Reteste aprovado em</div></div>
+  <div class="rodape"><span>Fichas de diagnóstico · envios de 26/10/2026</span><span>Ficha 04 de 16</span></div>
+</section>
+
+<!-- ============ 05 ============ -->
+<section class="folha">
+  <div class="cab"><div class="num">05</div><div>
+    <h1>O mesmo eSocial foi anexado a quatro funcionários</h1>
+    <div class="meta"><b>Família 4</b> · arquivo de outra pessoa · Atlas</div></div></div>
+  <div class="dados">
+    <div><span>Item</span>#273 · pedido 00230</div>
+    <div><span>Documento</span>Baixa na CTPS e/ou eSocial</div>
+    <div><span>Competência</span>08/2026 · Equatorial Rio Grande do Sul</div>
+    <div><span>Prazo do portal</span>02/08/2026</div>
+    <div><span>Situação</span>travado pelo robô, não enviado</div>
+    <div><span>Itens ligados</span>#269, #270 e #275</div>
+  </div>
+
+  <div class="sec"><h3>O que aconteceu</h3>
+    <p>O robô segurou o #273 porque o PDF dele é idêntico ao de outros três funcionários. Aqui a trava fez o que devia: impediu que o eSocial de uma pessoa fosse enviado como se fosse de outra.</p></div>
+
+  <div class="sec"><h3>Por que aconteceu <small>causa raiz</small></h3>
+    <p>Na Factorial, o mesmo arquivo "eSocial.pdf", de 23 páginas, foi anexado na ficha de quatro pessoas. O robô pega o documento que está na ficha de cada funcionário, então os quatro itens ficaram com o mesmo arquivo. Pelo conteúdo, ele pertence ao funcionário do #269.</p></div>
+
+  <div class="sec"><h3>Como sabemos <small>evidência</small></h3>
+    <ul>
+      <li>Os quatro PDFs têm o mesmo tamanho (524.330 bytes) e a mesma impressão digital (SHA-256).</li>
+      <li>Na leitura do texto feita em 19/10, só o CPF do funcionário do #269 aparece no documento.</li>
+      <li>O painel e o robô mostram o aviso: "o mesmo arquivo está na pendência de outro funcionário".</li>
+    </ul></div>
+
+  <div class="sec"><h3>O que fazer agora <small>correção</small></h3>
+    <ul>
+      <li>Pedir à NIP que anexe na Factorial o eSocial certo (S-2299) de cada um dos funcionários dos itens #270, #273 e #275.</li>
+      <li>Com autorização, voltar esses três itens para "pendente" no banco, para o robô buscar de novo.</li>
+      <li>Conferir no Atlas se algum dos quatro já subiu com esse arquivo. Se sim, ele passa a ser tratado como envio errado.</li>
+    </ul></div>
+
+  <div class="sec"><h3>Como vamos confirmar <small>reteste</small></h3>
+    <p>Depois da troca, os quatro PDFs devem ser diferentes entre si e cada um deve trazer o CPF do seu funcionário. O aviso de arquivo repetido deve sumir.</p></div>
+
+  <div class="sec"><h3>Para não acontecer de novo <small>regra preventiva</small></h3>
+    <ul>
+      <li>A trava de arquivo repetido entre pessoas já existe e funcionou. Ela continua.</li>
+      <li>Vamos acrescentar uma segunda conferência: em documentos individuais (ASO, eSocial, aviso, TRCT, GFD), o CPF da pendência precisa aparecer no texto do PDF. Se não aparecer, o item vai para "com problema".</li>
+    </ul></div>
+
+  <div class="assin"><div>Responsável</div><div>Prazo</div><div>Reteste aprovado em</div></div>
+  <div class="rodape"><span>Fichas de diagnóstico · envios de 26/10/2026</span><span>Ficha 05 de 16</span></div>
+</section>
+
+<!-- ============ 06 ============ -->
+<section class="folha">
+  <div class="cab"><div class="num">06</div><div>
+    <h1>A declaração de Brigada encontrada é de outro contrato</h1>
+    <div class="meta"><b>Família 4</b> · arquivo de outro contrato · Bernhoeft</div></div></div>
+  <div class="dados">
+    <div><span>Contrato</span>4600029828/2024 · RS</div>
+    <div><span>Documento</span>Brigada de Incêndio</div>
+    <div><span>Onde entra</span>Documentos da empresa</div>
+    <div><span>Arquivo escolhido</span>Declaração de não aplicabilidade… KAL</div>
+    <div><span>Situação</span>não enviado</div>
+    <div><span>Antes estava como</span>família 2 (genérico)</div>
+  </div>
+
+  <div class="sec"><h3>O que aconteceu</h3>
+    <p>Para a Brigada do contrato do RS, o sistema escolheu uma declaração de não aplicabilidade com o nome "KAL". Como o nome do arquivo não cita contrato nem estado, ele ficou com confiança baixa e o automático não enviou.</p></div>
+
+  <div class="sec"><h3>Por que aconteceu <small>causa raiz</small></h3>
+    <p>Não existe na Factorial um documento de Brigada para este contrato do RS. Sem opção melhor, o sistema ficou com o arquivo mais próximo pelo nome. Ele escolhe só pelo nome do arquivo e não lê o conteúdo, e é no conteúdo que aparece que a declaração é de outro contrato.</p></div>
+
+  <div class="sec"><h3>Como sabemos <small>evidência</small></h3>
+    <ul>
+      <li>O texto do PDF diz: <span class="cit">"declaramos que não possuímos Brigada de Incêndio nos seguintes contratos… Contrato nº 00757/2025 - GO - Subcontratada: KAL ENGENHARIA LTDA"</span>. A assinatura eletrônica é de 11/03/2026.</li>
+      <li>O arquivo está na pasta HSEQ da Factorial desde 11/03/2026, e o sistema o classificou como "genérico: o nome não cita contrato nem estado".</li>
+    </ul></div>
+
+  <div class="sec"><h3>O que fazer agora <small>correção</small></h3>
+    <p>O HSEQ da NIP precisa emitir o documento de Brigada deste contrato: a relação de brigadistas com os certificados ou, se não se aplica, uma declaração de não aplicabilidade citando o 4600029828/2024-RS. O arquivo deve entrar na Factorial com o número do contrato no nome.</p></div>
+
+  <div class="sec"><h3>Como vamos confirmar <small>reteste</small></h3>
+    <p>Na leitura seguinte, o sistema deve escolher o arquivo novo com confiança alta, e o texto deve citar o contrato 4600029828/2024.</p></div>
+
+  <div class="sec"><h3>Para não acontecer de novo <small>regra preventiva</small></h3>
+    <ul>
+      <li>O sistema passa a ler o texto do PDF. Se o documento cita um número de contrato diferente do pedido, o arquivo é descartado, mesmo com nome genérico.</li>
+      <li>Combinar com o HSEQ que todo documento de empresa entra na Factorial com o número do contrato no nome.</li>
+    </ul></div>
+
+  <div class="assin"><div>Responsável</div><div>Prazo</div><div>Reteste aprovado em</div></div>
+  <div class="rodape"><span>Fichas de diagnóstico · envios de 26/10/2026</span><span>Ficha 06 de 16</span></div>
+</section>
+
+<!-- ============ 07 ============ -->
+<section class="folha">
+  <div class="cab"><div class="num">07</div><div>
+    <h1>A declaração de Plano de Emergência encontrada é de outro contrato</h1>
+    <div class="meta"><b>Família 4</b> · arquivo de outro contrato · Bernhoeft</div></div></div>
+  <div class="dados">
+    <div><span>Contrato</span>4600029828/2024 · RS</div>
+    <div><span>Documento</span>Plano de Emergência Contra Incêndio</div>
+    <div><span>Onde entra</span>Documentos da empresa</div>
+    <div><span>Arquivo escolhido</span>Declaração de não aplicabilidade… KAL</div>
+    <div><span>Situação</span>não enviado</div>
+    <div><span>Antes estava como</span>família 2 (genérico)</div>
+  </div>
+
+  <div class="sec"><h3>O que aconteceu</h3>
+    <p>Mesma situação da ficha 06, agora com o Plano de Emergência: o sistema escolheu a declaração "KAL" de Plano de Emergência com confiança baixa, e ela não foi enviada.</p></div>
+
+  <div class="sec"><h3>Por que aconteceu <small>causa raiz</small></h3>
+    <p>Não há Plano de Emergência nem declaração deste contrato do RS na Factorial. A declaração que existe é do contrato 00757/2025-GO, e isso só aparece no texto, que o sistema não lê.</p></div>
+
+  <div class="sec"><h3>Como sabemos <small>evidência</small></h3>
+    <ul>
+      <li>O texto do PDF diz: <span class="cit">"não possuímos Plano de Emergência Contra Incêndio nos seguintes contratos… Contrato nº 00757/2025 - GO - Subcontratada: KAL ENGENHARIA LTDA"</span>. A assinatura é de 11/03/2026.</li>
+      <li>Arquivo da pasta HSEQ, de 11/03/2026, classificado como "genérico".</li>
+    </ul></div>
+
+  <div class="sec"><h3>O que fazer agora <small>correção</small></h3>
+    <p>Pedir ao HSEQ o Plano de Emergência do contrato 4600029828/2024-RS ou a declaração de não aplicabilidade citando esse contrato, com o número no nome do arquivo.</p></div>
+
+  <div class="sec"><h3>Como vamos confirmar <small>reteste</small></h3>
+    <p>Arquivo novo escolhido com confiança alta e texto citando 4600029828/2024-RS.</p></div>
+
+  <div class="sec"><h3>Para não acontecer de novo <small>regra preventiva</small></h3>
+    <p>As mesmas da ficha 06: o sistema confere o contrato no texto do PDF, e o HSEQ põe o número do contrato no nome do arquivo.</p></div>
+
+  <div class="assin"><div>Responsável</div><div>Prazo</div><div>Reteste aprovado em</div></div>
+  <div class="rodape"><span>Fichas de diagnóstico · envios de 26/10/2026</span><span>Ficha 07 de 16</span></div>
+</section>
+
+<!-- ============ 08 ============ -->
+<section class="folha">
+  <div class="cab"><div class="num">08</div><div>
+    <h1>O AVCB do contrato do RS não está na Factorial</h1>
+    <div class="meta"><b>Família 3</b> · arquivo ausente na origem · Bernhoeft</div></div></div>
+  <div class="dados">
+    <div><span>Contrato</span>4600029828/2024 · RS</div>
+    <div><span>Documento</span>Projeto de Prevenção e Combate a Incêndio e AVCB</div>
+    <div><span>Onde entra</span>Documentos da empresa</div>
+    <div><span>Arquivo escolhido</span>nenhum</div>
+    <div><span>Situação</span>não enviado</div>
+    <div><span>No portal</span>Não Entregue</div>
+  </div>
+
+  <div class="sec"><h3>O que aconteceu</h3>
+    <p>O sistema procurou o AVCB deste contrato e não encontrou nada. Sem arquivo, não havia o que enviar.</p></div>
+
+  <div class="sec"><h3>Por que aconteceu <small>causa raiz</small></h3>
+    <p>O documento nunca foi anexado na Factorial. O único arquivo parecido na pasta HSEQ é do contrato 00223/2025 do Pará, e o sistema fez certo em descartá-lo para o RS.</p></div>
+
+  <div class="sec"><h3>Como sabemos <small>evidência</small></h3>
+    <ul>
+      <li>O sistema registrou "nenhum arquivo deste tipo para este contrato ou estado", depois de procurar por AVCB, PPCI e "combate a incêndio".</li>
+      <li>O arquivo parecido que existe na pasta cita o contrato do Pará ("…COMBATE A INCENDIO CT 00223 - 2025").</li>
+      <li>No portal, a pendência segue "Não Entregue".</li>
+    </ul></div>
+
+  <div class="sec"><h3>O que fazer agora <small>correção</small></h3>
+    <p>O HSEQ providencia o AVCB/PPCI do RS. Se ele não se aplica, por exemplo porque a equipe trabalha dentro das instalações do cliente, providencia a declaração de não aplicabilidade de AVCB citando o 4600029828/2024-RS. Em qualquer caso, o arquivo entra na Factorial com o número do contrato no nome.</p></div>
+
+  <div class="sec"><h3>Como vamos confirmar <small>reteste</small></h3>
+    <p>Na leitura seguinte, a pendência deve sair de "não encontrado" e aparecer como pronta, com confiança alta.</p></div>
+
+  <div class="sec"><h3>Para não acontecer de novo <small>regra preventiva</small></h3>
+    <ul>
+      <li>O painel ganha uma lista "falta na origem", com o responsável (HSEQ) e o prazo do portal, e o HSEQ é avisado quando aparece uma pendência sem arquivo.</li>
+      <li>Manter com o HSEQ a lista de documentos de empresa exigidos por contrato, para o arquivo já existir quando a pendência aparecer.</li>
+    </ul></div>
+
+  <div class="assin"><div>Responsável</div><div>Prazo</div><div>Reteste aprovado em</div></div>
+  <div class="rodape"><span>Fichas de diagnóstico · envios de 26/10/2026</span><span>Ficha 08 de 16</span></div>
+</section>
+
+<!-- ============ 09 ============ -->
+<section class="folha">
+  <div class="cab"><div class="num">09</div><div>
+    <h1>A AET escolhida para Goiás é de Porto Velho, em Rondônia</h1>
+    <div class="meta"><b>Família 4</b> · arquivo de outro local · Bernhoeft</div></div></div>
+  <div class="dados">
+    <div><span>Contrato</span>5000000897/2025 · GO</div>
+    <div><span>Documento</span>Análise Ergonômica do Trabalho (AET)</div>
+    <div><span>Onde entra</span>Documentos da empresa</div>
+    <div><span>Arquivo escolhido</span>NIP_AET_Porto_Velho.pdf</div>
+    <div><span>Situação</span>não enviado</div>
+    <div><span>No portal</span>Não Entregue</div>
+  </div>
+
+  <div class="sec"><h3>O que aconteceu</h3>
+    <p>Para a AET do contrato de Goiás, o sistema escolheu o arquivo de Porto Velho com confiança baixa. O automático não enviou, e ainda bem: o documento é de outro estado.</p></div>
+
+  <div class="sec"><h3>Por que aconteceu <small>causa raiz</small></h3>
+    <p>Não há AET do contrato de Goiás na Factorial. O sistema reconhece o estado pela sigla (GO, RO, MA…), mas não pelo nome da cidade. Por isso não entendeu que "Porto Velho" é Rondônia e não descartou o arquivo.</p></div>
+
+  <div class="sec"><h3>Como sabemos <small>evidência</small></h3>
+    <ul>
+      <li>O texto do PDF diz: <span class="cit">"Análise Ergonômica do Trabalho (AET)… Edição 26.01, 30/07/2026… PORTO VELHO/RO"</span>. A assinatura eletrônica é de 20/10/2026.</li>
+      <li>Havia ainda outra versão, "NIP_AET_PORTO_VELHO_26.02.pdf", que o sistema deixou de fora porque a assinatura estava pendente.</li>
+    </ul></div>
+
+  <div class="sec"><h3>O que fazer agora <small>correção</small></h3>
+    <p>O HSEQ anexa na Factorial a AET do contrato 5000000897/2025-GO, com o contrato ou o estado no nome do arquivo.</p></div>
+
+  <div class="sec"><h3>Como vamos confirmar <small>reteste</small></h3>
+    <p>O sistema deve descartar o arquivo de Porto Velho para Goiás e escolher o novo com confiança alta ou média.</p></div>
+
+  <div class="sec"><h3>Para não acontecer de novo <small>regra preventiva</small></h3>
+    <ul>
+      <li>O sistema passa a reconhecer as cidades das unidades (Porto Velho é RO, Goiânia é GO, São Luís é MA…), no nome e no texto do arquivo.</li>
+      <li>Se o PDF cita outro estado, ou uma cidade de outro estado, o arquivo é descartado.</li>
+    </ul></div>
+
+  <div class="assin"><div>Responsável</div><div>Prazo</div><div>Reteste aprovado em</div></div>
+  <div class="rodape"><span>Fichas de diagnóstico · envios de 26/10/2026</span><span>Ficha 09 de 16</span></div>
+</section>
+
+<!-- ============ 10 ============ -->
+<section class="folha">
+  <div class="cab"><div class="num">10</div><div>
+    <h1>A declaração de Brigada de Goiás é de outro contrato no mesmo estado</h1>
+    <div class="meta"><b>Família 4</b> · arquivo de outro contrato · Bernhoeft</div></div></div>
+  <div class="dados">
+    <div><span>Contrato</span>5000000897/2025 · GO</div>
+    <div><span>Documento</span>Brigada de Incêndio</div>
+    <div><span>Onde entra</span>Documentos da empresa</div>
+    <div><span>Arquivo escolhido</span>Declaração de não aplicabilidade… KAL</div>
+    <div><span>Situação</span>não enviado</div>
+    <div><span>Antes estava como</span>família 2 (genérico)</div>
+  </div>
+
+  <div class="sec"><h3>O que aconteceu</h3>
+    <p>O sistema escolheu para Goiás a mesma declaração "KAL" da ficha 06, com confiança baixa, e não enviou.</p></div>
+
+  <div class="sec"><h3>Por que aconteceu <small>causa raiz</small></h3>
+    <p>Este caso engana mais do que os do RS: a declaração é de Goiás, mas do contrato 00757/2025 (subcontratada KAL), e não do 5000000897/2025. São dois contratos diferentes no mesmo estado. Não existe declaração de Brigada do 5000000897 na Factorial.</p></div>
+
+  <div class="sec"><h3>Como sabemos <small>evidência</small></h3>
+    <ul>
+      <li>O texto do PDF diz: <span class="cit">"não possuímos Brigada de Incêndio… Contrato nº 00757/2025 - GO - Subcontratada: KAL ENGENHARIA LTDA"</span>.</li>
+      <li>É o mesmo arquivo da ficha 06, classificado como "genérico".</li>
+    </ul></div>
+
+  <div class="sec"><h3>O que fazer agora <small>correção</small></h3>
+    <p>Pedir ao HSEQ o documento de Brigada do 5000000897/2025-GO. Se a situação da KAL também vale para este contrato, a declaração precisa ser reemitida citando o 5000000897/2025.</p></div>
+
+  <div class="sec"><h3>Como vamos confirmar <small>reteste</small></h3>
+    <p>Arquivo novo escolhido com confiança alta e texto citando 5000000897/2025.</p></div>
+
+  <div class="sec"><h3>Para não acontecer de novo <small>regra preventiva</small></h3>
+    <p>As mesmas da ficha 06. Este caso mostra por que a conferência tem que ser pelo número do contrato: olhando só o estado, o arquivo passaria, porque os dois contratos são de Goiás.</p></div>
+
+  <div class="assin"><div>Responsável</div><div>Prazo</div><div>Reteste aprovado em</div></div>
+  <div class="rodape"><span>Fichas de diagnóstico · envios de 26/10/2026</span><span>Ficha 10 de 16</span></div>
+</section>
+
+<!-- ============ 11 ============ -->
+<section class="folha">
+  <div class="cab"><div class="num">11</div><div>
+    <h1>O laudo escolhido é um LTCAT de outro cliente, do ramo de gás</h1>
+    <div class="meta"><b>Família 4</b> · arquivo de outro contrato · Bernhoeft</div></div></div>
+  <div class="dados">
+    <div><span>Contrato</span>5000000897/2025 · GO</div>
+    <div><span>Documento</span>Laudo de Insalubridade / Periculosidade</div>
+    <div><span>Onde entra</span>Documentos da empresa</div>
+    <div><span>Arquivo escolhido</span>LTCAT (2).pdf</div>
+    <div><span>Situação</span>não enviado</div>
+    <div><span>No portal</span>Não Entregue</div>
+  </div>
+
+  <div class="sec"><h3>O que aconteceu</h3>
+    <p>O sistema escolheu um LTCAT como laudo de insalubridade e periculosidade para Goiás, com confiança baixa. Não foi enviado.</p></div>
+
+  <div class="sec"><h3>Por que aconteceu <small>causa raiz</small></h3>
+    <p>O laudo deste contrato não está na Factorial. A regra do sistema aceita "LTCAT" como laudo deste tipo, e o único LTCAT na pasta é de outro contrato, de distribuição de gás natural.</p></div>
+
+  <div class="sec"><h3>Como sabemos <small>evidência</small></h3>
+    <ul>
+      <li>O texto do PDF diz: <span class="cit">"LTCAT, Edição 25.01, 19 de novembro de 2025… Distribuição de gás natural… Objeto do contrato: serviços contínuos de apoio à manutenção de gasodutos"</span>.</li>
+      <li>O arquivo está na pasta HSEQ desde 19/11/2025 e foi classificado como "genérico".</li>
+    </ul></div>
+
+  <div class="sec"><h3>O que fazer agora <small>correção</small></h3>
+    <p>O HSEQ anexa o laudo de insalubridade e periculosidade do contrato 5000000897/2025-GO. Vale também perguntar à Milena se um LTCAT do contrato certo atende esse requisito.</p></div>
+
+  <div class="sec"><h3>Como vamos confirmar <small>reteste</small></h3>
+    <p>O sistema deve escolher o laudo do contrato de Goiás, e o texto deve trazer o objeto do contrato com a Equatorial.</p></div>
+
+  <div class="sec"><h3>Para não acontecer de novo <small>regra preventiva</small></h3>
+    <ul>
+      <li>O sistema confere no texto o número e o objeto do contrato. Se forem de outro cliente ou contrato, o arquivo é descartado.</li>
+      <li>"LTCAT" sai da regra deste documento até a Milena confirmar que ele serve.</li>
+    </ul></div>
+
+  <div class="assin"><div>Responsável</div><div>Prazo</div><div>Reteste aprovado em</div></div>
+  <div class="rodape"><span>Fichas de diagnóstico · envios de 26/10/2026</span><span>Ficha 11 de 16</span></div>
+</section>
+
+<!-- ============ 12 ============ -->
+<section class="folha">
+  <div class="cab"><div class="num">12</div><div>
+    <h1>A declaração de Plano de Emergência de Goiás é de outro contrato</h1>
+    <div class="meta"><b>Família 4</b> · arquivo de outro contrato · Bernhoeft</div></div></div>
+  <div class="dados">
+    <div><span>Contrato</span>5000000897/2025 · GO</div>
+    <div><span>Documento</span>Plano de Emergência Contra Incêndio</div>
+    <div><span>Onde entra</span>Documentos da empresa</div>
+    <div><span>Arquivo escolhido</span>Declaração de não aplicabilidade… KAL</div>
+    <div><span>Situação</span>não enviado</div>
+    <div><span>Antes estava como</span>família 2 (genérico)</div>
+  </div>
+
+  <div class="sec"><h3>O que aconteceu</h3>
+    <p>O sistema escolheu a mesma declaração "KAL" da ficha 07, com confiança baixa, e ela não foi enviada.</p></div>
+
+  <div class="sec"><h3>Por que aconteceu <small>causa raiz</small></h3>
+    <p>A declaração é do contrato 00757/2025-GO, e não do 5000000897/2025-GO. Não há Plano de Emergência nem declaração deste contrato na Factorial.</p></div>
+
+  <div class="sec"><h3>Como sabemos <small>evidência</small></h3>
+    <ul>
+      <li>O texto do PDF diz: <span class="cit">"não possuímos Plano de Emergência Contra Incêndio… Contrato nº 00757/2025 - GO - Subcontratada: KAL ENGENHARIA LTDA"</span>.</li>
+      <li>É o mesmo arquivo da ficha 07, classificado como "genérico".</li>
+    </ul></div>
+
+  <div class="sec"><h3>O que fazer agora <small>correção</small></h3>
+    <p>Pedir ao HSEQ o Plano de Emergência do 5000000897/2025-GO ou a declaração de não aplicabilidade citando esse contrato, com o número no nome do arquivo.</p></div>
+
+  <div class="sec"><h3>Como vamos confirmar <small>reteste</small></h3>
+    <p>Arquivo novo escolhido com confiança alta e texto citando 5000000897/2025.</p></div>
+
+  <div class="sec"><h3>Para não acontecer de novo <small>regra preventiva</small></h3>
+    <p>As mesmas das fichas 06 e 10: conferir o número do contrato no texto, não só o estado.</p></div>
+
+  <div class="assin"><div>Responsável</div><div>Prazo</div><div>Reteste aprovado em</div></div>
+  <div class="rodape"><span>Fichas de diagnóstico · envios de 26/10/2026</span><span>Ficha 12 de 16</span></div>
+</section>
+
+<!-- ============ 13 ============ -->
+<section class="folha">
+  <div class="cab"><div class="num">13</div><div>
+    <h1>O ASO foi enviado junto com o pedido de exames e a ficha clínica</h1>
+    <div class="meta"><b>Enviado com conteúdo errado</b> · dados de saúde (LGPD) · Atlas</div></div></div>
+  <div class="dados">
+    <div><span>Item</span>#284 · pedido 00230</div>
+    <div><span>Documento</span>ASO Demissional</div>
+    <div><span>Competência</span>08/2026 · Equatorial Rio Grande do Sul</div>
+    <div><span>Enviado em</span>20/10/2026 às 11:13, pelo painel</div>
+    <div><span>Situação no Atlas</span>Em análise</div>
+    <div><span>Páginas enviadas</span>5 (o correto seria 1)</div>
+  </div>
+
+  <div class="sec"><h3>O que aconteceu</h3>
+    <p>O ASO subiu num PDF de 5 páginas: pedido de exames, ASO e ficha clínica. Só a página do ASO deveria ter ido. As outras têm informações de saúde do funcionário que a Equatorial não pediu, e que a LGPD protege.</p></div>
+
+  <div class="sec"><h3>Por que aconteceu <small>causa raiz</small></h3>
+    <p>Na Factorial, o exame demissional foi anexado inteiro, num arquivo só. O robô envia o arquivo como está e não confere as páginas do ASO.</p>
+    <p>A conferência de 19/10 já tinha apontado este item, mas ele não foi segurado no painel e acabou sendo enviado no dia seguinte.</p></div>
+
+  <div class="sec"><h3>Como sabemos <small>evidência</small></h3>
+    <ul>
+      <li>O PDF enviado tem 5 páginas (cerca de 2,8 MB). Um ASO correto do mesmo lote, o #322, tem 1 página.</li>
+      <li>O relatório da conferência de 19/10 registra: <span class="cit">"#284 (5 páginas: pedido de exames, ASO e ficha clínica)… não pode sair assim (LGPD)"</span>.</li>
+      <li>O histórico de envios registra o envio em 20/10 às 11:13, pelo painel, e o Atlas mostra o item em validação.</li>
+    </ul></div>
+
+  <div class="sec"><h3>O que fazer agora <small>correção</small></h3>
+    <ul>
+      <li>Pedir à NIP o ASO em uma página. Se o portal ainda permitir, excluir o arquivo enviado e mandar só o ASO. Se não permitir, pedir ao Atlas ou à Equatorial que removam o arquivo.</li>
+      <li>Avisar o responsável de privacidade (DPO) da NIP, porque dados de saúde foram compartilhados além do necessário.</li>
+    </ul></div>
+
+  <div class="sec"><h3>Como vamos confirmar <small>reteste</small></h3>
+    <p>O arquivo no Atlas deve ter uma página, só com o ASO, e o item deve voltar para "Em análise" com o arquivo novo.</p></div>
+
+  <div class="sec"><h3>Para não acontecer de novo <small>regra preventiva</small></h3>
+    <ul>
+      <li>O ASO só sai se tiver uma página, ou só as páginas com "Atestado de Saúde Ocupacional". Se o PDF tiver anamnese, ficha clínica, prontuário ou pedido de exame, o envio é bloqueado.</li>
+      <li>Todo item apontado numa conferência entra segurado no painel até ser corrigido.</li>
+    </ul></div>
+
+  <div class="assin"><div>Responsável</div><div>Prazo</div><div>Reteste aprovado em</div></div>
+  <div class="rodape"><span>Fichas de diagnóstico · envios de 26/10/2026</span><span>Ficha 13 de 16</span></div>
+</section>
+
+<!-- ============ 14 ============ -->
+<section class="folha">
+  <div class="cab"><div class="num">14</div><div>
+    <h1>O ASO foi enviado com prontuário e anamnese, e o Atlas reprovou</h1>
+    <div class="meta"><b>Enviado com conteúdo errado</b> · dados de saúde (LGPD) · Atlas</div></div></div>
+  <div class="dados">
+    <div><span>Item</span>#297 · pedido 00005</div>
+    <div><span>Documento</span>ASO Demissional</div>
+    <div><span>Competência</span>08/2026 · Equatorial Alagoas</div>
+    <div><span>Enviado em</span>26/10/2026 às 18:15, no automático</div>
+    <div><span>Situação no Atlas</span>Reprovado (atrasado)</div>
+    <div><span>Páginas enviadas</span>4 (o correto seria 1)</div>
+  </div>
+
+  <div class="sec"><h3>O que aconteceu</h3>
+    <p>O ASO subiu com 4 páginas: o ASO, uma revisão de prontuário e uma anamnese com histórico de doenças. Uma hora depois, às 19:15, o Atlas reprovou o envio.</p></div>
+
+  <div class="sec"><h3>Por que aconteceu <small>causa raiz</small></h3>
+    <p>É a mesma causa da ficha 13. O PDF da Factorial tinha mais do que o ASO, o robô não confere as páginas, e o item, que já estava apontado na conferência de 19/10, não tinha sido segurado.</p></div>
+
+  <div class="sec"><h3>Como sabemos <small>evidência</small></h3>
+    <ul>
+      <li>O PDF enviado tem 4 páginas (cerca de 1 MB).</li>
+      <li>A conferência de 19/10 registra: <span class="cit">"#297 (4 páginas: ASO, revisão de prontuário e anamnese com doenças)"</span>.</li>
+      <li>O registro de envio mostra o item enviado às 18:15. Às 19:15, o banco já o marcava como reprovado, com a situação "Reprovado (atrasado)".</li>
+    </ul></div>
+
+  <div class="sec"><h3>O que fazer agora <small>correção</small></h3>
+    <ul>
+      <li>Pedir à NIP o ASO em uma página, excluir no Atlas o arquivo reprovado e enviar só o ASO. O reenvio cai na mesma regra da ficha 01: primeiro excluir, depois enviar.</li>
+      <li>Incluir este caso no aviso ao DPO, junto com a ficha 13.</li>
+    </ul></div>
+
+  <div class="sec"><h3>Como vamos confirmar <small>reteste</small></h3>
+    <p>O arquivo no Atlas deve ter uma página, e o status deve passar de "Reprovado" para "Em análise".</p></div>
+
+  <div class="sec"><h3>Para não acontecer de novo <small>regra preventiva</small></h3>
+    <p>As mesmas da ficha 13 (ASO só com a página do ASO, item apontado entra segurado), mais as da ficha 01 para o reenvio de um item reprovado.</p></div>
+
+  <div class="assin"><div>Responsável</div><div>Prazo</div><div>Reteste aprovado em</div></div>
+  <div class="rodape"><span>Fichas de diagnóstico · envios de 26/10/2026</span><span>Ficha 14 de 16</span></div>
+</section>
+
+<!-- ============ 15 ============ -->
+<section class="folha">
+  <div class="cab"><div class="num">15</div><div>
+    <h1>Uma declaração de Plano de Emergência foi enviada no lugar do AVCB</h1>
+    <div class="meta"><b>Enviado com conteúdo errado</b> · documento trocado · Bernhoeft · caso novo</div></div></div>
+  <div class="dados">
+    <div><span>Contrato</span>00223/2025 · PA</div>
+    <div><span>Documento pedido</span>Projeto de Prevenção e Combate a Incêndio e AVCB</div>
+    <div><span>Onde entra</span>Documentos da empresa</div>
+    <div><span>Enviado em</span>26/10/2026 às 16:42</div>
+    <div><span>Situação no portal</span>Não Analisado</div>
+    <div><span>O que subiu</span>Declaração de Plano de Emergência</div>
+  </div>
+
+  <div class="sec"><h3>O que aconteceu</h3>
+    <p>O portal pedia o Projeto de Prevenção e Combate a Incêndio e o AVCB do contrato do Pará. O documento que subiu é uma declaração de não aplicabilidade do Plano de Emergência Contra Incêndio, que é outro documento.</p></div>
+
+  <div class="sec"><h3>Por que aconteceu <small>causa raiz</small></h3>
+    <p>Na Factorial, o arquivo se chama "…PLANO DE ATENDIMENTO DE COMBATE A INCENDIO CT 00223". A regra do sistema para AVCB aceita qualquer nome com "combate" e "incêndio", e como o nome também cita o contrato certo, a confiança ficou alta.</p>
+    <p>O sistema não lê o título dentro do PDF. Se lesse, veria que é um Plano de Emergência. Com a regra atual, o envio automático também teria mandado este arquivo.</p></div>
+
+  <div class="sec"><h3>Como sabemos <small>evidência</small></h3>
+    <ul>
+      <li>O título no PDF é <span class="cit">"Declaração de Não Aplicabilidade para Plano de Emergência Contra Incêndio"</span>, e o texto diz que a NIP não possui Plano de Emergência no contrato 00223/2025-PA. A assinatura é de 26/12/2025.</li>
+      <li>O sistema escolheu o arquivo com confiança alta, porque o nome "cita o contrato 223".</li>
+      <li>O registro de envio mostra o envio às 16:42 e o portal mostra o documento como "Não Analisado".</li>
+    </ul></div>
+
+  <div class="sec"><h3>O que fazer agora <small>correção</small></h3>
+    <p>Antes que o analista veja, trocar no portal pelo documento certo: o AVCB/PPCI do Pará ou uma declaração de não aplicabilidade de AVCB do contrato 00223/2025. Se não der para trocar, avisar o analista do Bernhoeft ou da Equatorial.</p></div>
+
+  <div class="sec"><h3>Como vamos confirmar <small>reteste</small></h3>
+    <p>O arquivo no portal deve trazer no título "AVCB" ou "Projeto de Prevenção e Combate a Incêndio", e o texto deve citar o contrato 00223/2025-PA.</p></div>
+
+  <div class="sec"><h3>Para não acontecer de novo <small>regra preventiva</small></h3>
+    <ul>
+      <li>A regra do AVCB recusa arquivos com "Plano de Emergência" ou "Plano de Atendimento" no nome ou no título, porque são outro documento.</li>
+      <li>O sistema compara o título da primeira página do PDF com o documento pedido pelo portal.</li>
+    </ul></div>
+
+  <div class="assin"><div>Responsável</div><div>Prazo</div><div>Reteste aprovado em</div></div>
+  <div class="rodape"><span>Fichas de diagnóstico · envios de 26/10/2026</span><span>Ficha 15 de 16</span></div>
+</section>
+
+<!-- ============ 16 ============ -->
+<section class="folha">
+  <div class="cab"><div class="num">16</div><div>
+    <h1>A Brigada enviada é de outro contrato do Maranhão</h1>
+    <div class="meta"><b>Enviado com conteúdo errado</b> · arquivo de outro contrato · Bernhoeft · caso novo</div></div></div>
+  <div class="dados">
+    <div><span>Contrato</span>356/2026 · MA</div>
+    <div><span>Documento</span>Brigada de Incêndio</div>
+    <div><span>Onde entra</span>Documentos da empresa</div>
+    <div><span>Enviado em</span>26/10/2026 às 16:42</div>
+    <div><span>Situação no portal</span>Não Analisado</div>
+    <div><span>O que subiu</span>Brigada do 4600029823/2024-MA</div>
+  </div>
+
+  <div class="sec"><h3>O que aconteceu</h3>
+    <p>O PDF enviado junta três partes: a relação da brigada, o memorial de cálculo e o calendário de reuniões. Todas são do contrato 4600029823/2024-MA, e não do 356/2026-MA, que era o pedido.</p></div>
+
+  <div class="sec"><h3>Por que aconteceu <small>causa raiz</small></h3>
+    <p>Os nomes dos arquivos citam o Maranhão, o que deu confiança média. O sistema só descarta um arquivo com número de outro contrato quando esse outro contrato também está pendente no portal. O 4600029823 não estava, então o número no nome do memorial não serviu de alerta.</p>
+    <p>Com a regra atual e o automático aceitando confiança média, ele também teria enviado este arquivo.</p></div>
+
+  <div class="sec"><h3>Como sabemos <small>evidência</small></h3>
+    <ul>
+      <li>Um dos arquivos se chama "BRIGADA DE INCÊNDIO_MEMORIAL DE CÁLCULO NIP_4600029823 - MA - 19-05-2026.pdf". A ata da primeira reunião ficou de fora porque a assinatura estava incompleta.</li>
+      <li>O texto do PDF traz <span class="cit">"Vigência 19/05/2026 a 19/05/2027 · Contrato: 460029823"</span> e <span class="cit">"Contrato: 4600029823/2024-MA · Gestão da Brigada Auxiliar de Incêndio 2026/2027"</span>.</li>
+      <li>O registro de envio mostra o envio às 16:42 e o portal mostra o documento como "Não Analisado".</li>
+    </ul></div>
+
+  <div class="sec"><h3>O que fazer agora <small>correção</small></h3>
+    <p>Confirmar com o HSEQ se a brigada do 4600029823 também cobre a equipe do 356/2026, por exemplo se trabalham no mesmo escritório. Se cobre, emitir um documento que cite o 356/2026. Se não cobre, enviar a brigada própria do 356/2026. Nos dois casos, trocar no portal antes da análise.</p></div>
+
+  <div class="sec"><h3>Como vamos confirmar <small>reteste</small></h3>
+    <p>O texto do arquivo no portal deve citar o contrato 356/2026-MA.</p></div>
+
+  <div class="sec"><h3>Para não acontecer de novo <small>regra preventiva</small></h3>
+    <ul>
+      <li>Qualquer número de contrato no nome ou no texto que seja diferente do pedido descarta o arquivo, esteja o outro contrato pendente ou não.</li>
+      <li>Quando há mais de um contrato no mesmo estado (o Maranhão tem três: 356/2026, 4600029823/2024 e 757/2025), confiança média não sai no automático.</li>
+    </ul></div>
+
+  <div class="assin"><div>Responsável</div><div>Prazo</div><div>Reteste aprovado em</div></div>
+  <div class="rodape"><span>Fichas de diagnóstico · envios de 26/10/2026</span><span>Ficha 16 de 16</span></div>
+</section>
+
+</body>
+</html>
