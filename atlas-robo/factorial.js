@@ -1,38 +1,56 @@
 // Busca na Factorial os documentos das pendências do Atlas (SOMENTE LEITURA na Factorial) e deixa prontos para o enviar.js.
 //
-// Cobre só os documentos de ARQUIVO ÚNICO, com regra segura pelo nome do arquivo e a pasta (as mesmas dos 11 achados em 15/10):
-//   67 ASO Demissional                              pasta BR-ASO ou Offboarding, nome com "ASO" e "demissional"
-//   68 Baixa na CTPS e/ou e-Social                  pasta Offboarding, nome com "eSocial" ou "CTPS"
-//   69 Pedido de demissão ou carta de desligamento  pasta Offboarding, nome com "pedido de demissão", "pedido de desligamento" ou "carta de desligamento"
-//      ("aviso prévio" saiu em 19/10: a Milena não o citou e o aviso do empregador é outro documento)
-// Os montados de várias partes (TRCT, GFD, benefícios: doc_id 2 a 10) ficam de fora: precisam de alguém escolher as partes.
+// Pasta e arquivo são reconhecidos pelas PALAVRAS do nome (regras-factorial.js), não pelo nome exato (03/11).
+// ARQUIVO ÚNICO (LOCALIZADO, caminho_origem "factorial:<id>"):
+//   67 ASO demissional · 68 baixa na CTPS/eSocial · 69 pedido de demissão   (só para colaborador com data de desligamento)
+//   78 ASO admissional/periódico (1 arquivo no período) · 79 ficha de registro · 80 comprovante de registro eSocial (onboarding;
+//   78/79/80 não valem para quem já saiu) · 83 cartão de ponto (1 PDF do colaborador no mês)   (todos estes: ligados por padrão)
+// Antes de gravar, o PDF baixado passa pela conferência do conteúdo (conteudo.js): CPF de outra pessoa, outro documento, dado clínico.
+// VÁRIAS PEÇAS, unidas pelo Gotenberg na ordem (COMPOSTO, caminho_origem "factorial:unido-<doc>-<id do Neon>"):
+//   8 férias: aviso → recibo → comprovante · 9 TRCT: TRCT → termo de quitação → comprovante (ou só o comprovante, pelo nome do Atlas)
+//   10 GFD rescisória: guia do FGTS → comprovante
+// O 8, 9 e 10 hoje são da sincronização do Evilásio (VPS, a cada 2 h): por isso ficam DESLIGADOS por padrão. Para ligar/simular:
+//   node factorial.js --simular --docs 8,9,10        (ou FACTORIAL_DOCS=67,68,69,8,9,10). Só um dono por documento: ligar aqui = desligar lá.
 //
 // Para cada linha do robô no Neon com estado PENDENTE_ENVIO e um desses doc_id:
 //   acha o funcionário pelo CPF (tem que ser exatamente 1), lista os documentos dele e aplica a regra;
-//   exatamente 1 arquivo = baixa em out/downloads/factorial-docs/<id Factorial>.pdf e grava no Neon
-//   estado LOCALIZADO, caminho_origem "factorial:<id>", tamanho_bytes e hash_arquivo (mesmo formato da sincronização do Evilásio);
-//   0 ou mais de 1 = não mexe no Neon e só registra o motivo em out/envio/busca.json (o painel mostra).
-// Uso: node factorial.js [--simular]      Variáveis: FACTORIAL_API_KEY (obrigatória), FACTORIAL_API_URL, ROBO_DATABASE_URL.
+//   achou tudo (e só 1 arquivo por peça) = baixa em out/downloads/factorial-docs/<id Factorial>.pdf (a união vira unido-<doc>-<id>.pdf) e grava no Neon;
+//   0 ou mais de 1 arquivo para uma peça, peça sem assinatura (TRCT/quitação), peça fora do período = não mexe no Neon e só registra
+//   o motivo em out/envio/busca.json (o painel mostra; sem nomes de arquivo, só ids).
+// Uso: node factorial.js [--simular] [--docs 8,9,10]   Variáveis: FACTORIAL_API_KEY (obrigatória), FACTORIAL_API_URL, ROBO_DATABASE_URL, GOTENBERG_URL.
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { neon } = require('@neondatabase/serverless');
 const { conexao } = require('./neon');
 const { OUT, log } = require('./comum');
+const { unirPdfs } = require('./unir-pdfs');
+const rf = require('./regras-factorial');
+const { conferirConteudo } = require('./conteudo');
+const lerPdf = require('./ler-pdf');
 
 const API = (process.env.FACTORIAL_API_URL || 'https://api.factorialhr.com/api/2026-07-01/resources').replace(/\/$/, '');
 const CHAVE = (process.env.FACTORIAL_API_KEY || '').trim();
 const PASTA = path.join(process.env.FACTORIAL_PASTA_DOWNLOAD || path.join(OUT, 'downloads'), 'factorial-docs');
 const ARQ_BUSCA = path.join(OUT, 'envio', 'busca.json');
 
-const normalizar = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[_\-.]+/g, ' ').replace(/\s+/g, ' ').trim();
+const normalizar = rf.normalizar;
 const digitos = (s) => String(s || '').replace(/\D/g, '');
-const REGRAS = {
-  67: { pastas: /^(br aso|offboarding)$/, achar: (n) => /\baso\b/.test(n) && /demissional/.test(n) },
-  68: { pastas: /^offboarding$/, achar: (n) => /\besocial\b|\be social\b|\bctps\b/.test(n) },
-  69: { pastas: /^offboarding$/, achar: (n) => /pedido de (demissao|desligamento)|carta de desligamento/.test(n) },
-};
-const ASSINATURA_OK = new Set([null, undefined, '', 'completed', 'signed', 'not_required']);
+const REGRAS = rf.UNICOS; // documentos de arquivo único (nome mantido para o teste e para quem lia daqui)
+const COMPOSTOS = [8, 9, 10]; // várias peças
+const PADRAO = [67, 68, 69, 78, 79, 80, 83];
+const ASSINATURA_OK = rf.ASSINATURA_OK;
+
+// Quais documentos buscar: --docs 8,9,10 ou FACTORIAL_DOCS; padrão 67,68,69. Número sem regra é recusado (não ignora em silêncio).
+function docsLigados(argv = process.argv, env = process.env) {
+  const i = argv.indexOf('--docs');
+  const bruto = i >= 0 ? argv[i + 1] : env.FACTORIAL_DOCS;
+  if (!bruto) return PADRAO;
+  const lista = String(bruto).split(',').map((x) => Number(x.trim())).filter(Boolean);
+  const invalidos = lista.filter((d) => !REGRAS[d] && !COMPOSTOS.includes(d));
+  if (invalidos.length || !lista.length) throw new Error(`--docs com número sem regra na Factorial: ${invalidos.join(', ') || bruto}. Valem: ${[...Object.keys(REGRAS), ...COMPOSTOS].join(', ')}.`);
+  return [...new Set(lista)];
+}
 
 async function api(caminho, opts = {}) {
   let r;
@@ -57,16 +75,38 @@ async function todos(caminho) {
   return itens;
 }
 
-(async () => {
+// Baixa um documento da Factorial em PASTA/<id>.pdf. Devolve { buf, arq } ou { erro }.
+async function baixar(d) {
+  const link = await api('/documents/download_urls/bulk_create', { method: 'POST', body: JSON.stringify({ ids: [Number(d.id)] }) }).then((x) => (x.data || x)[0]);
+  const res = await fetch(link.url); // link temporário: sem a chave no cabeçalho
+  if (!res.ok) return { erro: `download falhou (HTTP ${res.status})` };
+  const buf = Buffer.from(await res.arrayBuffer());
+  if (buf.subarray(0, 5).toString('latin1') !== '%PDF-') return { erro: 'o arquivo baixado não é PDF' };
+  fs.mkdirSync(PASTA, { recursive: true, mode: 0o700 });
+  const arq = path.join(PASTA, `${d.id}.pdf`);
+  fs.writeFileSync(arq, buf, { mode: 0o600 });
+  // No container o robô é root e o painel (1000) lê este arquivo: fica com o dono da pasta, senão o painel não abre.
+  try { const { uid, gid } = fs.statSync(PASTA); fs.chownSync(arq, uid, gid); } catch {}
+  return { buf, arq };
+}
+const paginas = (buf) => (buf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) || []).length;
+
+module.exports = { REGRAS, COMPOSTOS, PADRAO, docsLigados, normalizar };
+
+if (require.main === module) (async () => {
   const simular = process.argv.includes('--simular');
+  const docs = docsLigados();
   if (!CHAVE) throw new Error('FACTORIAL_API_KEY não configurada: a busca na Factorial não roda.');
   const url = conexao();
   if (!url) throw new Error('Sem conexão com o Neon (ROBO_DATABASE_URL).');
   const sql = neon(url);
-  const linhas = await sql.query(`select id, doc_id, nome, cpf, competencia from documentos
-    where aba is not null and estado = 'PENDENTE_ENVIO' and doc_id = any($1) order by id`, [Object.keys(REGRAS).map(Number)]);
-  log(`Busca na Factorial: ${linhas.length} pendência(s) de arquivo único esperando documento.`);
-  const relatorio = { em: new Date().toISOString(), itens: [] };
+  // Só PENDENTE_ENVIO é gravado. Na simulação dos compostos também aparecem os estados que a sincronização do Evilásio põe
+  // (para comparar o resultado das duas buscas lado a lado).
+  const estados = simular ? ['PENDENTE_ENVIO', 'NAO_ENCONTRADO_FACTORIAL', 'AGUARDANDO_ASSINATURA', 'ERRO_COMPOSICAO'] : ['PENDENTE_ENVIO'];
+  const linhas = await sql.query(`select id, doc_id, nome, cpf, competencia, estado from documentos
+    where aba is not null and estado = any($1) and doc_id = any($2) order by id`, [estados, docs]);
+  log(`Busca na Factorial (docs ${docs.join(', ')}): ${linhas.length} pendência(s) esperando documento.`);
+  const relatorio = { em: new Date().toISOString(), docs, itens: [] };
   if (linhas.length) {
     const pastas = Object.fromEntries((await todos('/documents/folders')).map((f) => [String(f.id), f.name]));
     const funcionarios = await todos('/employees/employees');
@@ -78,37 +118,68 @@ async function todos(caminho) {
       const f = cpf.length === 11 ? funcionarios.filter((e) => digitos(e.identifier) === cpf || digitos(e.social_security_number) === cpf) : [];
       if (f.length !== 1) { r.achou = false; r.motivo = f.length ? `${f.length} funcionários com o mesmo CPF na Factorial` : 'funcionário não encontrado na Factorial pelo CPF'; continue; }
       if (!docsDe.has(f[0].id)) docsDe.set(f[0].id, (await todos(`/documents/documents?employee_ids[]=${f[0].id}`)).filter((d) => !d.deleted_at));
-      const regra = REGRAS[l.doc_id];
-      const cand = docsDe.get(f[0].id).filter((d) => regra.pastas.test(normalizar(pastas[String(d.folder_id)])) && regra.achar(normalizar(d.filename)));
-      const aptos = cand.filter((d) => ASSINATURA_OK.has(d.signature_status) && /^\.?pdf$/i.test(String(d.extension || path.extname(d.filename))));
-      if (aptos.length !== 1) {
-        r.achou = false;
-        r.motivo = !cand.length ? 'nenhum arquivo deste tipo na Factorial' : !aptos.length ? 'arquivo achado, mas não é PDF ou falta assinatura'
-          : `${aptos.length} arquivos possíveis (${aptos.map((d) => d.id).join(', ')}): alguém escolhe`;
-        continue;
+      const lista = docsDe.get(f[0].id);
+      // Colaborador ativo/desligado (Milena: "conferir se o funcionário está ativo") e pedidos que ela manda desconsiderar.
+      const regraU = REGRAS[l.doc_id];
+      if (regraU) {
+        const ign = regraU.ignorar?.(l);
+        if (ign) { r.achou = false; r.motivo = ign; continue; }
+        const srv = rf.colaboradorServe(regraU, f[0]);
+        if (!srv.ok) { r.achou = false; r.motivo = srv.motivo; continue; }
+        if (regraU.colaborador && srv.situacao === null) r.aviso = 'a Factorial não informou se o colaborador está ativo ou desligado: situação não conferida';
       }
-      const d = aptos[0];
-      Object.assign(r, { achou: true, factorial_id: d.id, pasta: pastas[String(d.folder_id)] || null, criado: String(d.created_at || '').slice(0, 10) });
+
+      // ---- escolha do que vai no PDF
+      let partes; // [{ papel, d }]
+      if (COMPOSTOS.includes(l.doc_id)) {
+        const e = rf.escolherPartes(l.doc_id, l.nome, l.competencia, lista, pastas);
+        if (!e.ok) { r.achou = false; r.motivo = e.motivo; if (e.aguardando) r.aguardando_assinatura = true; continue; }
+        partes = e.partes;
+        if (e.avisos.length) r.aviso = e.avisos.join('; ');
+      } else {
+        const regra = REGRAS[l.doc_id];
+        const esc = rf.escolherUnico(regra, lista, pastas, l.competencia);
+        if (!esc.ok) { r.achou = false; r.motivo = esc.motivo; continue; }
+        if (esc.semTipo) r.sem_tipo_no_nome = true; // confirmado pelo texto depois de baixar
+        partes = [{ papel: 'unico', d: esc.d }];
+        if (regra.aviso) r.aviso = [r.aviso, regra.aviso].filter(Boolean).join('; ');
+      }
+      const unido = partes.length > 1 || COMPOSTOS.includes(l.doc_id);
+      Object.assign(r, { achou: true, unido, factorial_id: partes[0].d.id, pasta: pastas[String(partes[0].d.folder_id)] || null, criado: String(partes[0].d.created_at || '').slice(0, 10),
+        partes: partes.map((p) => ({ papel: p.papel, factorial_id: p.d.id, pasta: pastas[String(p.d.folder_id)] || null, criado: String(p.d.created_at || '').slice(0, 10) })) });
       if (simular) { r.motivo = 'simulação: não baixado'; continue; }
-      const link = await api('/documents/download_urls/bulk_create', { method: 'POST', body: JSON.stringify({ ids: [Number(d.id)] }) }).then((x) => (x.data || x)[0]);
-      const res = await fetch(link.url); // link temporário: sem a chave no cabeçalho
-      if (!res.ok) { r.achou = false; r.motivo = `download falhou (HTTP ${res.status})`; continue; }
-      const buf = Buffer.from(await res.arrayBuffer());
-      if (buf.subarray(0, 5).toString('latin1') !== '%PDF-') { r.achou = false; r.motivo = 'o arquivo baixado não é PDF'; continue; }
-      fs.mkdirSync(PASTA, { recursive: true, mode: 0o700 });
-      const arq = path.join(PASTA, `${d.id}.pdf`);
-      fs.writeFileSync(arq, buf, { mode: 0o600 });
-      // No container o robô é root e o painel (1000) lê este arquivo: fica com o dono da pasta, senão o painel não abre.
-      try { const { uid, gid } = fs.statSync(PASTA); fs.chownSync(arq, uid, gid); } catch {}
+
+      // ---- baixa, une e grava
+      const baixados = [];
+      let falha = null;
+      for (const p of partes) { const b = await baixar(p.d); if (b.erro) { falha = `${p.papel === 'unico' ? 'arquivo' : p.papel}: ${b.erro}`; break; } baixados.push(b); }
+      if (falha) { r.achou = false; r.motivo = falha; continue; }
+      let buf, caminho, estadoNovo;
+      if (unido) {
+        const nome = `unido-${l.doc_id}-${l.id}`;
+        try { await unirPdfs({ arquivos: baixados.map((b) => b.arq), nome, saida: PASTA, substituir: true }); }
+        catch (e) { r.achou = false; r.motivo = `não uniu as partes: ${e.message}`; continue; }
+        const arq = path.join(PASTA, `${nome}.pdf`);
+        try { const { uid, gid } = fs.statSync(PASTA); fs.chownSync(arq, uid, gid); fs.chmodSync(arq, 0o600); } catch {}
+        buf = fs.readFileSync(arq); caminho = `factorial:${nome}`; estadoNovo = 'COMPOSTO';
+      } else { buf = baixados[0].buf; caminho = `factorial:${partes[0].d.id}`; estadoNovo = 'LOCALIZADO'; }
+      // Conteúdo do PDF (conteudo.js): CPF de outra pessoa, outro documento, dado clínico no ASO, recusa. Só bloqueia; PDF imagem passa.
+      const arqFinal = unido ? path.join(PASTA, `unido-${l.doc_id}-${l.id}.pdf`) : baixados[0].arq;
+      if (r.sem_tipo_no_nome) {
+        const semTipo = rf.confirmarSemTipo(REGRAS[l.doc_id], await lerPdf.lerTexto(arqFinal), lerPdf.casaGrupos);
+        if (semTipo) { r.achou = false; r.motivo = semTipo; continue; }
+      }
+      const cont = await conferirConteudo(arqFinal, { doc_id: l.doc_id, nome: l.nome, cpf: l.cpf, competencia: l.competencia });
+      if (cont?.bloqueio) { r.achou = false; r.motivo = `conteúdo: ${cont.bloqueio}`; continue; }
       const hash = crypto.createHash('sha256').update(buf).digest('hex');
       // O mesmo arquivo já na pendência de outro funcionário = anexado na pessoa errada na Factorial (19/10: o mesmo "eSocial.pdf" em 4 pessoas).
       const outros = (await sql.query('select id, cpf from documentos where hash_arquivo = $1 and id <> $2', [hash, l.id])).filter((x) => digitos(x.cpf) && digitos(x.cpf) !== cpf);
       if (outros.length) { r.achou = false; r.motivo = `o mesmo arquivo já está na pendência de outro funcionário (#${outros.map((x) => x.id).join(', #')}): conferir na Factorial em quem ele foi anexado`; continue; }
       // Só avança quem ainda está PENDENTE_ENVIO (se outro processo mexeu no meio, não sobrescreve).
-      await sql.query(`update documentos set estado = 'LOCALIZADO', caminho_origem = $2, tamanho_bytes = $3, hash_arquivo = $4, atualizado_em = now()
-        where id = $1 and estado = 'PENDENTE_ENVIO'`, [l.id, `factorial:${d.id}`, buf.length, hash]);
-      r.paginas = (buf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) || []).length;
-      log(`#${l.id} ${l.nome} (${l.competencia}): achado na Factorial ${d.id} (${r.pasta}), ${buf.length} bytes -> LOCALIZADO`);
+      await sql.query(`update documentos set estado = $5, caminho_origem = $2, tamanho_bytes = $3, hash_arquivo = $4, atualizado_em = now()
+        where id = $1 and estado = 'PENDENTE_ENVIO'`, [l.id, caminho, buf.length, hash, estadoNovo]);
+      r.paginas = paginas(buf);
+      log(`#${l.id} ${l.nome} (${l.competencia}): achado na Factorial (${partes.length} peça(s)), ${buf.length} bytes -> ${estadoNovo}`);
     }
   }
   const achados = relatorio.itens.filter((x) => x.achou).length;

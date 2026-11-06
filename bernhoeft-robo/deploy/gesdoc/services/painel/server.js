@@ -478,8 +478,19 @@ const chaveAtlas = (r) => [normalizarAtlas(r.nome), digitosAtlas(r.cpf), digitos
 function chavesColetaAtlas() {
   const p = lerJson(path.join(DADOS, 'pendencias-atlas', 'pendencias.json'));
   if (!p || !Array.isArray(p.pendencias) || !p.pendencias.length) return null;
-  return new Set(p.pendencias.map((l) => chaveAtlas({ nome: l.documento, cpf: l.cpf, cnpj_filial: l.cnpj_filial, pedido: l.pedido,
-    unidade: l.unidades, competencia: l.competencia, prazo_envio: l.prazo_envio })));
+  return new Set(p.pendencias.map(chaveColeta));
+}
+const chaveColeta = (l) => chaveAtlas({ nome: l.documento, cpf: l.cpf, cnpj_filial: l.cnpj_filial, pedido: l.pedido,
+  unidade: l.unidades, competencia: l.competencia, prazo_envio: l.prazo_envio });
+// Motivo da reprovação escrito pelo cliente no Atlas (o pendencias.js lê de cada reprovada), pela mesma chave.
+// Data só com o dia: o Atlas manda a hora sem fuso. Para ordenar (mais recente primeiro) vai também a data inteira
+// só com dígitos (20261028125459), que o utc() não converte.
+function motivosColetaAtlas() {
+  const p = lerJson(path.join(DADOS, 'pendencias-atlas', 'pendencias.json'));
+  const m = new Map();
+  for (const l of p?.pendencias || []) if (l.motivo_reprovacao) m.set(chaveColeta(l), { motivo: l.motivo_reprovacao, em: l.validado_em ? String(l.validado_em).slice(0, 10) : null,
+    ord: l.validado_em ? String(l.validado_em).replace(/D/g, '').slice(0, 14) : null, obs: l.observacao_envio || null });
+  return m;
 }
 
 // Pendências do Atlas no Neon (inclui as enviadas, para mostrar para onde foram), com todas as colunas menos as de identificação.
@@ -499,6 +510,7 @@ async function documentosNeon() {
       ORDER BY documento_id, criado_em DESC`).catch(() => [])).map((a) => [String(a.documento_id), a]));
     arquivosAtlas.clear();
     const naColeta = chavesColetaAtlas();
+    const motivos = motivosColetaAtlas();
     const shp = buscaSharepoint();
     const porIdShp = new Map((shp?.itens || []).map((i) => [String(i.id), i]));
     for (const x of linhas) {
@@ -511,6 +523,8 @@ async function documentosNeon() {
       if (arq) { arquivosAtlas.set(String(x.id), arq); x.pdf_atlas = `atlas-doc/${x.id}`; const t = tamanho(arq); x.pdf_kb = t?.kb ?? null; x.pdf_erro = t?.erro || null; }
       // Ainda aparece na última coleta do Atlas? (null = sem coleta para comparar)
       x.no_atlas = naColeta ? naColeta.has(chaveAtlas(x)) : null;
+      const mr = motivos.get(chaveAtlas(x));
+      if (mr) { x.motivo_reprovacao = mr.motivo; x.reprovado_em = mr.em; x.reprovado_ord = mr.ord; x.observacao_envio = mr.obs; }
       x.montagem = montagemDe(x, rastro, shp);
       x.destino = destinoDe(x, rastro, rg.regras || [], envioRobo);
     }
@@ -667,6 +681,20 @@ async function listarPdfs() {
   }
   const st = auto.estado();
   for (const it of st.itens || []) {
+    // Documento de colaborador (auto.js, 30/10): um PDF por colaborador.
+    for (const c of it.por_colaborador ? it.colaboradores || [] : []) {
+      const t = c.pdf && tamanho(path.join(pacote.PACOTES, c.pdf));
+      if (!t) continue;
+      const sub = pacote.slug(c.nome);
+      lista.push({
+        grupo: 'Esteira automática Bernhoeft', titulo: `${it.pendencia.contrato} · ${it.tipo || it.pendencia.descricao} · ${c.nome}`,
+        sub: it.pendencia.descricao, url: `pacotes/${c.pdf}`, ...t, confianca: c.confianca, motivo: c.motivo,
+        paginas: c.arquivos.reduce((s, a) => s + (a.paginas || 0), 0) || null,
+        partes: c.arquivos.filter((a) => a.arquivo).map((a) => ({ nome: limpar(a.filename), url: `pacotes/auto/${it.pasta}/${sub}/${a.arquivo}`, paginas: a.paginas ?? null,
+          erro: erroParte(path.join(pacote.PACOTES, 'auto', it.pasta, sub, a.arquivo)),
+          id: a.id, created_at: a.created_at, assinatura: a.signature_status || null, pasta: a.pasta || null })),
+      });
+    }
     if (!it.pdf) continue;
     const t = tamanho(path.join(pacote.PACOTES, it.pdf));
     if (!t) continue;
@@ -1042,7 +1070,8 @@ function historicoEnvios(res, todos, porId) {
   }
   // situacao/estado = como está agora no Neon (a coleta do Atlas atualiza): mostra se o enviado foi reprovado depois.
   return lista.map((x) => ({ ...x, funcionario: porId.get(String(x.id))?.funcionario || null,
-    situacao: porId.get(String(x.id))?.situacao || null, estado: porId.get(String(x.id))?.estado || null }))
+    situacao: porId.get(String(x.id))?.situacao || null, estado: porId.get(String(x.id))?.estado || null,
+    motivo_reprovacao: porId.get(String(x.id))?.motivo_reprovacao || null }))
     .sort((a, b) => String(b.em).localeCompare(String(a.em)));
 }
 async function estadoEnvio() {
@@ -1058,6 +1087,8 @@ async function estadoEnvio() {
     motivos: (i.motivos || []).map(limpar), kb: i.tamanho ? Math.round(i.tamanho / 1024) : null, montado_aqui: !!i.montado_aqui,
     funcionario: porId.get(String(i.id))?.funcionario || null, pdf: arquivosAtlas.has(String(i.id)) ? `atlas-doc/${i.id}` : null,
     situacao: porId.get(String(i.id))?.situacao || null, unidade: porId.get(String(i.id))?.unidade || null,
+    motivo_reprovacao: porId.get(String(i.id))?.motivo_reprovacao || null, reprovado_em: porId.get(String(i.id))?.reprovado_em || null,
+    observacao_envio: porId.get(String(i.id))?.observacao_envio || null,
     resultado: res[i.id] ? { ...res[i.id], msg: limpar(res[i.id].msg || '') } : null,
     ficha: fichaEnvio(i, porId.get(String(i.id)), regraDe.get(String(i.doc_id)), res[i.id]),
     hash: i.hash || null,
@@ -1091,7 +1122,8 @@ async function estadoEnvio() {
   const vivo = robo && (robo.fazendo || Date.now() - new Date(robo.agora) < 120000);
   // Situação agora das que já saíram (enviadas ou reprovadas), para o diagnóstico dos "enviados com erro" na página.
   const situacoes = Object.fromEntries((n.linhas || []).filter((l) => ['ENVIADO', 'REJEITADO'].includes(l.estado))
-    .map((l) => [l.id, { situacao: l.situacao || null, estado: l.estado, atualizado_em: l.atualizado_em || null }]));
+    .map((l) => [l.id, { situacao: l.situacao || null, estado: l.estado, atualizado_em: l.atualizado_em || null,
+      motivo_reprovacao: l.motivo_reprovacao || null, reprovado_em: l.reprovado_em || null, observacao_envio: l.observacao_envio || null }]));
   return { agora: new Date().toISOString(), modo: lerModo(), robo, robo_ok: !!vivo, lista_em: sim.gerado_em || null, itens, fora_do_atlas, enviados, situacoes, pedidos: pedidosPendentes(),
     busca: busca ? { em: busca.em, itens: (busca.itens || []).map((x) => ({ ...x, motivo: limpar(x.motivo || '') })) } : null };
 }

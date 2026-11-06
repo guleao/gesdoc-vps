@@ -1,0 +1,36 @@
+# Espelho dos portais (homologação): o que os robôs leram no Atlas e no Bernhoeft, no formato dos portais, com uma ficha por pendência.
+# Só leitura: lê os out/ dos robôs em /dados e consulta o painel (GET). Acesso SÓ pelo Tailscale: http://100.103.196.93:3050
+# O código é o de ferramentas/espelho (fonte única); o publicar-espelho.sh copia servidor.js, pagina.html e fontes/ para cá.
+# As fichas analisadas à mão (DIAG) vêm da pagina.html LOCAL do painel, copiada como painel.html (só a parte do DIAG é usada).
+# CPF mascarado no servidor (SEM_CPF=1): o CPF inteiro não sai da VPS.
+# Subir: docker compose -f services/espelho/compose.hml.yml up -d
+name: gesdoc-espelho-hml
+
+services:
+  espelho:
+    image: node:22-alpine
+    working_dir: /app
+    command: ["node", "servidor.js"]
+    user: "1000:1000"
+    network_mode: host
+    environment:
+      ESCUTAR: "100.103.196.93"
+      PORTA: "3050"
+      PAINEL: http://100.103.196.93:3020
+      DADOS: /dados
+      GUARDA: /guarda
+      PAGINA_PAINEL: /app/painel.html
+      SEM_CPF: "1"
+    volumes:
+      - ./servidor.js:/app/servidor.js:ro
+      - ./pagina.html:/app/pagina.html:ro
+      - ./planilhas.html:/app/planilhas.html:ro
+      - ./fontes:/app/fontes:ro
+      - ./painel.html:/app/painel.html:ro
+      # Inclui /dados/planilhas-envios (planilhas de uso intensivo: tela /planilhas e download do .xlsx).
+      - /opt/gesdoc/data/hml:/dados:ro
+      # Leituras antigas do Atlas (para comparar), já com o CPF mascarado.
+      - /opt/gesdoc/data/hml/espelho/atlas:/guarda
+    mem_limit: 256m
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped

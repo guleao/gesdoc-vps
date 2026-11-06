@@ -27,7 +27,7 @@ Fontes: Neon (só leitura, transação read-only com o `robo_atlas`; scripts em 
 | 68 eSocial | 27 LOCALIZADO, 1 ENVIADO (#117, teste) | #269, #270, #273 e #275 continuam com o mesmo arquivo (a trava não foi publicada). A regra `esocial\|ctps` não separa o S-2200 (admissão) do S-2299 (desligamento) e não tem janela de datas |
 | 69 pedido de demissão | 18 LOCALIZADO, 10 pendentes | 13 dos LOCALIZADO são aviso prévio do empregador ou fim de experiência (regra antiga), e continuam LOCALIZADO, ou seja, enviáveis |
 | 2, 3, 4, 7 benefícios | 84 PENDENTE (25 "Reprovado (atrasado)") | O PDF do mês é da empresa inteira e vai igual para cada unidade (8 unidades). A relação lista os beneficiários de todos os tomadores: confirmar se o Atlas/Equatorial aceita ou se tem que filtrar por unidade (LGPD) |
-| 5 odonto, 6 VR | 21 pendentes | sem regra (já sabido) |
+| 6 VR | pendentes | sem regra (já sabido) |
 | 24, 25, 26 FGTS | 49 pendentes, marcadas `critico` | 7 PendingRejected (25, 26): reprovadas ainda no prazo |
 | 59, 63 | 13 | "já sobe automático" (Milena): risco de envio em dobro se ligar o `--gravar` |
 | 64, 81 certidões | 7 | O robô trata a data do nome como **validade**, mas há nomes com data de emissão ("... FGTS - 01.06.2026"). Também não confere o CNPJ: a CRF é por estabelecimento. #205 e #206 (81) são a mesma pendência com 2 prazos (26/10 e 30/10), em 2 linhas |

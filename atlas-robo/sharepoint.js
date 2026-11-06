@@ -60,37 +60,83 @@ const UNIDADES = {
   cea: /amapa|\bcea\b|eletricidade do am\b|05 ?965 ?546/, // "FOPAG 07.2026 20102080 COMPANHIA DE ELETRICIDADE DO AM"
 };
 const PDF = (n) => /\.pdf$/i.test(n);
+// Comprovante sem unidade no título (doc 26): arquivos { name } -> { cand, aviso }. Prefere os que citam a unidade; sem eles, os que não
+// citam NENHUMA unidade (serve a todas); os que citam outra unidade nunca entram.
+function filtrarPorUnidade(cand, unidadeAtlas) {
+  const un = UNIDADES[normalizar(unidadeAtlas)];
+  if (!un) return { cand: [], motivo: `unidade "${unidadeAtlas}" sem par no SharePoint` };
+  const citaAlguma = (x) => Object.values(UNIDADES).some((re) => re.test(normalizar(x.name)));
+  const daUnidade = cand.filter((x) => un.test(normalizar(x.name)));
+  if (daUnidade.length) return { cand: daUnidade };
+  const semUnidade = cand.filter((x) => !citaAlguma(x));
+  return semUnidade.length ? { cand: semUnidade, aviso: 'o comprovante não cita a unidade no nome: o mesmo arquivo serve a todas as unidades (confirmar com a Milena)' } : { cand: [] };
+}
+// Convenção coletiva (doc 84): itens { name, caminho } -> { item, aviso } | { motivo }. A unidade aparece no nome ou na pasta; a vigência é o
+// ano (ou o par "2025 2026") no nome: vale a que cobre o ano da competência; várias = a de vigência mais recente; empate = ninguém escolhe.
+function escolherConvencao(itens, unidadeAtlas, ano) {
+  const un = UNIDADES[normalizar(unidadeAtlas)];
+  if (!un) return { motivo: `unidade "${unidadeAtlas}" sem par no SharePoint` };
+  const da = itens.filter((x) => un.test(normalizar(`${x.caminho} ${x.name}`)));
+  if (!da.length) return { motivo: `nenhuma convenção da unidade ${unidadeAtlas} em 06 Convenções Coletivas` };
+  const anos = (x) => [...normalizar(`${x.caminho} ${x.name}`).matchAll(/\b(20\d\d)\b/g)].map((m) => +m[1]);
+  const vigentes = da.filter((x) => { const a = anos(x); return a.length && Math.min(...a) <= ano && Math.max(...a) >= ano; });
+  if (!vigentes.length) return { motivo: `nenhuma convenção da unidade ${unidadeAtlas} cobre ${ano} (${da.map((x) => x.name).join(', ')})` };
+  const fim = (x) => Math.max(...anos(x));
+  const topo = Math.max(...vigentes.map(fim)), melhores = vigentes.filter((x) => fim(x) === topo);
+  if (melhores.length > 1) return { motivo: `${melhores.length} convenções possíveis para ${unidadeAtlas} em ${ano} (${melhores.map((x) => x.name).join(', ')}): alguém escolhe` };
+  return { item: melhores[0], aviso: `convenção "${melhores[0].name}"${vigentes.length > 1 ? ` (${vigentes.length} vigentes: usada a mais recente)` : ''}: confirmar a vigência` };
+}
+// Pasta do tipo dentro do mês, pelas palavras do nome. Uma só casou = ela. Várias casaram e UMA tem o nome mais curto
+// ("FGTS" x "FGTS rescisoria") = a mais curta, com aviso; empate = não escolhe (n pastas).
+function escolherPasta(pastas, tipo) {
+  const c = pastas.filter((x) => tipo.test(normalizar(x.name)));
+  if (c.length <= 1) return { pasta: c[0] || null, n: c.length };
+  const tam = c.map((x) => normalizar(x.name).length), min = Math.min(...tam);
+  const curtas = c.filter((x, i) => tam[i] === min);
+  if (curtas.length === 1) return { pasta: curtas[0], n: c.length, aviso: `${c.length} pastas casaram (${c.map((x) => x.name).join(', ')}): usada a de nome mais curto, "${curtas[0].name}"` };
+  return { pasta: null, n: c.length };
+}
 // raiz: 'mensal' ou 'certidoes'; tipo: pasta dentro do mês (ausente = o próprio mês); achar: nome do arquivo; porUnidade: o arquivo é por tomador;
 // porTomador: dentro do tipo há uma pasta por tomador ("Serviço 64 - EQUATORIAL MARANHÃO"); aviso: vai para o painel junto do achado.
 // uniao 'beneficio': várias partes (relação de beneficiários, boleto, comprovante), unidas nessa ordem (ver papelBeneficio);
 // uniao 'todos': une todos os PDFs da pasta, em ordem de nome, a não ser que já haja um unido (pronto).
+// 03/11: pasta e arquivo são reconhecidos pelas PALAVRAS do nome, não pelo nome inteiro (pedido da equipe dos clientes).
+// Se mais de uma pasta/arquivo casar, o robô não escolhe: trava com o motivo ("N pastas do tipo", "alguém escolhe").
 const REGRAS = {
-  24: { raiz: 'mensal', tipo: /^fgts$/, achar: (n) => /\bguia\b/.test(n) },
-  25: { raiz: 'mensal', tipo: /^fgts$/, achar: (n) => /\bre\b/.test(n), porUnidade: true },
-  26: { raiz: 'mensal', tipo: /^fgts$/, achar: (n) => /comprovante/.test(n) },
-  60: { raiz: 'mensal', tipo: /^inss$/, achar: (n) => /recibo/.test(n) && /dctf ?web/.test(n) },
-  61: { raiz: 'mensal', tipo: /^inss$/, achar: (n) => /declaracao completa/.test(n) },
+  24: { raiz: 'mensal', tipo: /\bfgts\b/, achar: (n) => /\bguia\b|\bgfd\b|\bboleto\b/.test(n) && !/comprovante|\bre\b|relacao/.test(n) },
+  25: { raiz: 'mensal', tipo: /\bfgts\b/, achar: (n) => /\bre\b|relacao de (empregados|trabalhadores)/.test(n), porUnidade: true },
+  // 26: o título do comprovante não traz a unidade (Milena). Vale o da unidade, se o nome a cita; senão o que não cita nenhuma (serve a todas, com aviso).
+  26: { raiz: 'mensal', tipo: /\bfgts\b/, achar: (n) => /comprovante|recibo de pagamento/.test(n), unidadeOpcional: true },
+  60: { raiz: 'mensal', tipo: /\binss\b/, achar: (n) => /recibo|entrega/.test(n) && /dctf ?web/.test(n) },
+  61: { raiz: 'mensal', tipo: /\binss\b/, achar: (n) => /declaracao completa|relatorio completo|relatorio (da )?(declaracao|dctf)/.test(n) && !/recibo/.test(n) },
   // Na pasta INSS a guia ("GUIAS DARF'S", "DARF COMPLETA") e o comprovante dela ficam lado a lado, e às vezes um "DCTFWEB + DARF + COMPROVANTE".
-  65: { raiz: 'mensal', tipo: /^inss$/, achar: (n) => /\bdarf/.test(n) && !/comprovante/.test(n) && !/dctf/.test(n) },
-  59: { raiz: 'mensal', tipo: /^inss$/, achar: (n) => /\bdarf/.test(n) && /comprovante/.test(n) && !/dctf/.test(n),
+  65: { raiz: 'mensal', tipo: /\binss\b/, achar: (n) => /\bdarf/.test(n) && !/comprovante/.test(n) && !/dctf/.test(n) },
+  59: { raiz: 'mensal', tipo: /\binss\b/, achar: (n) => /\bdarf/.test(n) && /comprovante/.test(n) && !/dctf/.test(n),
     aviso: 'a Milena diz que o 59 "já sobe automático": confirmar quem envia antes de gravar (risco de envio em dobro)' },
-  63: { raiz: 'mensal', tipo: /^fopag$/, achar: (n) => /\bfopag\b|extrato mensal/.test(n), porUnidade: true,
+  63: { raiz: 'mensal', tipo: /\bfopag\b|folha de pagamento|\bfolha\b/, achar: (n) => /\bfopag\b|extrato (mensal|da folha)|folha (de pagamento )?(mensal )?analitica/.test(n), porUnidade: true,
     aviso: 'a Milena diz que o 63 "já está automatizado" (Gabriela): confirmar quem envia antes de gravar (risco de envio em dobro)' },
-  64: { raiz: 'certidoes', achar: (n) => /\bcrf\b|regularidade (do )?fgts/.test(n) }, // "CERTIDÃO DE REGULARIDADE FGTS - 01.06.2026"
-  81: { raiz: 'certidoes', achar: (n) => /certidao negativa.*tributos federais|\bcnd federal/.test(n) },
+  64: { raiz: 'certidoes', achar: (n) => /\bcrf\b|regularidade (do )?fgts|certificado de regularidade|\bcnd (do )?fgts|certidao.*\bfgts\b/.test(n) }, // "CERTIDÃO DE REGULARIDADE FGTS - 01.06.2026"
+  // CND federal: a "positiva com efeitos de negativa" também vale (certidão válida), mas FGTS e trabalhista são outros documentos.
+  81: { raiz: 'certidoes', achar: (n) => /certidao (negativa|positiva).*(federa|receita|pgfn|uniao)|\bcnd federal|\bcnd\b.*federa|tributos federais/.test(n) && !/fgts|trabalhist/.test(n) },
+  // CNDT: a Milena tira no TST e não fica guardada; se alguém salvar na pasta das certidões, o robô passa a achar.
+  82: { raiz: 'certidoes', achar: (n) => /\bcndt\b|debitos trabalhistas|certidao.*trabalhist/.test(n) },
+  // Convenção coletiva (AC, CC ou AIT): pasta "06 Convenções Coletivas" na raiz da biblioteca; anual. Escolhe por unidade e vigência (escolherConvencao).
+  84: { raiz: 'convencoes', achar: (n) => /convencao|acordo coletivo|acordo individual|\bcct\b|\bact\b|\bait\b|dissidio/.test(n) },
   // Benefícios: um PDF só por mês (o mesmo sobe em cada pendência do mês), relação -> boleto -> comprovante, sem nota fiscal.
-  2: { raiz: 'mensal', tipo: /^v ?a$|vale alimenta/, uniao: 'beneficio' },
-  3: { raiz: 'mensal', tipo: /^v ?t$|vale transporte|mobilidade/, uniao: 'beneficio' },
-  4: { raiz: 'mensal', tipo: /^seguro/, uniao: 'beneficio' },
-  7: { raiz: 'mensal', tipo: /plano (de )?saude/, uniao: 'beneficio' }, // "PLANO SAUDE" em 12-2025
+  2: { raiz: 'mensal', tipo: /^v ?a$|\bv ?a\b|alimenta/, uniao: 'beneficio' },
+  3: { raiz: 'mensal', tipo: /^v ?t$|\bv ?t\b|transporte|mobilidade/, uniao: 'beneficio' },
+  4: { raiz: 'mensal', tipo: /seguro/, uniao: 'beneficio' },
+  7: { raiz: 'mensal', tipo: /saude|assistencia medica/, uniao: 'beneficio' }, // "PLANO SAUDE" em 12-2025
   // Comprovantes de salário: um PDF por funcionário na pasta do tomador; a Milena baixa todos e une. A NIP às vezes já deixa
   // um "01 - Salarios - Equatorial MA.pdf" com todos: aí vale ele.
   56: { raiz: 'mensal', tipo: /^salario|comprovantes? de salario/, porTomador: true, uniao: 'todos', pronto: (n) => /^\d* ?salarios\b/.test(n) },
 };
+// Documentos que o robô procura aqui mesmo se a origem no banco disser outra coisa (82 CNDT: a origem certa é o TST, mas se alguém
+// salvar a certidão na pasta de certidões o robô acha; 66 não tem busca).
+const DOCS_FORCADOS = [82];
 const SEM_REGRA = {
   6: 'Vale Refeição não é um arquivo: é uma declaração para cada colaborador (Milena). Falta saber quem escreve e se há modelo',
   66: 'Relatório mensal de ocorrências não vem do SharePoint: a Milena baixa o modelo no Atlas e preenche (a origem no banco está errada)',
-  82: 'CNDT não fica guardada em lugar nenhum: tirar no TST pelo CNPJ, com captcha (a origem no banco está errada)',
   84: 'Convenção coletiva fica em "06 Convenções Coletivas" (não é mensal): falta a regra',
 };
 // Papel de cada arquivo da pasta de um benefício, pelo nome (nomes reais de 2025-2026: "Relatório-de-pedidos mob 80",
@@ -101,10 +147,10 @@ function papelBeneficio(nome) {
   const compl = /complem/.test(n);
   if (/beneficiarios ?\+ ?boleto ?\+ ?comprovante|vida ?\+ ?boleto ?\+ ?comprovante|^pdfsam|\bmerge\b/.test(n)) return { papel: 'pronto' };
   if (/\bnf\b|nota fiscal/.test(n) && !/boleto/.test(n)) return { papel: 'nf' };
-  if (/boleto|^projeto \d|^mob ?\d|^\d{8} \d{2} \d{4}\b/.test(n)) return { papel: 'boleto', compl };
-  if (/relatorio de (resumo de )?pedidos?|relacao de beneficiarios|\bvidas\b|mensalidade|demonstrativo|detalhamento|^dm\b/.test(n)) return { papel: 'relacao', compl };
+  if (/boleto|cobranca|^projeto \d|^mob ?\d|^\d{8} \d{2} \d{4}\b/.test(n)) return { papel: 'boleto', compl };
+  if (/relatorio de (resumo de )?pedidos?|relacao de (beneficiarios|colaboradores|funcionarios)|lista(gem)? de (beneficiarios|colaboradores|funcionarios)|\bbeneficiarios\b|\bvidas\b|mensalidade|demonstrativo|detalhamento|^dm\b/.test(n)) return { papel: 'relacao', compl };
   // "UNIMED - 29.740,90", "METROPOLITAN LIFE ... 2.483,56 GRUPO AP I": nome com valor em reais e nada mais = comprovante do banco.
-  if (/comprovante|^comp\b|^comp ?\d|\d,\d{2}\b/.test(n)) return { papel: 'comprovante', compl };
+  if (/comprovante|recibo de pagamento|\bpix\b|transferencia|^comp\b|^comp ?\d|\d,\d{2}\b/.test(n)) return { papel: 'comprovante', compl };
   return { papel: 'outro' };
 }
 const ORDEM_BENEFICIO = ['relacao', 'relacao+', 'boleto', 'boleto+', 'comprovante', 'comprovante+'];
@@ -196,8 +242,27 @@ async function certidaoValida(regra) {
     aviso: `certidão válida até ${br(c.validade)}${dias <= 10 ? ` (vence em ${dias} dia(s): conferir antes de enviar)` : ''}` };
 }
 
+// Convenção coletiva: anda em "06 Convenções Coletivas" (até 3 níveis), acha os arquivos de convenção e escolhe o da unidade e vigência.
+async function convencaoValida(regra, l) {
+  const raiz = await graph(`/drives/${drive}/root?$select=id`);
+  const tops = (await filhos(raiz.id)).filter((x) => x.folder && /convencao|convencoes/.test(normalizar(x.name)));
+  if (tops.length !== 1) return { erro: tops.length ? `${tops.length} pastas de convenções na raiz` : 'pasta "06 Convenções Coletivas" não encontrada na raiz da biblioteca' };
+  const achados = [];
+  const andar = async (dir, caminho, nivel) => {
+    for (const x of await filhos(dir.id)) {
+      if (x.folder && nivel < 3) await andar(x, `${caminho}/${x.name}`, nivel + 1);
+      else if (x.file && PDF(x.name) && regra.achar(normalizar(x.name))) achados.push({ name: x.name, caminho, x, dir });
+    }
+  };
+  await andar(tops[0], tops[0].name, 0);
+  const e = escolherConvencao(achados, l.unidade, Number(String(l.competencia || '').slice(-4)));
+  if (!e.item) return { erro: e.motivo };
+  return { pasta: e.item.dir, caminho: e.item.caminho, so: e.item.x.id, aviso: e.aviso };
+}
+
 // Pasta do mês da competência ("MM/AAAA"): mensal = <raiz>/<ano>/<mês>; certidões = a pasta da certidão válida (certidaoValida).
-async function pastaDoMes(regra, competencia) {
+async function pastaDoMes(regra, competencia, l) {
+  if (regra.raiz === 'convencoes') return convencaoValida(regra, l);
   if (regra.raiz === 'certidoes') return certidaoValida(regra);
   const m = String(competencia || '').match(/^(\d{2})\/(\d{4})$/);
   if (!m) return { erro: `competência "${competencia}" fora do formato MM/AAAA` };
@@ -273,7 +338,10 @@ function gravarMontagens(rel) {
   gravarJson(ARQ_MONTAGEM, m);
 }
 
-(async () => {
+// Para o teste (teste/t-achar-arquivo.js) ler as regras sem rodar a busca.
+module.exports = { REGRAS, UNIDADES, papelBeneficio, mesDaPasta, escolherPasta, filtrarPorUnidade, escolherConvencao, normalizar };
+
+if (require.main === module) (async () => {
   const gravar = process.argv.includes('--gravar');
   const baixa = gravar || process.argv.includes('--baixar');
   const modo = gravar ? 'gravar' : baixa ? 'baixar' : 'simulacao';
@@ -283,7 +351,7 @@ function gravarMontagens(rel) {
   const sql = neon(url);
   const linhas = await sql.query(`select d.id, d.doc_id, d.nome, d.competencia, d.unidade, d.cnpj_filial from documentos d
     join documento_regras r on r.doc_id = d.doc_id
-    where d.aba is not null and d.estado = 'PENDENTE_ENVIO' and r.origem = 'SharePoint' order by d.doc_id, d.competencia, d.id`);
+    where d.aba is not null and d.estado = 'PENDENTE_ENVIO' and (r.origem = 'SharePoint' or d.doc_id = any($1)) order by d.doc_id, d.competencia, d.id`, [DOCS_FORCADOS]);
   log(`Busca no SharePoint (${modo === 'baixar' ? 'baixa para o painel, não grava no banco' : modo}): ${linhas.length} pendência(s) de documento de empresa.`);
   const relatorio = { em: new Date().toISOString(), modo, itens: [] };
   if (linhas.length) {
@@ -298,13 +366,14 @@ function gravarMontagens(rel) {
       const regra = REGRAS[l.doc_id];
       if (!regra) { r.motivo = SEM_REGRA[l.doc_id] || 'sem regra para este tipo'; continue; }
       if (String(l.cnpj_filial).replace(/\D/g, '') !== FILIAL_20102080) { r.motivo = `filial ${l.cnpj_filial} não é a do 20102080 (Equatorial): pasta ainda não mapeada`; continue; }
-      const mes = await pastaDoMes(regra, l.competencia);
+      const mes = await pastaDoMes(regra, l.competencia, l);
       if (mes.erro) { r.motivo = mes.erro; continue; }
       let pasta = mes.pasta, caminho = mes.caminho;
       if (regra.tipo) {
-        const tipos = (await filhos(pasta.id)).filter((x) => x.folder && regra.tipo.test(normalizar(x.name)));
-        if (tipos.length !== 1) { r.motivo = tipos.length ? `${tipos.length} pastas do tipo em ${caminho}` : `não há pasta deste tipo em ${caminho}`; continue; }
-        pasta = tipos[0]; caminho += `/${pasta.name}`;
+        const escolha = escolherPasta((await filhos(pasta.id)).filter((x) => x.folder), regra.tipo);
+        if (!escolha.pasta) { r.motivo = escolha.n ? `${escolha.n} pastas do tipo em ${caminho}` : `não há pasta deste tipo em ${caminho}`; continue; }
+        pasta = escolha.pasta; caminho += `/${pasta.name}`;
+        if (escolha.aviso) mes.aviso = [mes.aviso, escolha.aviso].filter(Boolean).join('; ');
       }
       const un = UNIDADES[normalizar(l.unidade)];
       if (regra.porTomador) {
@@ -368,6 +437,11 @@ function gravarMontagens(rel) {
         if (regra.porUnidade) {
           if (!un) { r.motivo = `unidade "${l.unidade}" sem par no SharePoint (pendência de várias unidades?)`; r.candidatos = cand.map((x) => x.name); continue; }
           cand = cand.filter((x) => un.test(normalizar(x.name)));
+        } else if (regra.unidadeOpcional) {
+          const f = filtrarPorUnidade(cand, l.unidade);
+          if (f.motivo) { r.motivo = f.motivo; continue; }
+          cand = f.cand;
+          if (f.aviso) r.aviso = [r.aviso, f.aviso].filter(Boolean).join('; ');
         }
         const aptos = cand.filter((x) => PDF(x.name));
         if (aptos.length !== 1) {

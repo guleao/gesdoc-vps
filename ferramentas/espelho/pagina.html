@@ -23,8 +23,8 @@ header h1 { font-size: 14px; font-weight: 600; margin: 0 8px 0 0; }
 .seg button { height: 24px; padding: 0 10px; border: 0; border-radius: var(--r1); background: none; color: var(--t2); font: inherit; cursor: pointer; }
 .seg button.on { background: var(--s4); color: var(--t1); }
 .seg button .n { font-family: var(--mono); font-size: 11.5px; color: var(--t3); margin-left: 6px; }
-button.btn { height: 28px; padding: 0 12px; border: 1px solid var(--l2); border-radius: var(--r2); background: var(--s3); color: var(--t1); font: inherit; cursor: pointer; }
-button.btn:hover { background: var(--s4); }
+button.btn, a.btn { display: inline-flex; align-items: center; text-decoration: none; height: 28px; padding: 0 12px; border: 1px solid var(--l2); border-radius: var(--r2); background: var(--s3); color: var(--t1); font: inherit; cursor: pointer; }
+button.btn:hover, a.btn:hover { background: var(--s4); }
 .dir { margin-left: auto; display: flex; align-items: center; gap: 10px; color: var(--t2); }
 main { padding: 16px; max-width: 1700px; margin: 0 auto; }
 .cartoes { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
@@ -60,7 +60,30 @@ a { color: var(--in); text-decoration: none; } a:hover { text-decoration: underl
 h2 { font-size: 13px; font-weight: 600; margin: 20px 0 8px; }
 .dica { color: var(--t3); font-size: 12px; }
 tbody tr[data-i] { cursor: pointer; }
+tbody tr.dia td { background: var(--s2); color: var(--t2); font-size: 12px; padding-top: 10px; }
+#comoEnv { margin: 10px 0 0 8px; }
 tr.sel td { background: var(--s4); }
+/* Linguagem simples: situação em uma frase, próximo passo, ajuda da tela */
+td.resumo { min-width: 220px; }
+td.resumo .frase { font-weight: 500; display: block; }
+td.resumo .sub { color: var(--t2); font-size: 12px; display: block; }
+td a { white-space: nowrap; }
+td.passo { color: var(--t1); font-size: 12.5px; max-width: 320px; }
+td.passo .quem { display: block; color: var(--t3); font-size: 11.5px; margin-top: 2px; }
+.ajuda { background: var(--s2); border: 1px solid var(--l1); border-radius: var(--r3); padding: 10px 14px; margin-bottom: 14px; color: var(--t2); line-height: 1.55; }
+.ajuda summary { color: var(--t1); font-weight: 500; cursor: pointer; }
+.ajuda p { margin: 8px 0 0; max-width: 980px; }
+.ajuda b { color: var(--t1); font-weight: 500; }
+.legenda { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 10px; font-size: 12px; }
+.legenda i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 6px; vertical-align: 0; }
+.legenda i.er { background: var(--er); } .legenda i.at { background: var(--at); } .legenda i.in { background: var(--in); } .legenda i.ok { background: var(--ok); }
+td .frase { font-weight: 500; display: block; }
+td .sub { color: var(--t2); font-size: 12px; display: block; }
+td details summary { color: var(--in); cursor: pointer; }
+ul.itens { margin: 4px 0 0; padding-left: 18px; color: var(--t2); font-size: 12px; }
+ul.itens li { margin: 2px 0; }
+.oque { color: var(--t2); margin: 10px 0 0; }
+.oque b { color: var(--t1); font-weight: 500; }
 /* Ficha da pendência (mesmo roteiro das fichas de 27/10) */
 #ficha { position: fixed; top: 46px; right: 0; bottom: 0; width: min(620px, 100vw); background: var(--s1); border-left: 1px solid var(--l2); overflow: auto; padding: 18px 20px 40px; transform: translateX(100%); transition: transform .15s; z-index: 4; }
 #ficha.aberta { transform: none; }
@@ -86,14 +109,16 @@ tr.sel td { background: var(--s4); }
 </head>
 <body>
 <header>
-  <h1>Espelho dos portais</h1>
+  <h1>O que os robôs viram nos sites</h1>
   <div class="seg" id="portal">
-    <button data-p="atlas" class="on">Atlas</button>
-    <button data-p="bern">Bernhoeft</button>
+    <button data-p="atlas" class="on" title="Site do Atlas: documentos que a Equatorial pede">Atlas</button>
+    <button data-p="bern" title="Site do Bernhoeft (ContractWeb): documentos dos contratos">Bernhoeft</button>
+    <button data-p="hist" title="Tudo o que os robôs fizeram, do mais novo para o mais antigo">Histórico do robô</button>
   </div>
   <div class="dir">
     <span id="lido"></span>
-    <button class="btn" id="atualizar" title="Busca de novo o que o robô leu por último na VPS (não entra nos portais)">Atualizar</button>
+    <a class="btn" href="/planilhas" title="Planilhas de uso intensivo assistido (ver e baixar)">Planilhas</a>
+    <button class="btn" id="atualizar" title="Mostra a olhada mais recente do robô (não entra nos sites)">Atualizar</button>
   </div>
 </header>
 <main id="tela"><p class="fr">Carregando…</p></main>
@@ -109,7 +134,16 @@ const STATUS_ATLAS = {
 };
 const corAtlas = (s) => /Rejected/.test(s) ? 'er' : /Delay/.test(s) ? 'at' : /Valid$/.test(s) ? 'ok' : /ToValidate|Waiting/.test(s) ? 'in' : '';
 const corBern = (s) => /Não Entregue/i.test(s) ? 'er' : /Não Analisado/i.test(s) ? 'in' : /^Analisado/i.test(s) ? 'ok' : /reprov/i.test(s) ? 'er' : '';
+// Situação do Bernhoeft dita de um jeito simples (o nome do site fica embaixo, em cinza).
+const statusBernSimples = (s) => /Não Entregue/i.test(s) ? 'Falta entregar' : /Não Analisado/i.test(s) ? 'Entregue, esperando análise' : /^Analisado/i.test(s) ? 'Já analisado' : s;
 const ABAS_ATLAS = ['Atrasados', 'Próximas entregas', 'Reprovados'];
+// O que é cada aba, em uma frase (aparece logo abaixo das abas).
+const OQUE_ATLAS = {
+  Atrasados: '<b>Atrasados:</b> o prazo já passou e a Equatorial ainda não tem o documento certo. Os recusados também aparecem aqui quando o prazo deles já passou.',
+  'Próximas entregas': '<b>Próximas entregas:</b> ainda está dentro do prazo. Precisa ser enviado até a data da coluna Prazo.',
+  Reprovados: '<b>Reprovados:</b> a Equatorial abriu o arquivo enviado e recusou. Alguém precisa ler o motivo no site, apagar o arquivo recusado e mandar outro.',
+  'Enviados por nós': '<b>Enviados por nós:</b> o que o nosso sistema já mandou para o site. "Robô" = saiu sozinho; "painel" = alguém clicou em Enviar.',
+};
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const data = (s) => { const m = /^(\d{4})-(\d\d)-(\d\d)/.exec(s || ''); return m ? `${m[3]}/${m[2]}/${m[1]}` : (s || ''); };
@@ -117,7 +151,7 @@ const hora = (s) => s ? new Date(s).toLocaleString('pt-BR', { day: '2-digit', mo
 const nomeLeitura = (arq) => hora(arq.replace('.json', '').replace(/T(\d\d)-(\d\d)-(\d\d)-(\d+)Z/, 'T$1:$2:$3.$4Z'));
 const cpfMasc = (c) => !c ? '' : estado.verCpf ? c : String(c).replace(/^(\d{3})\.?(\d{3})\.?(\d{3})-?(\d{2})$/, '***.$2.$3-**');
 
-const estado = { portal: 'atlas', atlas: null, bern: null, abaAtlas: 'Atrasados', statusBern: 'todos', f: {}, ordem: null, verCpf: false, antigaAtlas: null, antigaBern: null };
+const estado = { portal: 'atlas', atlas: null, bern: null, abaAtlas: 'Atrasados', statusBern: 'todos', f: {}, ordem: null, verCpf: false, antigaAtlas: null, antigaBern: null, como: 'robo', hist: null, histDias: 3, histRobo: 'todos', histTudo: false };
 
 async function api(rota) {
   const r = await fetch(rota);
@@ -130,7 +164,8 @@ async function carregar(novo) {
   const tela = document.getElementById('tela');
   document.getElementById('lido').textContent = 'Lendo da VPS…';
   try {
-    if (estado.portal === 'atlas') estado.atlas = await api('/api/atlas' + (novo ? '?novo=1' : ''));
+    if (estado.portal === 'hist') estado.hist = await api('/api/historico?dias=' + estado.histDias);
+    else if (estado.portal === 'atlas') estado.atlas = await api('/api/atlas' + (novo ? '?novo=1' : ''));
     else estado.bern = await api('/api/bern' + (novo ? '?novo=1' : ''));
     desenhar();
   } catch (e) {
@@ -159,16 +194,50 @@ function filtrar(lista, campos) {
 
 const th = (c, t) => `<th data-ord="${c}">${esc(t)}${estado.ordem?.[0] === c ? (estado.ordem[1] > 0 ? ' ↑' : ' ↓') : ''}</th>`;
 
+// ---------- enviados (Atlas e Bernhoeft) ----------
+// Separa o que o robô enviou sozinho (auto) do que saiu pelo botão do painel, e agrupa por dia para acompanhar.
+const COMO_ENV = [['robo', 'Pelo robô (automático)'], ['painel', 'Pelo painel (à mão)'], ['todos', 'Todos']];
+const doComo = (envs, c) => (c === 'todos' ? envs : envs.filter((e) => (c === 'robo') === Boolean(e.auto)));
+const diaDe = (s) => new Date(s).toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
+const soHora = (s) => new Date(s).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+function haQuanto(s) {
+  const m = Math.round((Date.now() - new Date(s)) / 60000);
+  if (m < 60) return `há ${m} min`;
+  if (m < 48 * 60) return `há ${Math.round(m / 60)} h`;
+  return `há ${Math.round(m / 1440)} dias`;
+}
+function resumoEnvios(envs) {
+  const robo = envs.filter((e) => e.auto), hoje = new Date().toDateString();
+  const semana = robo.filter((e) => Date.now() - new Date(e.em) < 7 * 86400000).length;
+  const ultimo = robo.reduce((u, e) => (!u || e.em > u ? e.em : u), '');
+  return `<div class="cartoes">
+    <div class="cartao"><div class="rot">Enviados pelo robô</div><div class="val">${robo.length}</div><div class="sub">${ultimo ? `último ${esc(hora(ultimo))} (${esc(haQuanto(ultimo))})` : 'nenhum ainda'}</div></div>
+    <div class="cartao"><div class="rot">Pelo robô hoje</div><div class="val">${robo.filter((e) => new Date(e.em).toDateString() === hoje).length}</div><div class="sub">${semana} nos últimos 7 dias</div></div>
+    <div class="cartao"><div class="rot">Pelo painel (à mão)</div><div class="val">${envs.length - robo.length}</div><div class="sub">botão Enviar do painel</div></div></div>`;
+}
+const segComo = (envs) => `<div class="seg" id="comoEnv">${COMO_ENV.map(([c, t]) => `<button data-como="${c}" class="${c === estado.como ? 'on' : ''}">${esc(t)}<span class="n">${doComo(envs, c).length}</span></button>`).join('')}</div>`;
+// Linhas agrupadas por dia (a ordem de estado.vis é a mesma das linhas, para a ficha abrir certo).
+function linhasPorDia(lista, ncol, linha) {
+  let dia = '', out = '';
+  lista.forEach((e, k) => {
+    const d = diaDe(e.em);
+    if (d !== dia) { dia = d; out += `<tr class="dia"><td colspan="${ncol}">${esc(d)} · ${lista.filter((x) => diaDe(x.em) === d).length} envio(s)</td></tr>`; }
+    out += linha(e, k);
+  });
+  return out;
+}
+const celEnviado = (e) => `<td class="m">${esc(soHora(e.em))}<span class="cod">${esc(haQuanto(e.em))}</span></td><td>${e.auto ? '<span class="selo ok">robô</span>' : '<span class="selo in">painel</span>'}</td>`;
+
 function desenhar() {
   fecharFicha();
-  if (estado.portal === 'atlas') desenharAtlas(); else desenharBern();
+  if (estado.portal === 'hist') desenharHist(); else if (estado.portal === 'atlas') desenharAtlas(); else desenharBern();
 }
 
 // ---------- Atlas ----------
 function desenharAtlas() {
   const { coleta, nosso, painel_ok, leituras } = estado.atlas;
   const L = coleta.pendencias || [];
-  document.getElementById('lido').textContent = `Robô leu o Atlas em ${hora(coleta.coletado_em)}`;
+  document.getElementById('lido').textContent = `O robô olhou o Atlas pela última vez em ${hora(coleta.coletado_em)} (${haQuanto(coleta.coletado_em)})`;
   const tot = coleta.totais || {};
 
   // Comparação com uma leitura guardada antes.
@@ -181,71 +250,69 @@ function desenharAtlas() {
   const cartoes = ABAS_ATLAS.map((a) => {
     const n = L.filter((p) => p.aba === a).length;
     const igual = tot[a] == null || tot[a] === n;
-    return `<div class="cartao"><div class="rot">${esc(a)}</div><div class="val ${igual ? '' : 'er'}">${n}</div><div class="sub">${tot[a] == null ? 'o portal não informou o total' : igual ? `<span class="ok">o portal diz ${tot[a]}: igual</span>` : `<span class="er">o portal diz ${tot[a]}: faltam ${tot[a] - n}</span>`}</div></div>`;
-  }).join('') + `<div class="cartao"><div class="rot">Entregues</div><div class="val">${tot.Entregues ?? '?'}</div><div class="sub fr">total do portal; o robô não lê esta aba</div></div>`
-    + `<div class="cartao"><div class="rot">Com funcionário</div><div class="val">${L.filter((p) => p.cpf).length}</div><div class="sub">${new Set(L.filter((p) => p.cpf).map((p) => p.cpf)).size} pessoas diferentes</div></div>`;
+    return `<div class="cartao"><div class="rot">${esc(a)}</div><div class="val ${igual ? '' : 'er'}">${n}</div><div class="sub">${tot[a] == null ? 'o site não disse o total' : igual ? `<span class="ok">o site mostra ${tot[a]}: o robô viu todos</span>` : `<span class="er">o site mostra ${tot[a]}: o robô não viu ${tot[a] - n}</span>`}</div></div>`;
+  }).join('') + `<div class="cartao"><div class="rot">Já entregues (desde sempre)</div><div class="val">${tot.Entregues ?? '?'}</div><div class="sub fr">número do site; o robô não abre esta lista</div></div>`
+    + `<div class="cartao"><div class="rot">Documentos de funcionário</div><div class="val">${L.filter((p) => p.cpf).length}</div><div class="sub">de ${new Set(L.filter((p) => p.cpf).map((p) => p.cpf)).size} pessoas; o resto é da empresa</div></div>`;
 
   const daAba = L.filter((p) => p.aba === estado.abaAtlas);
   const enviadosTab = estado.abaAtlas === 'Enviados por nós';
+  // O histórico de envios não guarda a unidade: vem da linha do banco (mesmo id do Neon).
+  const unidadeBanco = new Map((estado.atlas.banco || []).map((l) => [String(l.id), l.unidade]));
+  const unidadeDe = (id) => unidadeBanco.get(String(id)) || '';
   const envs = [...(estado.atlas.enviados || [])].sort((a, b) => String(b.em).localeCompare(String(a.em)));
-  const lista = enviadosTab ? filtrar(envs, ['nome', 'funcionario', 'competencia', 'msg']) : filtrar(daAba, ['documento', 'funcionario', 'unidades', 'pedido', 'competencia', 'categoria', 'tipo']);
+  const lista = enviadosTab ? filtrar(doComo(envs, estado.como), ['nome', 'funcionario', 'competencia', 'msg']) : filtrar(daAba, ['documento', 'funcionario', 'unidades', 'pedido', 'competencia', 'categoria', 'tipo']);
   estado.vis = lista;
-  const linhasEnv = !enviadosTab ? '' : lista.map((e, k) => `<tr data-i="${k}">
-      <td class="doc">${esc(e.nome)}</td><td>${esc(e.funcionario || '')}</td><td class="m">${esc(e.competencia || '')}</td>
-      <td class="m">${esc(hora(e.em))}</td><td>${e.auto ? 'automático' : 'pelo painel'}</td>
+  const linhaEnv = (e, k) => `<tr data-i="${k}">
+      ${celEnviado(e)}<td class="doc">${esc(e.nome)}<span class="cod">${esc(unidadeDe(e.id))}</span></td><td>${esc(e.funcionario || '')}</td><td class="m">${esc(e.competencia || '')}</td>
       <td>${e.status_atlas ? `<span class="selo ${corAtlas(e.status_atlas)}">${esc(STATUS_ATLAS[e.status_atlas] || e.status_atlas)}</span>` : ''}</td>
-      <td>${e.schedule_id ? `<a href="https://gestao.atlasfacilities.com.br/document-schedule/${encodeURIComponent(e.schedule_id)}/general-information?resume=false" target="_blank" rel="noopener">abrir</a>` : ''}</td></tr>`).join('');
+      <td>${e.schedule_id ? `<a href="https://gestao.atlasfacilities.com.br/document-schedule/${encodeURIComponent(e.schedule_id)}/general-information?resume=false" target="_blank" rel="noopener">abrir</a>` : ''}</td></tr>`;
+  // Por dia só na ordem de envio; ordenado por outra coluna, lista corrida.
+  const linhasEnv = !enviadosTab ? '' : (!estado.ordem || estado.ordem[0] === 'em') ? linhasPorDia(lista, 7, linhaEnv) : lista.map(linhaEnv).join('');
+  // Colunas: situação em uma frase · documento · de quem · mês · prazo · quando foi enviado · próximo passo · link.
   const linhas = enviadosTab ? '' : lista.map((p, k) => {
     const n = nosso[p.document_schedule_id];
     const novo = ant && !antSched.has(p.document_schedule_id);
     const mudou = ant && !novo && antIds.get(p.document_schedule_id + '|' + p.aba)?.status !== p.status && antIds.has(p.document_schedule_id + '|' + p.aba);
-    let nossoTxt = '<span class="fr">não está na lista de envio</span>';
-    if (n) {
-      const partes = [];
-      if (n.enviado_em) partes.push(`<span class="ok">enviado ${esc(hora(n.enviado_em))}${n.enviado_auto ? ' (automático)' : ''}</span>`);
-      if (n.estado) partes.push(`#${esc(n.id)} ${esc(n.estado)}${n.pronta ? ' · <span class="ok">pronta</span>' : ''}`);
-      if (n.resultado && !n.resultado.ok && n.resultado.msg) partes.push(`<span class="er">${esc(n.resultado.msg.slice(0, 120))}</span>`);
-      else if (!n.pronta && n.motivos?.length) partes.push(`<span class="at">${esc(n.motivos[0].slice(0, 120))}</span>`);
-      nossoTxt = partes.join('<br>');
-    }
+    const r = resumoAtlas(p);
+    const quemEnviou = n?.enviado_em ? (n.enviado_auto ? 'pelo nosso robô' : 'pelo nosso painel') : 'por outra pessoa (fora do robô)';
+    const enviado = p.enviado_em ? `${esc(hora(p.enviado_em))}<span class="cod">${quemEnviou}</span>` : n?.enviado_em ? `${esc(hora(n.enviado_em))}<span class="cod">${n.enviado_auto ? 'pelo nosso robô' : 'pelo nosso painel'}</span>` : '<span class="fr">ainda não</span>';
     return `<tr data-i="${k}">
-      <td>${novo ? '<span class="selo in">novo</span> ' : ''}${mudou ? `<span class="selo at" title="antes: ${esc(STATUS_ATLAS[antIds.get(p.document_schedule_id + '|' + p.aba).status] || '')}">mudou</span> ` : ''}</td>
-      <td class="doc">${esc(p.documento)}</td>
-      <td>${esc(p.funcionario || '')}${p.cpf ? `<span class="cod">${esc(cpfMasc(p.cpf))}</span>` : ''}</td>
-      <td>${esc(p.unidades || '')}<span class="cod">${esc(p.cliente || '')}</span></td>
-      <td>${esc(p.categoria || '')}<span class="cod">${esc(p.tipo || '')}</span></td>
+      ${celResumo(r, `${STATUS_ATLAS[p.status] || p.status}${p.critico ? ', crítico' : ''}`)}
+      <td class="doc">${novo ? '<span class="selo in">apareceu agora</span> ' : ''}${mudou ? `<span class="selo at" title="antes: ${esc(STATUS_ATLAS[antIds.get(p.document_schedule_id + '|' + p.aba).status] || '')}">mudou</span> ` : ''}${esc(p.documento)}<span class="cod">${esc(p.unidades || '')}</span></td>
+      <td>${p.funcionario ? `${esc(p.funcionario)}${p.cpf ? `<span class="cod">${esc(cpfMasc(p.cpf))}</span>` : ''}` : '<span class="fr">da empresa</span>'}</td>
       <td class="m">${esc(p.competencia || '')}</td>
       <td class="m">${esc(data(p.prazo_envio))}</td>
-      <td><span class="selo ${corAtlas(p.status)}">${esc(STATUS_ATLAS[p.status] || p.status)}</span>${p.critico ? ' <span class="selo er">crítico</span>' : ''}<span class="cod">${esc(p.status)}</span></td>
-      <td class="m">${esc(p.pedido || '')}</td>
-      <td class="m">${p.enviado_em ? esc(hora(p.enviado_em)) : ''}${p.validade ? `<span class="cod">validade ${esc(data(p.validade))}</span>` : ''}</td>
-      <td class="nosso">${nossoTxt}</td>
-      <td>${p.document_schedule_id ? `<a href="https://gestao.atlasfacilities.com.br/document-schedule/${encodeURIComponent(p.document_schedule_id)}/general-information?resume=false" target="_blank" rel="noopener" title="Abre a pendência no Atlas (só a tela)">abrir</a>` : ''}</td>
+      <td class="m">${enviado}</td>
+      ${celPasso(r)}
+      <td>${p.document_schedule_id ? `<a href="https://gestao.atlasfacilities.com.br/document-schedule/${encodeURIComponent(p.document_schedule_id)}/general-information?resume=false" target="_blank" rel="noopener" title="Abre este documento no site do Atlas (só olhar; nada é enviado)">ver no site</a>` : ''}</td>
     </tr>`;
   }).join('');
 
   const outrasLeituras = leituras.filter((a) => a !== leituras[0]);
   document.getElementById('tela').innerHTML = `
-    ${painel_ok ? '' : '<div class="aviso">O painel não respondeu: a coluna "nosso sistema" está vazia.</div>'}
+    ${painel_ok ? '' : '<div class="aviso">O painel não respondeu: a parte "o que o nosso sistema está fazendo" ficou vazia. Clique em Atualizar daqui a pouco.</div>'}
+    ${comoLer('atlas', `<p>O <b>Atlas</b> é o site onde a Equatorial pede os documentos da NIP. <b>Cada linha da tabela é um documento que ela está pedindo.</b></p>
+      <p>O nosso robô entra no site de hora em hora, copia esta lista e tenta achar e enviar o documento sozinho. Esta tela mostra o que ele viu, do jeito que está no site.</p>
+      <p>Para cada documento, leia só duas colunas: <b>Situação</b> (como está, em uma frase) e <b>Próximo passo</b> (o que fazer e quem faz). <b>Clique em qualquer linha</b> para ver a explicação completa. Nada nesta tela envia ou muda coisa alguma.</p>`)}
     <div class="cartoes">${cartoes}</div>
     <div class="seg" id="abasAtlas">${ABAS_ATLAS.map((a) => `<button data-aba="${esc(a)}" class="${a === estado.abaAtlas ? 'on' : ''}">${esc(a)}<span class="n">${L.filter((p) => p.aba === a).length}</span></button>`).join('')}<button data-aba="Enviados por nós" class="${enviadosTab ? 'on' : ''}" title="Histórico de envios do painel: no Atlas eles estão na aba Entregues">Enviados por nós<span class="n">${envs.length}</span></button></div>
-    ${enviadosTab ? `<div class="filtros"><input type="search" data-f="busca" placeholder="Buscar documento, funcionário, competência" value="${esc(estado.f.busca || '')}"><span class="dica">No Atlas, estes ficam na aba Entregues (o robô não lê essa aba). Situação = a da conferência na hora do envio.</span><span class="contagem">${lista.length} de ${envs.length}</span></div>
-    <div class="tabela"><table><thead><tr>${th('nome', 'Documento')}${th('funcionario', 'Funcionário')}${th('competencia', 'Competência')}${th('em', 'Enviado em')}<th>Como</th>${th('status_atlas', 'Situação no envio')}<th></th></tr></thead>
+    <p class="oque">${OQUE_ATLAS[estado.abaAtlas] || ''}</p>
+    ${enviadosTab ? `${resumoEnvios(envs)}${segComo(envs)}<div class="filtros"><input type="search" data-f="busca" placeholder="Procurar documento, funcionário, mês" value="${esc(estado.f.busca || '')}"><span class="dica">No site do Atlas, estes ficam na aba "Entregues". A última coluna mostra como o site estava logo depois do envio.</span><span class="contagem">${lista.length} de ${envs.length}</span></div>
+    <div class="tabela"><table><thead><tr>${th('em', 'Enviado em')}<th>Quem enviou</th>${th('nome', 'Documento')}${th('funcionario', 'Funcionário')}${th('competencia', 'Mês')}${th('status_atlas', 'Como ficou no site')}<th></th></tr></thead>
       <tbody>${linhasEnv || '<tr><td colspan="7" class="fr">Nenhum envio registrado.</td></tr>'}</tbody></table></div>` : `
     <div class="filtros">
-      <input type="search" data-f="busca" placeholder="Buscar funcionário, CPF, documento, pedido" value="${esc(estado.f.busca || '')}">
-      ${opcoes(daAba, 'unidades', 'Unidade')}${opcoes(daAba, 'categoria', 'Categoria')}${opcoes(daAba, 'documento', 'Documento')}${opcoes(daAba, 'status', 'Status')}${opcoes(daAba, 'competencia', 'Competência')}
-      <label><input type="checkbox" data-f="comFunc" ${estado.f.comFunc ? 'checked' : ''}> só com funcionário</label>
-      <label><input type="checkbox" id="verCpf" ${estado.verCpf ? 'checked' : ''}> mostrar CPF</label>
-      <label>Comparar com <select id="antiga"><option value="">nenhuma leitura</option>${outrasLeituras.map((a) => `<option value="${esc(a)}" ${estado.antigaAtlas?._arq === a ? 'selected' : ''}>${esc(nomeLeitura(a))}</option>`).join('')}</select></label>
-      ${outrasLeituras.length ? '' : '<span class="dica">As leituras passam a ser guardadas a partir de agora (o robô só guarda a última).</span>'}
+      <input type="search" data-f="busca" placeholder="Procurar funcionário, documento, pedido" value="${esc(estado.f.busca || '')}">
+      ${opcoes(daAba, 'unidades', 'Unidade')}${opcoes(daAba, 'documento', 'Documento')}${opcoes(daAba, 'competencia', 'Mês')}${opcoes(daAba, 'status', 'Situação no site')}${opcoes(daAba, 'categoria', 'Categoria')}
+      <label><input type="checkbox" data-f="comFunc" ${estado.f.comFunc ? 'checked' : ''}> só de funcionário</label>
+      ${estado.atlas?.cpf_oculto ? '' : `<label><input type="checkbox" id="verCpf" ${estado.verCpf ? 'checked' : ''}> mostrar CPF</label>`}
+      <label title="Mostra o que apareceu, mudou ou sumiu desde uma olhada anterior do robô">Comparar com a olhada de <select id="antiga"><option value="">não comparar</option>${outrasLeituras.map((a) => `<option value="${esc(a)}" ${estado.antigaAtlas?._arq === a ? 'selected' : ''}>${esc(nomeLeitura(a))}</option>`).join('')}</select></label>
       <span class="contagem">${lista.length} de ${daAba.length}</span>
     </div>
     <div class="tabela"><table>
-      <thead><tr><th></th>${th('documento', 'Documento')}${th('funcionario', 'Funcionário')}${th('unidades', 'Unidade')}${th('categoria', 'Categoria')}${th('competencia', 'Competência')}${th('prazo_envio', 'Prazo de envio')}${th('status', 'Status')}${th('pedido', 'Pedido')}${th('enviado_em', 'Enviado em')}<th>Nosso sistema</th><th></th></tr></thead>
-      <tbody>${linhas || '<tr><td colspan="12" class="fr">Nada com esses filtros.</td></tr>'}</tbody>
+      <thead><tr>${th('status', 'Situação')}${th('documento', 'Documento e unidade')}${th('funcionario', 'De quem')}${th('competencia', 'Mês')}${th('prazo_envio', 'Prazo')}${th('enviado_em', 'Arquivo enviado em')}<th>Próximo passo</th><th></th></tr></thead>
+      <tbody>${linhas || '<tr><td colspan="8" class="fr">Nada com esses filtros.</td></tr>'}</tbody>
     </table></div>`}
-    ${ant ? `<h2>Saíram desde ${esc(nomeLeitura(ant._arq))} (${saiu.length})</h2>
+    ${ant ? `<h2>Sumiram da lista desde a olhada de ${esc(nomeLeitura(ant._arq))} (${saiu.length}): foram entregues ou a Equatorial tirou o pedido</h2>
       <div class="tabela" style="max-height:none"><table><thead><tr><th>Aba</th><th>Documento</th><th>Funcionário</th><th>Unidade</th><th>Competência</th><th>Status antes</th></tr></thead><tbody>
       ${saiu.map((p) => `<tr class="saiu"><td>${esc(p.aba)}</td><td>${esc(p.documento)}</td><td>${esc(p.funcionario || '')}</td><td>${esc(p.unidades || '')}</td><td class="m">${esc(p.competencia || '')}</td><td>${esc(STATUS_ATLAS[p.status] || p.status)}</td></tr>`).join('') || '<tr><td colspan="6" class="fr">Nenhuma.</td></tr>'}
       </tbody></table></div>` : ''}
@@ -253,11 +320,80 @@ function desenharAtlas() {
   ligar();
 }
 
+// ---------- Histórico do robô ----------
+// Tudo o que os robôs fizeram, do mais novo para o mais antigo, agrupado por dia. As olhadas sem novidade ficam escondidas
+// (o robô olha o Atlas de hora em hora e o Bernhoeft a cada 30 min): só aparecem marcando a caixa.
+const COR_HIST = { envio: 'ok', recusa: 'er', parou: 'er', erro: 'er', segurou: 'at', mudanca: 'in', leitura: '' };
+const ROBOS_HIST = [['todos', 'Todos'], ['Atlas', 'Robô Atlas'], ['Bernhoeft', 'Robô Bernhoeft'], ['Sincronização', 'Sincronização da Factorial']];
+function desenharHist() {
+  const H = estado.hist, ag = H.agora || {};
+  document.getElementById('lido').textContent = `Histórico montado em ${hora(H.gerado_em)}`;
+  const todos = H.eventos || [];
+  const doRobo = estado.histRobo === 'todos' ? todos : todos.filter((e) => e.robo === estado.histRobo);
+  const busca = (estado.f.busca || '').toLowerCase();
+  const lista = doRobo.filter((e) => (estado.histTudo || e.tipo !== 'leitura')
+    && (!busca || [e.titulo, e.detalhe, ...(e.itens || [])].join(' ').toLowerCase().includes(busca)));
+  const conta = (t) => doRobo.filter((e) => e.tipo === t).reduce((s, e) => s + (t === 'envio' || t === 'recusa' || t === 'segurou' ? (e.itens?.length || 1) : 1), 0);
+
+  // Como cada robô está agora.
+  const at = ag.atlas, bn = ag.bern, sc = ag.sinc;
+  const envioTxt = (m) => !m ? '' : !m.liberado ? 'envio bloqueado no painel' : m.automatico ? 'envio automático ligado' : 'envio liberado, mas só à mão';
+  const agora = `<div class="cartoes">
+    <div class="cartao"><div class="rot">Robô Atlas agora</div><div class="val ${at?.erro?.length ? 'er' : ''}">${at ? (at.fazendo ? esc(at.fazendo) : 'esperando') : '?'}</div>
+      <div class="sub">${at ? `última rodada ${esc(hora(at.ultima))} (${esc(haQuanto(at.ultima))})${at.proxima ? ` · próxima ${esc(soHora(at.proxima))}` : ''}<br>${esc(envioTxt(at))}${at.erro?.length ? `<br><span class="er">deu erro em: ${esc(at.erro.join(', '))}</span>` : ''}` : 'sem informação'}</div></div>
+    <div class="cartao"><div class="rot">Robô Bernhoeft agora</div><div class="val">${bn?.ultima ? esc(haQuanto(bn.ultima)) : '?'}</div>
+      <div class="sub">${bn?.ultima ? `última olhada ${esc(hora(bn.ultima))}` : 'nenhuma olhada no período'}<br>${esc(envioTxt(bn))}${bn?.automatico ? ` (certeza mínima ${esc({ media: 'média' }[bn.confianca] || bn.confianca)})` : ''}</div></div>
+    <div class="cartao"><div class="rot">Sincronização da Factorial</div><div class="val ${sc && !sc.ok ? 'er' : ''}">${sc ? (sc.ok ? 'rodou bem' : 'falhou') : '?'}</div>
+      <div class="sub">${sc ? `última vez ${esc(hora(sc.em))} (${esc(haQuanto(sc.em))})` : 'nenhuma rodada no período'}<br>roda de 2 em 2 horas, das 7h às 19h</div></div>
+  </div>`;
+  const numeros = `<div class="cartoes">
+    <div class="cartao"><div class="rot">Documentos enviados</div><div class="val ok">${conta('envio')}</div><div class="sub">nos últimos ${H.dias} dia(s)</div></div>
+    <div class="cartao"><div class="rot">Envios recusados pelo site</div><div class="val ${conta('recusa') ? 'er' : ''}">${conta('recusa')}</div><div class="sub">tentou e o site não aceitou</div></div>
+    <div class="cartao"><div class="rot">Segurados</div><div class="val ${conta('segurou') ? 'at' : ''}">${conta('segurou')}</div><div class="sub">o robô parou de tentar sozinho</div></div>
+    <div class="cartao"><div class="rot">Erros e paradas</div><div class="val ${conta('erro') + conta('parou') ? 'er' : ''}">${conta('erro') + conta('parou')}</div><div class="sub">algo não rodou como devia</div></div>
+    <div class="cartao"><div class="rot">Olhadas nos sites</div><div class="val">${conta('leitura') + conta('mudanca')}</div><div class="sub">${conta('mudanca')} com alguma mudança</div></div>
+  </div>`;
+
+  let dia = '', linhas = '';
+  for (const e of lista) {
+    const d = diaDe(e.em);
+    if (d !== dia) { dia = d; linhas += `<tr class="dia"><td colspan="4">${esc(d)}</td></tr>`; }
+    const itens = e.itens || [];
+    linhas += `<tr>
+      <td class="m">${esc(soHora(e.em))}</td>
+      <td><span class="selo">${esc(e.robo === 'Sincronização' ? 'Sincronização' : 'Robô ' + e.robo)}</span>${e.auto != null && e.tipo === 'envio' ? `<span class="cod">${e.auto ? 'sozinho' : 'pelo painel'}</span>` : ''}</td>
+      <td><span class="frase ${COR_HIST[e.tipo] || ''}">${esc(e.titulo)}</span>${e.detalhe ? `<span class="sub">${esc(e.detalhe)}</span>` : ''}</td>
+      <td>${itens.length === 1 ? esc(itens[0]) : itens.length ? `<details><summary>ver os ${itens.length}</summary><ul class="itens">${itens.map((i) => `<li>${esc(i)}</li>`).join('')}</ul></details>` : ''}</td>
+    </tr>`;
+  }
+  const escondidas = doRobo.filter((e) => e.tipo === 'leitura').length;
+
+  document.getElementById('tela').innerHTML = `
+    ${comoLer('hist', `<p>Esta tela é o <b>diário dos robôs</b>: tudo o que eles fizeram, do mais novo para o mais antigo. Cada linha é uma ação, com a hora.</p>
+      <p><b>Verde</b> = enviou um documento. <b>Vermelho</b> = tentou e o site recusou, ou algo deu erro. <b>Amarelo</b> = o robô segurou um documento e não vai mais tentar sozinho. <b>Azul</b> = olhou o site e algo mudou (apareceu, saiu ou mudou de situação).</p>
+      <p>As olhadas em que nada mudou ficam escondidas para não poluir; marque "mostrar também as olhadas sem novidade" para ver todas. Quando uma linha junta vários documentos, clique em "ver os N".</p>`, false)}
+    ${agora}
+    ${numeros}
+    <div class="seg" id="histRobo">${ROBOS_HIST.map(([r, t]) => `<button data-r="${esc(r)}" class="${r === estado.histRobo ? 'on' : ''}">${esc(t)}<span class="n">${(r === 'todos' ? todos : todos.filter((e) => e.robo === r)).filter((e) => e.tipo !== 'leitura').length}</span></button>`).join('')}</div>
+    <div class="filtros">
+      <input type="search" data-f="busca" placeholder="Procurar documento, unidade, mês, motivo" value="${esc(estado.f.busca || '')}">
+      <label>Período <select id="histDias">${[1, 3, 7, 15, 30].map((d) => `<option value="${d}" ${d === estado.histDias ? 'selected' : ''}>${d === 1 ? 'último dia' : `últimos ${d} dias`}</option>`).join('')}</select></label>
+      <label><input type="checkbox" id="histTudo" ${estado.histTudo ? 'checked' : ''}> mostrar também as olhadas sem novidade (${escondidas})</label>
+      <span class="contagem">${lista.length} ações</span>
+    </div>
+    <div class="tabela"><table><thead><tr><th>Hora</th><th>Quem</th><th>O que fez</th><th>Quais documentos</th></tr></thead>
+      <tbody>${linhas || '<tr><td colspan="4" class="fr">Nenhuma ação com esses filtros.</td></tr>'}</tbody></table></div>`;
+  ligar();
+  document.querySelectorAll('#histRobo button').forEach((b) => b.addEventListener('click', () => { estado.histRobo = b.dataset.r; desenhar(); }));
+  document.getElementById('histDias').addEventListener('change', (ev) => { estado.histDias = Number(ev.target.value); carregar(); });
+  document.getElementById('histTudo').addEventListener('change', (ev) => { estado.histTudo = ev.target.checked; desenhar(); });
+}
+
 // ---------- Bernhoeft ----------
 function desenharBern() {
   const { coleta, leituras } = estado.bern;
   const L = coleta.itens || [];
-  document.getElementById('lido').textContent = `Robô leu o Bernhoeft em ${hora(coleta.coletado_em)}`;
+  document.getElementById('lido').textContent = `O robô olhou o Bernhoeft pela última vez em ${hora(coleta.coletado_em)} (${haQuanto(coleta.coletado_em)})`;
   const ant = estado.antigaBern;
   const antMap = ant ? new Map(ant.itens.map((x) => [x.chave, x])) : null;
   const atu = new Set(L.map((x) => x.chave));
@@ -271,54 +407,64 @@ function desenharBern() {
   const aviso012 = !data012
     ? '<div class="aviso">Não dá para saber de quando é o relatório 012 usado nesta leitura: a situação dos documentos pode estar velha.</div>'
     : dias012 >= 2
-      ? `<div class="aviso">A situação de cada documento abaixo vem do <b>relatório 012 pedido em ${esc(hora(data012))}</b> (${dias012} dias atrás), não do portal de hoje. O robô lê a tela a cada 30 min, mas o status por documento só muda quando sai um relatório 012 novo. Por isso o que foi enviado depois dessa data (por exemplo, os dois de 26/10) ainda aparece como "Não Entregue".</div>`
+      ? `<div class="aviso"><b>Atenção: a situação abaixo está velha.</b> Ela é de ${esc(hora(data012))} (${dias012} dias atrás). O Bernhoeft só informa a situação de cada documento num relatório (o "012"), e o último que o robô conseguiu é dessa data. Por isso, o que foi enviado depois dela (por exemplo, os dois de 26/10) ainda aparece como "falta entregar".</div>`
       : '';
-  const cartoes = `<div class="cartao"><div class="rot">Documentos lidos</div><div class="val">${L.length}</div><div class="sub">${data012 ? `relatório 012 de <span class="${dias012 >= 2 ? 'at' : ''}">${esc(hora(data012))}</span>` : ''}</div></div>`
-    + status.map((s) => `<div class="cartao"><div class="rot">${esc(s)}</div><div class="val ${corBern(s)}">${L.filter((x) => x.status === s).length}</div></div>`).join('')
-    + `<div class="cartao"><div class="rot">Com colaborador</div><div class="val">${L.filter((x) => x.colaboradores).length}</div><div class="sub fr">${coleta.incluiu_concluidos ? 'inclui concluídos' : 'sem os concluídos'}</div></div>`;
+  const cartoes = `<div class="cartao"><div class="rot">Documentos pedidos</div><div class="val">${L.length}</div><div class="sub">${data012 ? `situação de <span class="${dias012 >= 2 ? 'at' : ''}">${esc(hora(data012))}</span>` : ''}</div></div>`
+    + status.map((s) => `<div class="cartao"><div class="rot">${esc(statusBernSimples(s))}</div><div class="val ${corBern(s)}">${L.filter((x) => x.status === s).length}</div><div class="sub fr">no site: ${esc(s)}</div></div>`).join('')
+    + `<div class="cartao"><div class="rot">De funcionário</div><div class="val">${L.filter((x) => x.colaboradores).length}</div><div class="sub fr">o resto é documento da empresa</div></div>`;
 
-  const daAba = estado.statusBern === 'todos' ? L : L.filter((x) => x.status === estado.statusBern);
-  const lista = filtrar(daAba, ['contrato', 'contratada', 'area', 'descricao', 'colaboradores', 'unidade', 'competencia']);
+  const envTab = estado.statusBern === '__env';
+  const envs = [...(estado.bern.envio?.enviados || [])].sort((a, b) => String(b.em).localeCompare(String(a.em)));
+  const daAba = envTab ? [] : estado.statusBern === 'todos' ? L : L.filter((x) => x.status === estado.statusBern);
+  const lista = envTab ? filtrar(doComo(envs, estado.como), ['contrato', 'documento', 'msg']) : filtrar(daAba, ['contrato', 'contratada', 'area', 'descricao', 'colaboradores', 'unidade', 'competencia']);
   estado.vis = lista;
-  const linhas = lista.map((x, k) => {
+  const linhaEnv = (e, k) => `<tr data-i="${k}">${celEnviado(e)}<td class="m">${esc(e.contrato)}</td><td class="doc">${esc(e.documento)}</td>
+      <td>${e.status_portal ? `<span class="selo ${corBern(e.status_portal)}">${esc(e.status_portal)}</span>` : ''}<span class="cod">${esc(e.competencia_status || '')}</span></td>
+      <td>${esc(e.confianca || '')}</td><td>${esc(e.arquivo_portal || '')}${e.kb ? `<span class="cod">${esc(e.kb)} KB</span>` : ''}</td></tr>`;
+  const linhasEnv = !envTab ? '' : (!estado.ordem || estado.ordem[0] === 'em') ? linhasPorDia(lista, 7, linhaEnv) : lista.map(linhaEnv).join('');
+  const linhas = envTab ? '' : lista.map((x, k) => {
     const a = antMap?.get(x.chave);
     const novo = ant && !a;
     const mudou = a && a.status !== x.status;
+    const r = resumoBern(x);
     return `<tr data-i="${k}">
-      <td>${novo ? '<span class="selo in">novo</span>' : ''}${mudou ? `<span class="selo at" title="antes: ${esc(a.status)}">mudou</span>` : ''}</td>
+      ${celResumo(r, x.status)}
+      <td class="doc">${novo ? '<span class="selo in">apareceu agora</span> ' : ''}${mudou ? `<span class="selo at" title="antes: ${esc(a.status)}">mudou</span> ` : ''}${esc(x.descricao)}<span class="cod">${esc([x.area, x.unidade].filter(Boolean).join(' · '))}</span></td>
       <td class="m">${esc(x.contrato)}</td>
-      <td>${esc(x.contratada)}</td>
-      <td>${esc(x.area)}<span class="cod">${esc(x.unidade || '')}</span></td>
+      <td>${x.colaboradores ? esc(x.colaboradores) : '<span class="fr">da empresa</span>'}</td>
       <td class="m">${esc(x.competencia)}</td>
-      <td class="doc">${esc(x.descricao)}</td>
-      <td>${esc(x.colaboradores || '')}</td>
-      <td>${esc(x.risco || '')}</td>
-      <td>${esc(x.tipo || '')}</td>
-      <td><span class="selo ${corBern(x.status)}">${esc(x.status)}</span>${mudou ? `<span class="cod">antes: ${esc(a.status)}</span>` : ''}${x.docs_pendentes ? ' <span class="selo er">docs pendentes</span>' : ''}</td>
+      ${celPasso(r)}
     </tr>`;
   }).join('');
 
   const r012 = coleta.relatorio012;
   const outras = leituras.filter((a) => a !== leituras[0]);
   document.getElementById('tela').innerHTML = `
+    ${comoLer('bern', `<p>O <b>Bernhoeft</b> (ContractWeb) é o outro site onde a Equatorial pede documentos, separados por contrato. <b>Cada linha da tabela é um documento pedido em um contrato.</b></p>
+      <p>O nosso robô olha este site a cada 30 minutos. Para os documentos da empresa, ele procura o arquivo e pode enviar sozinho. Os documentos de funcionário ainda são enviados à mão.</p>
+      <p>Leia só duas colunas: <b>Situação</b> (como está) e <b>Próximo passo</b> (o que fazer e quem faz). <b>Clique em qualquer linha</b> para ver a explicação completa. Nada nesta tela envia ou muda coisa alguma.</p>`)}
     ${aviso012}
     <div class="cartoes">${cartoes}</div>
-    <div class="seg" id="statusBern">${['todos', ...status].map((s) => `<button data-st="${esc(s)}" class="${s === estado.statusBern ? 'on' : ''}">${s === 'todos' ? 'Todos' : esc(s)}<span class="n">${s === 'todos' ? L.length : L.filter((x) => x.status === s).length}</span></button>`).join('')}</div>
+    <div class="seg" id="statusBern">${['todos', ...status].map((s) => `<button data-st="${esc(s)}" class="${s === estado.statusBern ? 'on' : ''}" title="${s === 'todos' ? '' : `No site: ${esc(s)}`}">${s === 'todos' ? 'Todos' : esc(statusBernSimples(s))}<span class="n">${s === 'todos' ? L.length : L.filter((x) => x.status === s).length}</span></button>`).join('')}<button data-st="__env" class="${envTab ? 'on' : ''}">Enviados por nós<span class="n">${envs.length}</span></button></div>
+    <p class="oque">${envTab ? '<b>Enviados por nós:</b> o que o nosso sistema já mandou para o site. "Robô" = saiu sozinho; "painel" = alguém clicou em Enviar.' : '<b>Vermelho</b> = ainda falta entregar. <b>Azul</b> = já entregue, esperando alguém do Bernhoeft olhar. <b>Verde</b> = já olharam (o resultado, aprovado ou não, só aparece no site).'}</p>
+    ${envTab ? `${resumoEnvios(envs)}${segComo(envs)}<div class="filtros"><input type="search" data-f="busca" placeholder="Procurar contrato, documento" value="${esc(estado.f.busca || '')}"><span class="dica">"Como ficou no site" = o que o site mostrava logo depois do envio. "Certeza" = o quanto o robô tinha certeza de que o arquivo era o certo.</span><span class="contagem">${lista.length} de ${envs.length}</span></div>
+    <div class="tabela"><table><thead><tr>${th('em', 'Enviado em')}<th>Quem enviou</th>${th('contrato', 'Contrato')}${th('documento', 'Documento')}${th('status_portal', 'Como ficou no site')}${th('confianca', 'Certeza')}<th>Arquivo</th></tr></thead>
+      <tbody>${linhasEnv || '<tr><td colspan="7" class="fr">Nenhum envio com esse filtro.</td></tr>'}</tbody></table></div>` : `
     <div class="filtros">
-      <input type="search" data-f="busca" placeholder="Buscar contrato, área, documento, colaborador" value="${esc(estado.f.busca || '')}">
-      ${opcoes(daAba, 'contrato', 'Contrato')}${opcoes(daAba, 'area', 'Área')}${opcoes(daAba, 'unidade', 'Unidade')}${opcoes(daAba, 'tipo', 'Tipo')}${opcoes(daAba, 'competencia', 'Competência')}
-      <label>Comparar com <select id="antiga"><option value="">nenhuma leitura</option>${outras.map((a) => `<option value="${esc(a)}" ${estado.antigaBern?._arq === a ? 'selected' : ''}>${esc(nomeLeitura(a))}</option>`).join('')}</select></label>
+      <input type="search" data-f="busca" placeholder="Procurar contrato, área, documento, funcionário" value="${esc(estado.f.busca || '')}">
+      ${opcoes(daAba, 'contrato', 'Contrato')}${opcoes(daAba, 'area', 'Área')}${opcoes(daAba, 'unidade', 'Unidade')}${opcoes(daAba, 'competencia', 'Mês')}${opcoes(daAba, 'tipo', 'Tipo')}
+      <label title="Mostra o que apareceu, mudou ou sumiu desde uma olhada anterior do robô">Comparar com a olhada de <select id="antiga"><option value="">não comparar</option>${outras.map((a) => `<option value="${esc(a)}" ${estado.antigaBern?._arq === a ? 'selected' : ''}>${esc(nomeLeitura(a))}</option>`).join('')}</select></label>
       <span class="contagem">${lista.length} de ${daAba.length}</span>
     </div>
     <div class="tabela"><table>
-      <thead><tr><th></th>${th('contrato', 'Contrato')}${th('contratada', 'Contratada')}${th('area', 'Área')}${th('competencia', 'Competência')}${th('descricao', 'Documento')}${th('colaboradores', 'Colaboradores')}${th('risco', 'Risco')}${th('tipo', 'Tipo')}${th('status', 'Status')}</tr></thead>
-      <tbody>${linhas || '<tr><td colspan="10" class="fr">Nada com esses filtros.</td></tr>'}</tbody>
-    </table></div>
-    ${ant ? `<h2>Saíram desde ${esc(nomeLeitura(ant._arq))} (${saiu.length})</h2>
+      <thead><tr>${th('status', 'Situação')}${th('descricao', 'Documento e área')}${th('contrato', 'Contrato')}${th('colaboradores', 'De quem')}${th('competencia', 'Mês')}<th>Próximo passo</th></tr></thead>
+      <tbody>${linhas || '<tr><td colspan="6" class="fr">Nada com esses filtros.</td></tr>'}</tbody>
+    </table></div>`}
+    ${ant ? `<h2>Sumiram da lista desde a olhada de ${esc(nomeLeitura(ant._arq))} (${saiu.length}): foram entregues ou a Equatorial tirou o pedido</h2>
       <div class="tabela" style="max-height:none"><table><thead><tr><th>Contrato</th><th>Área</th><th>Competência</th><th>Documento</th><th>Status antes</th></tr></thead><tbody>
       ${saiu.map((x) => `<tr class="saiu"><td>${esc(x.contrato)}</td><td>${esc(x.area)}</td><td>${esc(x.competencia)}</td><td>${esc(x.descricao)}</td><td>${esc(x.status)}</td></tr>`).join('') || '<tr><td colspan="5" class="fr">Nenhuma.</td></tr>'}
       </tbody></table></div>` : ''}
-    ${r012 ? `<h2>Relatório 012 (pedidos de relatório) · ${r012.total_pedidos ?? r012.pedidos?.length ?? 0}</h2>
+    ${r012 ? `<h2>Relatórios "012" pedidos ao site (é deles que vem a situação de cada documento) · ${r012.total_pedidos ?? r012.pedidos?.length ?? 0}</h2>
       <div class="tabela" style="max-height:320px"><table><thead><tr><th>Solicitado em</th><th>Status</th><th>Contratante</th><th>Grupo/área</th><th>Unidade</th><th>Download</th></tr></thead><tbody>
       ${(r012.pedidos || []).map((p) => `<tr><td class="m">${esc(p.solicitado_em)}</td><td>${esc(p.status)}</td><td>${esc(p.contratante)}</td><td>${esc(p.grupo_area)}</td><td>${esc(p.unidade)}</td><td>${p.tem_download ? 'sim' : '<span class="fr">não</span>'}</td></tr>`).join('')}
       </tbody></table></div>` : ''}
@@ -335,8 +481,8 @@ const DIA = 86400000;
 const diasAte = (iso) => { const m = /^(\d{4})-(\d\d)-(\d\d)/.exec(iso || ''); return m ? Math.round((new Date(+m[1], m[2] - 1, +m[3]) - new Date(new Date().toDateString())) / DIA) : null; };
 const comp = (s) => { const t = String(s || ''); const a = /^(\d{4})-(\d\d)/.exec(t), b = /(\d\d)\/(\d{4})/.exec(t); return a ? `${a[2]}/${a[1]}` : b ? `${b[1]}/${b[2]}` : t; };
 const ESTADO_NEON = {
-  PENDENTE_ENVIO: 'na fila: ainda sem arquivo', LOCALIZADO: 'arquivo achado', COMPOSTO: 'PDF montado (partes unidas)', ENVIADO: 'enviado',
-  REJEITADO: 'reprovado no Atlas', DIVERGENTE_FACTORIAL: 'divergente da Factorial',
+  PENDENTE_ENVIO: 'ainda sem arquivo', LOCALIZADO: 'arquivo encontrado', COMPOSTO: 'arquivo montado (juntamos várias partes num PDF só)', ENVIADO: 'já enviado',
+  REJEITADO: 'o arquivo foi recusado pela Equatorial', DIVERGENTE_FACTORIAL: 'o arquivo não bate com o que está na Factorial',
 };
 const DIAG_OK = typeof DIAG !== 'undefined' ? DIAG : [];
 
@@ -367,12 +513,20 @@ function situacaoNossa(p, b, n, env) {
     r.fazer.push(['Abrir no Atlas e ver se o arquivo está lá.', 'equipe']);
     return r;
   }
+  // Tipo de documento que não existe no banco (nenhuma linha com este nome): o robô não tem regra para ele (neon.js, REGRAS).
+  if (!b && p.aba !== 'Reprovados' && !(estado.atlas.banco || []).some((x) => semAcento(x.documento) === semAcento(p.documento))) {
+    r.agora = 'Este tipo de documento não está cadastrado no nosso sistema: o robô vê o pedido, mas não sabe procurar nem enviar.';
+    r.aconteceu = `Nenhuma pendência "${p.documento}" foi gravada no nosso banco.`;
+    r.porque = 'O robô só trata os tipos de documento que têm regra (a lista de nomes no neon.js). Este nome não está na lista, ou o site mudou o nome.';
+    r.fazer.push(['Enviar à mão no site do Atlas enquanto isso.', 'NIP'], ['Pedir para cadastrar este tipo de documento no robô.', 'quem cuida do sistema']);
+    return r;
+  }
   if (!b) {
     r.agora = 'Não achamos esta pendência no banco (Neon).';
     r.porque = p.aba === 'Reprovados' ? 'A aba Reprovados não é gravada no banco: o item reprovado entra pela aba Atrasados.' : 'Pode ser nova: o robô grava no banco a cada rodada (60 min). Se continuar assim depois de uma rodada, a ligação falhou.';
     return r;
   }
-  r.agora = `No nosso banco: #${b.id}, ${ESTADO_NEON[b.estado] || b.estado}${b.fonte ? ` (vem de ${b.fonte})` : ''}.`;
+  r.agora = `No nosso sistema: ${ESTADO_NEON[b.estado] || b.estado}${b.fonte ? ` (o arquivo vem da ${b.fonte})` : ''}.`;
   if (b.estado === 'ENVIADO') {
     r.aconteceu = 'O banco diz que foi enviado, mas o Atlas ainda mostra o item sem arquivo.';
     r.porque = 'O envio foi registrado fora do histórico do painel, ou o Atlas reabriu o item.';
@@ -454,7 +608,7 @@ function fichaEnviado(e) {
   const naColeta = (estado.atlas.coleta.pendencias || []).filter((p) => String(p.document_schedule_id) === String(e.schedule_id));
   return {
     num: `Atlas · enviado por nós · #${e.id}`, quem: [e.nome, e.funcionario, e.competencia].filter(Boolean).join(' · '),
-    titulo: `Enviado em ${hora(e.em)} (${e.auto ? 'automático' : 'pelo painel'})`,
+    titulo: `Enviado em ${hora(e.em)} ${e.auto ? 'pelo robô (automático)' : 'pelo painel (à mão)'}`,
     agora: e.msg || 'Envio registrado no histórico do painel.',
     portal: naColeta.length ? `Voltou a aparecer na leitura de agora: ${naColeta.map((p) => `${p.aba}, ${STATUS_ATLAS[p.status] || p.status}`).join(' · ')}.` : 'Não aparece em Atrasados, Próximas nem Reprovados: está na aba "Entregues" do Atlas, que o robô não lê.',
     aconteceu: `Na conferência feita na hora do envio, o Atlas mostrava: ${STATUS_ATLAS[s] || s || 'sem situação'}.`,
@@ -465,6 +619,24 @@ function fichaEnviado(e) {
     link: e.schedule_id ? `https://gestao.atlasfacilities.com.br/document-schedule/${encodeURIComponent(e.schedule_id)}/general-information?resume=false` : '',
     manual: DIAG_OK.find((d) => d.onde === 'atlas' && d.ids.includes(Number(e.id))),
     dados: [['schedule_id', e.schedule_id], ['Situação na hora', s]],
+  };
+}
+
+// Envio do Bernhoeft: se a pendência ainda está na leitura, a ficha dela (que já conta o envio); senão, só o registro do envio.
+function fichaEnviadoBern(e) {
+  const item = (estado.bern.coleta.itens || []).find((x) => x.chave === e.chave);
+  if (item) return fichaBern(item);
+  return {
+    num: `Bernhoeft · enviado por nós · ${e.contrato}`, quem: e.documento,
+    titulo: `Enviado em ${hora(e.em)} ${e.auto ? 'pelo robô (automático)' : 'pelo painel (à mão)'}`,
+    agora: e.msg || 'Envio registrado pelo entregar.js.',
+    portal: e.status_portal ? `Logo depois do envio o portal mostrava: ${e.status_portal}.` : '',
+    aconteceu: `O arquivo ${e.arquivo_portal || ''} foi para a competência "Documentos da empresa" do contrato (confiança ${e.confianca || '?'}).`,
+    porque: 'A pendência não está mais na leitura de agora.',
+    fazer: [['Nada a fazer agora: esperar a análise do Bernhoeft/Equatorial.', '']],
+    resolvido: 'Quando o relatório 012 mostrar "Analisado".',
+    sabemos: ['Resultados do entregar.js (out/envio/resultados.json), pelo painel.'],
+    manual: null, dados: [['Competência', e.competencia_id], ['Objeto', e.objeto_id], ['Arquivo', e.pdf]],
   };
 }
 
@@ -531,6 +703,55 @@ function fichaBern(x) {
   return f;
 }
 
+// ---------- resumo de cada linha, em palavras simples ----------
+// Uma frase curta e colorida (vermelho = recusado, amarelo = atrasado, azul = esperando a Equatorial, verde = pronto/ok)
+// e o próximo passo, tirado da própria ficha (o mesmo texto que aparece ao clicar).
+const QUEM = { equipe: 'equipe Equatorial', NIP: 'NIP', HSEQ: 'HSEQ', 'NIP + equipe': 'NIP e equipe Equatorial', 'quem usa o painel': 'quem usa o painel', 'quem segurou': 'quem segurou' };
+function passoDe(f, extra) {
+  const p = (f.fazer || [])[0];
+  if (p) return { texto: p[0], quem: QUEM[p[1]] || p[1] || '' };
+  return extra || { texto: 'Clique na linha para ver os detalhes.', quem: '' };
+}
+function resumoAtlas(p) {
+  const f = fichaAtlas(p), n = estado.atlas.nosso?.[p.document_schedule_id], b = bancoDe(p), modo = estado.atlas.modo || {};
+  const dias = diasAte(p.prazo_envio), segurada = (n?.motivos || []).some((m) => /segurad/i.test(m));
+  let nosso = 'ainda não temos o arquivo';
+  if (n?.enviado_em) nosso = 'já enviamos';
+  else if (segurada) nosso = 'segurado: o robô não envia sozinho';
+  else if (n?.pronta) nosso = 'arquivo pronto, falta enviar';
+  else if (b && ['LOCALIZADO', 'COMPOSTO'].includes(b.estado)) nosso = 'temos o arquivo, mas ele ainda não pode ir';
+  else if (b?.estado === 'REJEITADO') nosso = 'o arquivo que temos foi recusado';
+  else if (!b) nosso = (estado.atlas.banco || []).some((x) => semAcento(x.documento) === semAcento(p.documento)) ? 'não está no nosso sistema' : 'o robô não conhece este tipo de documento';
+  let cor, frase;
+  if (/Rejected/.test(p.status)) { cor = 'er'; frase = 'Recusado: precisa mandar outro arquivo'; if (nosso === 'ainda não temos o arquivo') nosso = 'ainda não temos um arquivo novo'; }
+  else if (/Delay/.test(p.status)) { cor = 'at'; frase = dias != null && dias < 0 ? `Atrasado há ${-dias} dia(s)` : 'Atrasado'; }
+  else { cor = 'in'; frase = dias == null ? 'No prazo' : dias === 0 ? 'No prazo: vence hoje' : `No prazo: faltam ${dias} dia(s)`; }
+  const pronto = n?.pronta && !segurada;
+  return { cor, frase, nosso, passo: passoDe(f, pronto ? { texto: modo.liberado && modo.automatico ? 'Nada: o robô envia sozinho na próxima rodada.' : 'Clicar em Enviar no painel (aba 6).', quem: modo.liberado && modo.automatico ? 'robô' : 'quem usa o painel' } : null) };
+}
+function resumoBern(x) {
+  const f = fichaBern(x);
+  const est = (estado.bern.esteira || []).find((s) => s.chave === x.chave);
+  let cor = '', frase = f.titulo, nosso = '';
+  if (/^Enviado/.test(f.titulo)) { cor = 'in'; frase = 'Já enviamos: esperando a análise'; }
+  else if (/Não Entregue/i.test(x.status)) {
+    cor = 'er'; frase = 'Falta entregar';
+    nosso = x.colaboradores ? 'documento de funcionário: vai pela Mobilização' : !est ? 'o robô não reconheceu este documento'
+      : est.estado === 'pronto' ? `arquivo pronto (certeza ${est.confianca || '?'})` : est.estado === 'nao_encontrado' ? 'não achamos o arquivo' : est.estado === 'erro' ? 'erro ao montar o arquivo' : 'procurando o arquivo';
+  } else if (/Não Analisado/i.test(x.status)) { cor = 'in'; frase = 'Entregue: esperando a análise'; }
+  else if (/^Analisado/i.test(x.status)) { cor = 'ok'; frase = 'Já foi analisado'; }
+  return { cor, frase, nosso, passo: passoDe(f) };
+}
+const celResumo = (r, site) => `<td class="resumo"><span class="frase ${r.cor}">${esc(r.frase)}</span>${r.nosso ? `<span class="sub">${esc(r.nosso)}</span>` : ''}${site ? `<span class="cod">no site: ${esc(site)}</span>` : ''}</td>`;
+const celPasso = (r) => `<td class="passo">${esc(r.passo.texto)}${r.passo.quem ? `<span class="quem">quem faz: ${esc(r.passo.quem)}</span>` : ''}</td>`;
+
+// Quadro "Como ler esta tela": aberto na primeira vez; quem fechar não vê de novo (fica guardado no navegador).
+function comoLer(id, html, legenda = true) {
+  const fechado = localStorage.getItem('espelho-ajuda-' + id) === 'fechado';
+  return `<details class="ajuda" data-ajuda="${id}" ${fechado ? '' : 'open'}><summary>Como ler esta tela</summary><div>${html}
+    ${legenda ? '' : '<!--'}<div class="legenda"><span><i class="er"></i>vermelho: recusado ou faltando, precisa de alguém</span><span><i class="at"></i>amarelo: atrasado</span><span><i class="in"></i>azul: no prazo ou esperando a Equatorial</span><span><i class="ok"></i>verde: tudo certo</span></div>${legenda ? '' : '-->'}</div></details>`;
+}
+
 function mostrarFicha(f) {
   const el = document.getElementById('ficha');
   const linha = (t, v) => v ? `<dt>${t}</dt><dd>${v}</dd>` : '';
@@ -545,7 +766,7 @@ function mostrarFicha(f) {
     <dl>${linha('Como está', esc(f.agora))}${linha('No portal agora', esc(f.portal))}${linha('O que aconteceu', esc(f.aconteceu))}${linha('Por quê', esc(f.porque))}
       ${linha('O que fazer', fazer(f.fazer))}${linha('Resolvido quando', esc(f.resolvido))}${f.extra ? `<dt>Atenção</dt><dd class="ressalva">${esc(f.extra)}</dd>` : ''}${linha('Como sabemos', lista(f.sabemos))}</dl>
     ${f.link ? `<p><a href="${esc(f.link)}" target="_blank" rel="noopener">Abrir no Atlas</a> <span class="dica">(só a tela; nada é enviado)</span></p>` : ''}
-    <details class="dados"><summary>Dados da pendência</summary><table>${(f.dados || []).filter(([, v]) => v).map(([k, v]) => `<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>`).join('')}</table></details>`;
+    <details class="dados"><summary>Detalhes técnicos (para quem dá suporte)</summary><table>${(f.dados || []).filter(([, v]) => v).map(([k, v]) => `<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>`).join('')}</table></details>`;
   el.classList.add('aberta');
   document.getElementById('fecharFicha').addEventListener('click', fecharFicha);
 }
@@ -563,7 +784,7 @@ function ligar() {
     if (!x) return;
     document.querySelectorAll('tr.sel').forEach((t) => t.classList.remove('sel'));
     tr.classList.add('sel');
-    mostrarFicha(estado.portal === 'bern' ? fichaBern(x) : estado.abaAtlas === 'Enviados por nós' ? fichaEnviado(x) : fichaAtlas(x));
+    mostrarFicha(estado.portal === 'bern' ? (estado.statusBern === '__env' ? fichaEnviadoBern(x) : fichaBern(x)) : estado.abaAtlas === 'Enviados por nós' ? fichaEnviado(x) : fichaAtlas(x));
   }));
   document.querySelectorAll('[data-f]').forEach((el) => {
     const ev = el.type === 'search' ? 'input' : 'change';
@@ -581,6 +802,8 @@ function ligar() {
   }));
   document.querySelectorAll('#abasAtlas button').forEach((b) => b.addEventListener('click', () => { estado.abaAtlas = b.dataset.aba; estado.f = { busca: estado.f.busca }; desenhar(); }));
   document.querySelectorAll('#statusBern button').forEach((b) => b.addEventListener('click', () => { estado.statusBern = b.dataset.st; desenhar(); }));
+  document.querySelectorAll('details.ajuda').forEach((d) => d.addEventListener('toggle', () => localStorage.setItem('espelho-ajuda-' + d.dataset.ajuda, d.open ? 'aberto' : 'fechado')));
+  document.querySelectorAll('#comoEnv button').forEach((b) => b.addEventListener('click', () => { estado.como = b.dataset.como; desenhar(); }));
   const vc = document.getElementById('verCpf');
   if (vc) vc.addEventListener('change', () => { estado.verCpf = vc.checked; desenhar(); });
   const an = document.getElementById('antiga');

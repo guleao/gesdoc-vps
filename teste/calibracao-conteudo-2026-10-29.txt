@@ -1,0 +1,72 @@
+Calibração da leitura do conteúdo do PDF com os arquivos REAIS da VPS, 29/10/2026 (só leitura; nada foi enviado).
+Sem nome nem CPF: só o id da pendência no Neon, o contrato e contagens.
+Como foi rodado: %TEMP%/gesdoc-teste/conteudo/calibrar-vps.sh (Atlas) e .../conteudo/bern/sonda-bern.js (Bernhoeft),
+numa pasta temporária, sem mexer no robô no ar.
+
+=== ATLAS (simulação do enviar.js novo contra o Neon, o atlas.db e os PDFs do robô) ===
+153 pendências COMPOSTO/LOCALIZADO; 152 com arquivo.
+Conteúdo lido em 120; 32 são PDF só imagem (escaneado, sem texto: não bloqueia, confiança média).
+Confiança: 91 alta, 49 média, 12 baixa.
+Bloqueados pelo conteúdo (todos casos reais, já conhecidos da auditoria de 19/10 e das fichas de 27/10):
+  7x doc 69 é aviso prévio do empregador, não pedido de demissão (#121 #124 #150 #224 #288 #294 #347)
+  1x doc 69 sem nenhuma palavra de pedido de demissão (#307)
+  3x doc 68 com o CPF de outra pessoa e não o da pendência (#270 #273 #275 = o mesmo eSocial do #269)
+  1x doc 4 sem nenhuma palavra de seguro (#213, benefício do PI reprovado em 28/10; só boleto e comprovante)
+Trava "mesmo arquivo em pessoas diferentes": #269 #270 #273 #275.
+CPF no texto: 58 com o CPF da pendência, 25 sem CPF no texto, 3 só com CPF de outra pessoa.
+Ajuste feito com os PDFs reais: doc 7 (saúde) traz "Unimed/beneficiários/fatura"; doc 4 "seguros/apólice";
+doc 26 é o recibo PIX da Caixa e não cita "FGTS". Depois do ajuste, por tipo (lidos / tipo confere):
+  4: 2/1 · 7: 8/8 · 9: 32/32 · 10: 17/17 · 24: 6/6 · 25: 6/6 · 26: 6/6 · 60: 1/1 · 61: 1/1 · 65: 2/2 · 67: 2/2 · 68: 27/27 · 69: 8/0 · 81: 2/2
+
+=== BERNHOEFT (esteira de 29/10 13:27, partes já baixadas, regra nova) ===
+esteira de 2026-10-29T16:27:23.657Z | itens 9
+
+00223/2025 - PA · Projeto de Prevenção e Combate a Incêndio e AVCB | estado pronto | antes: alta (1 arq.)
+  pelo nome (lista fixa de contratos): 1 de 1 arquivo(s) ficam
+  pelo conteúdo: 1 ficam, 0 saem -> confiança baixa
+   · o texto cita o contrato da pendência
+   · o texto parece outro documento (nao aplicabilidade): conferir
+
+356/2026 - MA · Brigada de Incêndio | estado pronto | antes: média (3 arq.)
+  pelo nome (lista fixa de contratos): 2 de 3 arquivo(s) ficam
+  pelo conteúdo: 2 ficam, 1 saem -> confiança baixa
+   · o texto confere com o tipo (brigada)
+   · outro arquivo do mesmo grupo era de outro contrato: conferir os que ficaram
+   – fora: o texto cita outro contrato (4600029823) e não o 356
+
+4600029828/2024 - RS · Brigada de Incêndio | estado pronto | antes: baixa (1 arq.)
+  pelo nome (lista fixa de contratos): 1 de 1 arquivo(s) ficam
+  pelo conteúdo: 0 ficam, 1 saem -> confiança baixa
+   – fora: o texto cita outro contrato (757) e não o 4600029828
+
+4600029828/2024 - RS · Plano de Emergência Contra Incêndio | estado pronto | antes: baixa (1 arq.)
+  pelo nome (lista fixa de contratos): 1 de 1 arquivo(s) ficam
+  pelo conteúdo: 0 ficam, 1 saem -> confiança baixa
+   – fora: o texto cita outro contrato (757) e não o 4600029828
+
+4600029828/2024 - RS · Projeto de Prevenção e Combate a Incêndio e AVCB | estado nao_encontrado | antes: - (0 arq.)
+  pelo nome (lista fixa de contratos): 0 de 0 arquivo(s) ficam
+
+5000000897/2025 - GO · Análise Ergonômica do Trabalho (AET) | estado pronto | antes: baixa (1 arq.)
+  pelo nome (lista fixa de contratos): 1 de 1 arquivo(s) ficam
+  pelo conteúdo: 1 ficam, 0 saem -> confiança média
+   · o texto confere com o tipo (ergonom*; aet)
+
+5000000897/2025 - GO · Brigada de Incêndio | estado pronto | antes: baixa (1 arq.)
+  pelo nome (lista fixa de contratos): 1 de 1 arquivo(s) ficam
+  pelo conteúdo: 0 ficam, 1 saem -> confiança baixa
+   – fora: o texto cita outro contrato (757) e não o 5000000897
+
+5000000897/2025 - GO · Laudo de Insalubridade / Periculosidade | estado pronto | antes: baixa (1 arq.)
+  pelo nome (lista fixa de contratos): 1 de 1 arquivo(s) ficam
+  pelo conteúdo: 1 ficam, 0 saem -> confiança média
+   · o texto confere com o tipo (insalubr*; periculos*; ltcat)
+
+5000000897/2025 - GO · Plano de Emergência Contra Incêndio | estado pronto | antes: baixa (1 arq.)
+  pelo nome (lista fixa de contratos): 1 de 1 arquivo(s) ficam
+  pelo conteúdo: 0 ficam, 1 saem -> confiança baixa
+   – fora: o texto cita outro contrato (757) e não o 5000000897
+
+Leitura: os dois envios errados de 26/10 seriam barrados: o AVCB 00223/2025-PA cai para confiança baixa
+("não aplicabilidade") e o arquivo do 4600029823 sai da Brigada 356/2026-MA (os outros dois vão para baixa).
+Quatro PDFs "prontos" do RS e do GO dizem no texto "contrato nº 00757/2025 – GO": são de outro contrato e saem.

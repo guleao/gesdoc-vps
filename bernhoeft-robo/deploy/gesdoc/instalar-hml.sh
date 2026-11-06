@@ -72,7 +72,7 @@ mkdir -p "$PEND/bernhoeft" "$PEND/atlas"
 cp "$ROBO"/{pendencias.js,entregar.js,login.js,login_auto.py,requirements-captcha.txt,package.json,package-lock.json,Dockerfile,.dockerignore} "$PEND/bernhoeft/"
 docker build -q -t gesdoc/pendencias-bernhoeft:hml "$PEND/bernhoeft"
 log "Copiando e construindo o robô Atlas (gesdoc/pendencias-atlas:hml)"
-cp "$ATLAS"/{comum.js,login.js,pendencias.js,planilha.js,neon.js,unir-pdfs.js,enviar.js,factorial.js,sharepoint.js,robo.js,package.json,package-lock.json,Dockerfile,.dockerignore} "$PEND/atlas/"
+cp -r "$ATLAS"/{comum.js,login.js,pendencias.js,planilha.js,neon.js,unir-pdfs.js,enviar.js,factorial.js,sharepoint.js,robo.js,ler-pdf.js,conteudo.js,classificar.js,regras-factorial.js,vendor,package.json,package-lock.json,Dockerfile,.dockerignore} "$PEND/atlas/"
 docker build -q -t gesdoc/pendencias-atlas:hml "$PEND/atlas"
 cp "$PACOTE/services/pendencias/compose.hml.yml" "$PEND/"
 
@@ -102,7 +102,7 @@ fi
 log "Subindo services/painel (http://100.103.196.93:3020, só pelo Tailscale)"
 mkdir -p "$REPO/services/painel" "$DADOS/pacotes-bernhoeft"
 chmod 700 "$DADOS/pacotes-bernhoeft"
-cp "$PACOTE/services/painel/"{compose.hml.yml,server.js,pacote.js,auto.js,pagina.html} "$REPO/services/painel/"
+cp -r "$PACOTE/services/painel/"{compose.hml.yml,server.js,pacote.js,auto.js,ler-pdf.js,vendor,pagina.html} "$REPO/services/painel/"
 sops exec-env "$SEGREDOS" "docker compose -f '$REPO/services/painel/compose.hml.yml' up -d --force-recreate" \
   || log "Painel não subiu (seguindo)."
 

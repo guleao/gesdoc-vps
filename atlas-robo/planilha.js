@@ -26,6 +26,7 @@ const COLUNAS = [
   ['Situação', 'status', 18],
   ['Enviado em', 'enviado_em', 14],
   ['Validado em', 'validado_em', 14],
+  ['Motivo da reprovação', 'motivo_reprovacao', 60],
 ];
 const SITUACAO = { DelayNotSent: 'Não enviado no prazo', DelayRejected: 'Reprovado (atrasado)', PendingNotSent: 'A enviar', Rejected: 'Reprovado' };
 const DATAS = new Set(['prazo_envio', 'enviado_em', 'validado_em']);

@@ -38,6 +38,7 @@ const { neon } = require('@neondatabase/serverless');
 const { DatabaseSync } = require('node:sqlite');
 const { conexao } = require('./neon');
 const { APP, GATEWAY, OUT, log, abrir, garantirLogin, esperarToken, api, dormir } = require('./comum');
+const { conferirConteudo, travaDoDocumento } = require('./conteudo');
 
 const DB = process.env.ATLAS_DB || path.join(__dirname, 'out', 'atlas.db');
 const AMBIGUA = Symbol('ambígua');
@@ -81,6 +82,12 @@ const JA_IMPORTADO = /"code":\s*22006/;
 function acharArquivo(caminho, pasta, id) {
   if (!caminho) return { erro: 'sem caminho_origem' };
   // LOCALIZADO: a sincronização grava "factorial:<id do documento>"; o arquivo baixado fica em <pasta>/factorial-docs/<id>.<ext>.
+  // 03/11: PDF unido pelo factorial.js (docs 8, 9, 10): "factorial:unido-<doc>-<id do Neon>" -> <pasta>/factorial-docs/unido-<doc>-<id>.pdf.
+  const fun = /^factorial:(unido-[\w.\-]+)$/i.exec(caminho);
+  if (fun) {
+    const arq = path.join(pasta, 'factorial-docs', `${fun[1]}.pdf`);
+    return fs.existsSync(arq) && fs.statSync(arq).isFile() ? { arquivo: arq, original: true } : { erro: `PDF unido ainda não montado (${fun[1]})` };
+  }
   const fid = /^factorial:(\d+)$/i.exec(caminho);
   if (fid) {
     const dir = path.join(pasta, 'factorial-docs');
@@ -202,7 +209,8 @@ async function conferirNoAtlas(ctx, item) {
 }
 
 // Envia UMA pendência ao local exato (document_schedule_id). Para sem enviar se qualquer conferência falhar.
-async function enviarUma(ctx, item, sql) {
+// como = 'automático' (botão ligado no painel) ou 'painel' (botão Enviar de uma pendência): vai na situação do Neon.
+async function enviarUma(ctx, item, sql, como = 'painel') {
   if (!liberado()) throw new Error(BLOQUEADO);
   const { problemas } = await conferirNoAtlas(ctx, item);
   if (problemas.length) throw new Error('NÃO ENVIEI: ' + problemas.join('; '));
@@ -222,7 +230,8 @@ async function enviarUma(ctx, item, sql) {
   registro(`#${item.id} ENVIADO ao schedule ${item.schedule_id}; status no Atlas agora: ${depois.status ?? '?'}`);
   // Tamanho e SHA-256 passam a ser os do arquivo que foi de fato enviado (o montado aqui, se for o caso).
   const hash = crypto.createHash('sha256').update(dados).digest('hex');
-  await sql.query(`update documentos set estado = 'ENVIADO', enviado_em = now(), atualizado_em = now(), tamanho_bytes = $2, hash_arquivo = $3 where id = $1`, [item.id, dados.length, hash]);
+  await sql.query(`update documentos set estado = 'ENVIADO', situacao = $4, enviado_em = now(), atualizado_em = now(), tamanho_bytes = $2, hash_arquivo = $3 where id = $1`,
+    [item.id, dados.length, hash, como === 'automático' ? 'Enviado pela automação (automático)' : 'Enviado pela automação (botão do painel)']);
   registro(`#${item.id} Neon: estado ENVIADO gravado.`);
   return depois.status ?? null;
 }
@@ -274,6 +283,8 @@ async function enviarUma(ctx, item, sql) {
     if (st && !STATUS_ENVIAVEL.test(st)) { item.status_atlas = st; item.acao_portal = true; item.pronta = false; item.motivos.push(motivoStatus(st)); }
     const seg = segurar[l.id];
     if (seg) { item.segurada = true; item.pronta = false; item.motivos.push(`segurada no painel${seg.motivo ? ': ' + seg.motivo : ''}`); }
+    const tdoc = travaDoDocumento(l.doc_id); // 59 e 63: só saem depois de ENVIO_DOCS_LIBERADOS
+    if (tdoc) { item.trava_doc = true; item.pronta = false; item.motivos.push(tdoc); }
     return item;
   });
   // O mesmo arquivo em pendências de funcionários diferentes = arquivo errado em alguém (19/10: o mesmo "eSocial.pdf" de 23 páginas
@@ -289,6 +300,29 @@ async function enviarUma(ctx, item, sql) {
     (item.avisos ||= []).push(m);
     item.motivos.push(m);
     item.pronta = false;
+  }
+  // Também entre os arquivos de TODAS as pendências prontas para envio (PDF montado aqui ainda não tem o SHA-256 no Neon).
+  // Com --id a lista tem só uma: os arquivos das outras são lidos à parte, para a trava valer também no envio de uma por vez.
+  const naFila = opc.id
+    ? (await neon(url).query('select id, cpf, caminho_origem from documentos where aba is not null and estado = any($1)', [['COMPOSTO', 'LOCALIZADO']]))
+      .map((l) => { const f = acharArquivo(l.caminho_origem, pasta, l.id); return f.arquivo ? { id: l.id, cpf: digitos(l.cpf), hash: crypto.createHash('sha256').update(fs.readFileSync(f.arquivo)).digest('hex') } : null; })
+      .filter(Boolean)
+    : itens.map((x, j) => ({ id: x.id, cpf: digitos(linhas[j].cpf), hash: x.hash }));
+  for (const [i, item] of itens.entries()) {
+    const cpf = digitos(linhas[i].cpf);
+    if (!cpf || !item.hash || item.avisos?.some((a) => a.startsWith('o mesmo arquivo'))) continue;
+    const outros = naFila.filter((x) => x.id !== item.id && x.hash === item.hash && x.cpf && x.cpf !== cpf);
+    if (!outros.length) continue;
+    const m = `o mesmo arquivo está na pendência de outro funcionário (#${outros.map((x) => x.id).join(', #')}): conferir em quem ele foi anexado`;
+    (item.avisos ||= []).push(m);
+    item.motivos.push(m);
+    item.pronta = false;
+  }
+  // Conteúdo do PDF: lê o texto e confere tipo, CPF, mês e o que não pode ir (conferirConteudo). Só bloqueia, nunca libera.
+  for (const [i, item] of itens.entries()) {
+    if (!item.arquivo) continue;
+    item.conteudo = await conferirConteudo(item.arquivo, linhas[i]);
+    if (item.conteudo?.bloqueio) { item.motivos.push(`conteúdo: ${item.conteudo.bloqueio}`); item.pronta = false; }
   }
 
   if (opc.verificar) {
@@ -311,7 +345,7 @@ async function enviarUma(ctx, item, sql) {
       if (!item) throw new Error(`#${opc.id} não está COMPOSTO/LOCALIZADO no Neon.`);
       if (!item.pronta) throw new Error(`#${item.id} não está pronta: ${item.motivos.join('; ')}`);
       if (item.schedule_id !== opc.confirmo) throw new Error(`--confirmo não confere: o local desta pendência é ${item.schedule_id}. Nada enviado.`);
-      const status = await comSessao((ctx) => enviarUma(ctx, item, neon(url)));
+      const status = await comSessao((ctx) => enviarUma(ctx, item, neon(url), 'painel'));
       resultado(item.id, { acao: 'enviar', ok: true, status_atlas: status, schedule_id: item.schedule_id, msg: `ENVIADO; status no Atlas agora: ${status ?? '?'}` });
     } catch (e) {
       resultado(opc.id, { acao: 'enviar', ok: false, msg: String(e.message).slice(0, 400) });
@@ -337,7 +371,7 @@ async function enviarUma(ctx, item, sql) {
       for (const item of fila) {
         if (!liberado()) { registro(`Envio automático PAROU antes de #${item.id}: o envio foi bloqueado no painel.`); break; }
         try {
-          const status = await enviarUma(ctx, item, sql);
+          const status = await enviarUma(ctx, item, sql, 'automático');
           resultado(item.id, { acao: 'enviar', auto: true, ok: true, status_atlas: status, schedule_id: item.schedule_id, msg: `ENVIADO (automático); status no Atlas agora: ${status ?? '?'}` });
           enviadas++;
         } catch (e) {

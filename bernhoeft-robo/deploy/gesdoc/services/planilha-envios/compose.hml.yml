@@ -1,0 +1,24 @@
+# Planilha "USO INTENSIVO ASSISTIDO" (homologação): as tentativas de envio do dia anterior, com o resultado e a atitude.
+# Só lê os out/ dos robôs (/dados, somente leitura) e grava 1 xlsx por dia em /opt/gesdoc/data/hml/planilhas-envios.
+# Usa a imagem do robô Atlas só porque ela já tem o exceljs (o gerar.js fica em /app/planilha, acha o /app/node_modules).
+# Roda e sai (cron.sh à 00:00): docker compose -f services/planilha-envios/compose.hml.yml run --rm -T planilha [AAAA-MM-DD | --desde AAAA-MM-DD]
+name: gesdoc-planilha-envios-hml
+
+services:
+  planilha:
+    image: gesdoc/pendencias-atlas:hml
+    pull_policy: never
+    entrypoint: ["node", "/app/planilha/gerar.js"]
+    command: []
+    user: "1000:1000"
+    network_mode: none
+    environment:
+      DADOS: /dados
+      SAIDA: /saida
+      TZ: America/Sao_Paulo
+    volumes:
+      - ./gerar.js:/app/planilha/gerar.js:ro
+      - /opt/gesdoc/data/hml:/dados:ro
+      - /opt/gesdoc/data/hml/planilhas-envios:/saida
+    mem_limit: 256m
+    security_opt: ["no-new-privileges:true"]

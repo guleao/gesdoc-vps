@@ -41,6 +41,8 @@ services:
       - ./server.js:/app/server.js:ro
       - ./pacote.js:/app/pacote.js:ro
       - ./auto.js:/app/auto.js:ro
+      - ./ler-pdf.js:/app/ler-pdf.js:ro
+      - ./vendor:/app/vendor:ro
       - ./pagina.html:/app/pagina.html:ro
       - /opt/gesdoc/data/hml:/dados:ro
       # Gravável só para: codigo.txt e rodar-agora (Atlas) e rodar-agora (Bernhoeft), do botão Reiniciar.

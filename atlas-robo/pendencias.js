@@ -14,7 +14,7 @@
 const fs = require('fs');
 const path = require('path');
 const { DatabaseSync } = require('node:sqlite');
-const { OUT, log, abrir, garantirLogin, esperarToken, apiPost } = require('./comum');
+const { OUT, log, abrir, garantirLogin, esperarToken, api, apiPost } = require('./comum');
 const { gerarPlanilha } = require('./planilha');
 const { enviarNeon, temConexao } = require('./neon');
 
@@ -62,6 +62,8 @@ function linha(aba, i) {
     validade: data(i.document_file_validity_at),
     critico: i.is_critical ? 1 : 0,
     document_schedule_id: i.document_schedule_id,
+    motivo_reprovacao: null, // preenchidos por lerMotivos() nas reprovadas
+    observacao_envio: null,
     bruto: JSON.stringify(i),
   };
 }
@@ -84,7 +86,35 @@ function abrirBanco() {
     CREATE VIEW IF NOT EXISTS pendencias_atuais AS
       SELECT * FROM pendencias WHERE coleta_id = (SELECT MAX(id) FROM coletas);
   `);
+  // Banco de antes de uma coluna nova (ex.: motivo_reprovacao, 28/10): acrescenta sem mexer no que já está gravado.
+  const tem = new Set(db.prepare('PRAGMA table_info(pendencias)').all().map((c) => c.name));
+  for (const c of COLUNAS) if (!tem.has(c)) db.exec(`ALTER TABLE pendencias ADD COLUMN ${c} TEXT`);
   return db;
+}
+
+// Motivo da reprovação: o texto que o cliente escreveu ao reprovar ("validation_message"). A lista não traz; o portal
+// busca ao abrir o item, por GET em document-reports/modal/schedules/<id> (conferido em 28/10; o document-files/visualize
+// dá 400 sem os outros parâmetros). Vem junto a "observation", que quem enviou escreveu no envio.
+// Só leitura. Uma consulta por agendamento reprovado; falha = fica sem motivo e a coleta segue.
+const texto = (s) => (s && String(s).trim()) || null;
+async function lerMotivos(ctx, linhas) {
+  const reprovadas = [...new Set(linhas.filter((l) => /Rejected/.test(l.status || '')).map((l) => l.document_schedule_id).filter(Boolean))];
+  const porId = new Map();
+  let falhas = 0;
+  for (const id of reprovadas) {
+    try {
+      const r = await api(ctx, `enc/document-reports/modal/schedules/${id}`);
+      const d = r?.data || r || {};
+      porId.set(id, { motivo: texto(d.validation_message), obs: texto(d.observation) });
+    } catch { falhas++; }
+  }
+  for (const l of linhas) {
+    const m = porId.get(l.document_schedule_id);
+    l.motivo_reprovacao = m?.motivo || null;
+    l.observacao_envio = m?.obs || null;
+  }
+  const com = [...porId.values()].filter((m) => m.motivo).length;
+  log(`Motivo da reprovação: ${com} de ${reprovadas.length} reprovada(s)${falhas ? ` (${falhas} consulta(s) com erro)` : ''}.`);
 }
 
 const csv = (v) => (v == null ? '' : /[;"\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v));
@@ -111,7 +141,28 @@ const csv = (v) => (v == null ? '' : /[;"\n]/.test(String(v)) ? `"${String(v).re
       totais[aba] = total;
       log(`${aba}: ${total}`);
     }
-    const entregues = (await apiPost(ctx, 'enc/document-reports/provider', { ...filtro(3, 0), take: 1 })).count;
+    // Entregues (04/11): a lista inteira, para o neon.js marcar como ENVIADO as linhas que saíram das listas porque foram
+    // entregues (pelo robô ou por alguém direto no portal). Fica fora do atlas.db (são milhares por coleta): vai para
+    // out/entregues.json, com a hora desta coleta. Falhou = sem lista (o neon.js não marca nada) e a coleta segue.
+    let entregues = 0;
+    let listaEntregues = null;
+    try {
+      const itens = [];
+      let skip = 0;
+      do {
+        const r = await apiPost(ctx, 'enc/document-reports/provider', filtro(3, skip));
+        entregues = r.count;
+        for (const i of r.items) itens.push(linha('Entregues', i));
+        skip += POR_PAGINA;
+        if (!r.items.length) break;
+      } while (skip < entregues);
+      if (itens.length >= entregues) listaEntregues = itens.map(({ bruto, ...l }) => l);
+      log(`Entregues: ${entregues}${listaEntregues ? '' : ` (lista incompleta: ${itens.length}; não usada)`}`);
+    } catch (e) {
+      log(`Entregues: lista não lida (${e.message}); o Neon não marca as entregues nesta coleta.`);
+      if (!entregues) entregues = (await apiPost(ctx, 'enc/document-reports/provider', { ...filtro(3, 0), take: 1 }).catch(() => ({}))).count ?? null;
+    }
+    await lerMotivos(ctx, linhas);
 
     const db = abrirBanco();
     const agora = new Date().toISOString();
@@ -127,6 +178,8 @@ const csv = (v) => (v == null ? '' : /[;"\n]/.test(String(v)) ? `"${String(v).re
     const semBruto = COLUNAS.filter((c) => c !== 'bruto');
     fs.writeFileSync(path.join(OUT, 'pendencias.csv'), '﻿' + [semBruto.join(';'), ...linhas.map((l) => semBruto.map((c) => csv(l[c])).join(';'))].join('\r\n'), 'utf8');
     fs.writeFileSync(path.join(OUT, 'pendencias.json'), JSON.stringify({ coletado_em: agora, totais: { ...totais, Entregues: entregues }, pendencias: linhas.map(({ bruto, ...l }) => l) }, null, 2), 'utf8');
+    // Sempre regrava (lista null = coleta sem Entregues): o neon.js só usa a lista da MESMA coleta.
+    fs.writeFileSync(path.join(OUT, 'entregues.json'), JSON.stringify({ coletado_em: agora, itens: listaEntregues }), 'utf8');
     log(`${linhas.length} linha(s) gravadas na coleta ${coleta} de ${DB} (e em out/pendencias.csv).`);
     try {
       const { destino } = await gerarPlanilha();
@@ -140,7 +193,7 @@ const csv = (v) => (v == null ? '' : /[;"\n]/.test(String(v)) ? `"${String(v).re
     }
     if (temConexao()) {
       try {
-        await enviarNeon({ log });
+        await enviarNeon({ log, entregues: listaEntregues });
       } catch (e) {
         log(`Neon: não gravado (${String(e.message).replace(/postgres(ql)?:\/\/\S+/g, '<url>')}).`);
         process.exitCode = 3;

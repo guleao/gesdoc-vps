@@ -64,7 +64,7 @@ Pelo PDF, tudo deveria ter acontecido entre 23/09 e 20/10 (handover em 19–20/1
 
 ## 7. Atualização: 2ª versão da planilha (19/10, à tarde)
 
-Agora 29 dos 36 documentos têm fala ou passo a passo da Milena (antes eram 7). Continuam **todos "Não iniciado"** no Controle 36, e nenhuma "Regra oficial normalizada" foi preenchida: são relatos ainda não confirmados. Sem nada: 5 (odonto), 84, 95 e 112–116.
+Agora 29 dos 36 documentos têm fala ou passo a passo da Milena (antes eram 7). Continuam **todos "Não iniciado"** no Controle 36, e nenhuma "Regra oficial normalizada" foi preenchida: são relatos ainda não confirmados. Sem nada: 84, 95 e 112–116.
 Responsáveis citados na NIP: Joana Novais (VT), Gabriela Mathias (DCTFWeb, folha e CND), Tatiana Almeida (baixa na CTPS).
 
 **Confirma o que o código já faz**

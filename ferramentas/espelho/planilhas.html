@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Planilhas de uso intensivo</title>
+<style>
+@font-face { font-family: "Geist"; src: url(/fontes/Geist-Variable.woff2) format("woff2"); font-weight: 100 900; }
+@font-face { font-family: "Geist Mono"; src: url(/fontes/GeistMono-Variable.woff2) format("woff2"); font-weight: 100 900; }
+:root {
+  --s0: #09090b; --s1: #0f0f12; --s2: #151518; --s3: #1c1c20; --s4: #26262b;
+  --l1: rgba(255,255,255,.06); --l2: rgba(255,255,255,.1);
+  --t1: #ededef; --t2: #a0a0ab; --t3: #6c6c76;
+  --ac: #3ecf8e; --ok: #3ecf8e; --er: #f0565a; --in: #6ea8fe;
+  --r1: 5px; --r2: 7px; --r3: 10px;
+  --ui: "Geist", "Segoe UI", system-ui, sans-serif; --mono: "Geist Mono", Consolas, monospace;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--s0); color: var(--t1); font: 13px/1.45 var(--ui); }
+header { display: flex; align-items: center; gap: 12px; height: 46px; padding: 0 16px; border-bottom: 1px solid var(--l1); background: var(--s1); position: sticky; top: 0; z-index: 3; }
+header h1 { font-size: 14px; font-weight: 600; margin: 0 8px 0 0; }
+.dir { margin-left: auto; display: flex; align-items: center; gap: 10px; color: var(--t2); }
+a { color: var(--in); text-decoration: none; } a:hover { text-decoration: underline; }
+.leiaute { display: grid; grid-template-columns: 250px 1fr; min-height: calc(100vh - 46px); }
+aside { border-right: 1px solid var(--l1); background: var(--s1); padding: 10px; overflow: auto; }
+aside .dia { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 7px 10px; border-radius: var(--r2); cursor: pointer; color: var(--t2); }
+aside .dia:hover { background: var(--s2); color: var(--t1); }
+aside .dia.on { background: var(--s4); color: var(--t1); }
+aside .dia .d { font-family: var(--mono); font-size: 12.5px; }
+aside .dia .n { font-size: 11.5px; color: var(--t3); }
+aside .dia.vazio .d { color: var(--t3); }
+main { padding: 16px 20px; max-width: 1500px; }
+.topo { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.topo h2 { font-size: 15px; font-weight: 600; margin: 0; }
+.dica { color: var(--t3); font-size: 12px; }
+a.btn { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 12px; border: 1px solid var(--l2); border-radius: var(--r2); background: var(--s3); color: var(--t1); }
+a.btn:hover { background: var(--s4); text-decoration: none; }
+a.btn svg { width: 14px; height: 14px; }
+.seg { display: inline-flex; background: var(--s3); border-radius: var(--r2); padding: 2px; gap: 2px; }
+.seg button { height: 26px; padding: 0 12px; border: 0; border-radius: var(--r1); background: none; color: var(--t2); font: inherit; cursor: pointer; }
+.seg button.on { background: var(--s4); color: var(--t1); }
+.cartoes { display: flex; gap: 10px; flex-wrap: wrap; margin: 12px 0 16px; }
+.cartao { background: var(--s2); border: 1px solid var(--l1); border-radius: var(--r3); padding: 9px 14px; min-width: 150px; }
+.cartao .rot { color: var(--t3); font-size: 11.5px; }
+.cartao .val { font-family: var(--mono); font-size: 16px; margin-top: 2px; }
+.ok { color: var(--ok); } .er { color: var(--er); }
+.tabela { background: var(--s1); border: 1px solid var(--l1); border-radius: var(--r3); overflow: auto; }
+table { border-collapse: collapse; width: 100%; }
+th { position: sticky; top: 0; background: var(--s2); color: var(--t2); font-weight: 500; text-align: left; font-size: 12px; padding: 7px 10px; border-bottom: 1px solid var(--l2); white-space: nowrap; }
+td { padding: 6px 10px; border-bottom: 1px solid var(--l1); vertical-align: top; white-space: pre-line; }
+td.m { font-family: var(--mono); font-size: 12px; white-space: nowrap; }
+tr.grupo td { background: var(--s2); font-weight: 500; padding-top: 9px; }
+tr.grupo td a { color: var(--t1); }
+.sub { color: var(--t2); font-size: 12px; display: block; margin-top: 2px; }
+.ficha { background: var(--s1); border: 1px solid var(--l1); border-radius: var(--r3); margin-bottom: 14px; overflow: hidden; }
+.ficha h3 { margin: 0; font-size: 13px; font-weight: 600; padding: 9px 14px; background: var(--s2); border-bottom: 1px solid var(--l1); display: flex; gap: 10px; align-items: baseline; }
+.ficha h3 .n { color: var(--t3); font-family: var(--mono); font-weight: 400; font-size: 12px; }
+.ficha dl { display: grid; grid-template-columns: 170px 1fr; margin: 0; }
+.ficha dt, .ficha dd { margin: 0; padding: 7px 14px; border-bottom: 1px solid var(--l1); white-space: pre-line; }
+.ficha dt { color: var(--t2); }
+.ficha dl > :nth-last-child(-n+2) { border-bottom: 0; }
+.ficha.alvo { border-color: var(--in); }
+.vazio-msg { color: var(--t2); padding: 30px 0; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Planilhas de uso intensivo</h1>
+  <span class="dica">tentativas de envio de cada dia, Atlas e Bernhoeft</span>
+  <div class="dir"><a href="/">Voltar ao espelho</a></div>
+</header>
+<div class="leiaute">
+  <aside id="dias"><div class="dica">carregando…</div></aside>
+  <main id="corpo"></main>
+</div>
+<script>
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const br = (d) => d.split('-').reverse().join('/');
+const SEMANA = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
+const semana = (d) => SEMANA[new Date(d + 'T12:00:00').getDay()];
+const BAIXAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>';
+let DIAS = [], atual = null, aba = 'tentativas';
+
+async function iniciar() {
+  const r = await fetch('/api/planilhas').then((x) => x.json()).catch(() => ({ dias: [], aviso: 'não deu para ler a lista' }));
+  DIAS = r.dias || [];
+  if (!DIAS.length) { $('#dias').innerHTML = `<div class="dica">${esc(r.aviso || 'Nenhuma planilha gerada ainda.')}</div>`; return; }
+  $('#dias').innerHTML = DIAS.map((d) => {
+    const t = d.resumo?.tentativas ?? 0;
+    return `<div class="dia${t ? '' : ' vazio'}" data-d="${d.dia}"><span class="d">${br(d.dia)} <span class="n">${semana(d.dia)}</span></span>`
+      + `<span class="n">${t ? `${t} tent. · <span class="${d.resumo.enviadas ? 'ok' : ''}">${d.resumo.enviadas} env.</span>` : 'sem envio'}</span></div>`;
+  }).join('');
+  $('#dias').onclick = (e) => { const el = e.target.closest('.dia'); if (el) abrir(el.dataset.d); };
+  const pedido = new URLSearchParams(location.search).get('dia');
+  abrir(DIAS.some((d) => d.dia === pedido) ? pedido : (DIAS.find((d) => d.resumo?.tentativas) || DIAS[0]).dia);
+}
+
+async function abrir(dia) {
+  document.querySelectorAll('aside .dia').forEach((el) => el.classList.toggle('on', el.dataset.d === dia));
+  history.replaceState(null, '', `?dia=${dia}`);
+  $('#corpo').innerHTML = '<div class="dica">carregando…</div>';
+  const j = await fetch(`/api/planilhas/${dia}`).then((x) => (x.ok ? x.json() : null)).catch(() => null);
+  atual = j || { dia, resumo: null, pendencias: [] };
+  desenhar();
+}
+
+function desenhar() {
+  const j = atual, r = j.resumo || {};
+  const xlsx = `/planilhas/uso-intensivo-assistido-${j.dia}.xlsx`;
+  const cart = (rot, val, cls = '') => `<div class="cartao"><div class="rot">${rot}</div><div class="val ${cls}">${val ?? '-'}</div></div>`;
+  let h = `<div class="topo"><h2>${br(j.dia)}</h2>
+    <a class="btn" href="${xlsx}" download>${BAIXAR}Baixar planilha (.xlsx)</a>
+    ${j.gerada_em ? `<span class="dica">gerada em ${new Date(j.gerada_em).toLocaleString('pt-BR')}</span>` : ''}</div>`;
+  if (!j.resumo) return ($('#corpo').innerHTML = h + '<div class="vazio-msg">Esta planilha ainda não tem a versão para a tela. Baixe o .xlsx.</div>');
+  h += `<div class="cartoes">${cart('Pendências', r.pendencias)}${cart('Tentativas', r.tentativas)}${cart('Enviadas', r.enviadas, r.enviadas ? 'ok' : '')}`
+    + `${cart('Não enviadas', r.nao_enviadas, r.nao_enviadas ? 'er' : '')}${cart('Atlas / Bernhoeft', `${r.atlas} / ${r.bernhoeft}`)}${cart('"Já importado"', r.ja_importado)}</div>`;
+  if (!j.pendencias.length) return ($('#corpo').innerHTML = h + '<div class="vazio-msg">Nenhuma tentativa de envio neste dia.</div>');
+  h += `<div class="seg" id="abas" style="margin-bottom:12px">
+    <button data-a="tentativas" class="${aba === 'tentativas' ? 'on' : ''}">Uso intensivo assistido</button>
+    <button data-a="fichas" class="${aba === 'fichas' ? 'on' : ''}">Fichas</button></div>`;
+  const n = j.pendencias.length;
+  if (aba === 'tentativas') {
+    h += `<div class="tabela"><table><thead><tr><th>DATA</th><th>FATO-DOC #</th><th>RESULTADO</th><th>ATITUDE</th></tr></thead><tbody>`;
+    j.pendencias.forEach((p, i) => {
+      h += `<tr class="grupo"><td colspan="4"><a href="#" data-f="${i}">Pendência ${i + 1} de ${n} · ${esc(p.titulo)}</a>`
+        + ` <span class="dica">· ${p.tentativas.length} tentativa(s), <span class="${p.enviadas ? 'ok' : ''}">${p.enviadas} enviada(s)</span> · ver ficha</span></td></tr>`;
+      for (const t of p.tentativas) {
+        h += `<tr><td class="m">${esc(t.data)}</td><td>${esc(t.fato_doc)}</td>`
+          + `<td><span class="${t.ok ? 'ok' : 'er'}">${esc(t.resultado)}</span>${t.hoje ? `<span class="sub">Hoje no portal: ${esc(t.hoje)}</span>` : ''}</td><td>${esc(t.atitude)}</td></tr>`;
+      }
+    });
+    h += '</tbody></table></div>';
+  } else {
+    j.pendencias.forEach((p, i) => {
+      h += `<div class="ficha" id="ficha-${i}"><h3><span class="n">Ficha ${i + 1} de ${n}</span>${esc(p.titulo)}</h3><dl>`;
+      for (const [rot, val] of p.ficha) {
+        const cls = rot === 'O que conseguiu' && p.enviadas ? 'ok' : rot === 'O que não conseguiu' && p.enviadas < p.tentativas.length ? 'er' : '';
+        h += `<dt>${esc(rot)}</dt><dd class="${cls}">${esc(val)}</dd>`;
+      }
+      h += '</dl></div>';
+    });
+  }
+  $('#corpo').innerHTML = h;
+  $('#abas').onclick = (e) => { const b = e.target.closest('button'); if (b) { aba = b.dataset.a; desenhar(); } };
+  $('#corpo').querySelectorAll('a[data-f]').forEach((a) => (a.onclick = (e) => {
+    e.preventDefault(); aba = 'fichas'; desenhar();
+    const f = document.getElementById('ficha-' + a.dataset.f);
+    f.classList.add('alvo'); f.scrollIntoView({ block: 'start' });
+  }));
+}
+iniciar();
+</script>
+</body>
+</html>

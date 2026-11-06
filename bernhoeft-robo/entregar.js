@@ -78,6 +78,7 @@ function itemDaEsteira(chave) {
   return it;
 }
 function conferirPdf(item) {
+  if (item.por_colaborador) return { erro: 'documento de colaborador: um PDF por colaborador, entra pela Mobilização (este envio é só da Etapa 6, documento de empresa)' };
   if (item.estado !== 'pronto' || !item.pdf) return { erro: 'a esteira não montou o PDF desta pendência' };
   const arq = path.join(PACOTES, item.pdf);
   let st;

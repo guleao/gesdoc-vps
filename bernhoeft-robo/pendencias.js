@@ -302,13 +302,19 @@ async function lerXlsx(arquivo) {
   let cab = 0;
   ws.eachRow((r, i) => { if (!cab && val(r.getCell(1)) === 'Contrato') cab = i; });
   if (!cab) throw new Error('Cabeçalho "Contrato" não encontrado no xlsx.');
+  // Lê pelo nome da coluna: o relatório de 30/10 veio com 19 colunas (o de 25/09 tinha 16) e a posição mudou.
+  const col = {};
+  ws.getRow(cab).eachCell((c, n) => { col[val(c).replace(/\s+/g, ' ')] = n; });
+  const faltando = ['Contrato', 'Contratada', 'Risco', 'Competência', 'Área', 'Descrição', 'Colaboradores', 'Status dos Documentos', 'Unidade', 'Tipo'].filter((n) => !col[n]);
+  if (faltando.length) throw new Error(`Coluna não encontrada no xlsx: ${faltando.join(', ')}.`);
   const docs = [];
   ws.eachRow((r, i) => {
     if (i <= cab || !val(r.getCell(1))) return;
+    const g = (nome) => (col[nome] ? val(r.getCell(col[nome])) : '');
     const d = {
-      contrato: val(r.getCell(1)), contratada: val(r.getCell(2)), risco: val(r.getCell(3)), competencia: val(r.getCell(4)),
-      area: val(r.getCell(5)), descricao: val(r.getCell(6)), colaboradores: [val(r.getCell(8)), val(r.getCell(9))].filter(Boolean).join(' '),
-      status: val(r.getCell(14)), unidade: val(r.getCell(15)), tipo: val(r.getCell(16)),
+      contrato: g('Contrato'), contratada: g('Contratada'), risco: g('Risco'), competencia: g('Competência'),
+      area: g('Área'), descricao: g('Descrição'), colaboradores: [g('Colaboradores'), g('Colaboradores (Parte 2)')].filter(Boolean).join(' '),
+      status: g('Status dos Documentos'), unidade: g('Unidade'), tipo: g('Tipo'),
     };
     d.chave = `doc:${[d.contrato, d.contratada, d.competencia, d.area, d.descricao, d.colaboradores, d.unidade].join('|')}`;
     d.docs_pendentes = d.status === 'Não Entregue';
@@ -407,9 +413,18 @@ async function ciclo(page) {
 }
 
 // Roda login_auto.py (sem navegador do Node aberto, para não travar o profile). true = logou.
+// Auditoria do CAPTCHA (29/10): a saída do login_auto.py (método, tentativa, resultado e tempo; nunca senha nem token) vai também
+// para out/login-captcha.log, que não é apagado como o log do container.
+const LOG_CAPTCHA = path.join(OUT, 'login-captcha.log');
 function loginAutomatico() {
   log('Sessão expirada. Tentando login automático (reCAPTCHA por áudio)...');
-  const r = spawnSync(PYTHON_BIN, [path.join(__dirname, 'login_auto.py')], { stdio: 'inherit', env: process.env });
+  const r = spawnSync(PYTHON_BIN, [path.join(__dirname, 'login_auto.py')], { stdio: ['ignore', 'pipe', 'pipe'], encoding: 'utf8', env: process.env });
+  const saida = `${r.stdout || ''}${r.stderr || ''}`;
+  process.stdout.write(saida);
+  try {
+    fs.mkdirSync(OUT, { recursive: true });
+    fs.appendFileSync(LOG_CAPTCHA, `=== ${new Date().toISOString()} login automático (saída ${r.status})\n${saida.replace(/\r/g, '')}`, 'utf8');
+  } catch {}
   return r.status === 0;
 }
 
