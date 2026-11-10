@@ -23,6 +23,8 @@ services:
       CAPSOLVER_API_KEY:
       CAPTCHA_FALLBACK:
       ALERT_WEBHOOK_URL:
+      # Passo 4 (10/11): os documentos do 012 vão para o Neon (portal = Bernhoeft), com a mesma role do robô Atlas. Sem ela, pula.
+      ROBO_DATABASE_URL:
     volumes:
       - bernhoeft-data:/data
       - /opt/gesdoc/data/hml/pendencias-bernhoeft:/app/out

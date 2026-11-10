@@ -29,7 +29,9 @@ const { OUT, log } = require('./comum');
 const { unirPdfs } = require('./unir-pdfs');
 
 const SITE = 'igneos.sharepoint.com:/sites/brasil/rh';
-const RAIZ_MENSAL = '13 Auditorias/Auditoria 20102080 Equatorial';
+// 10/11: a pasta do 20102080 foi movida pela NIP para "03 -  Documentação centralizada" (com DOIS espaços depois do "-"), com a
+// mesma estrutura dentro. A antiga fica de reserva (se voltarem com ela, continua achando).
+const RAIZES_MENSAL = ['13 Auditorias/03 -  Documentação centralizada/Auditoria 20102080 Equatorial', '13 Auditorias/Auditoria 20102080 Equatorial'];
 const RAIZ_CERTIDOES = '13 Auditorias/0 - CERTIDÕES DE REGULARIDADE';
 const FILIAL_20102080 = '02867678000797';
 // 09/11 (e-mail da Lorena aprovado pela Ediliz em 29/10 + respostas da Milena de 06/11): os comprovantes de benefícios passam a ficar
@@ -295,11 +297,12 @@ async function pastaDoMes(regra, competencia, l) {
   if (regra.raiz === 'certidoes') return certidaoValida(regra);
   const m = String(competencia || '').match(/^(\d{2})\/(\d{4})$/);
   if (!m) return { erro: `competência "${competencia}" fora do formato MM/AAAA` };
-  const base = await porCaminho(`${RAIZ_MENSAL}/${m[2]}`);
-  if (!base) return { erro: `não há pasta ${m[2]} no 20102080` };
+  let base = null, raiz = null;
+  for (const r of RAIZES_MENSAL) { base = await porCaminho(`${r}/${m[2]}`); if (base) { raiz = r; break; } }
+  if (!base) return { erro: `não há pasta ${m[2]} no 20102080 (procurado em: ${RAIZES_MENSAL.join(' | ')})` };
   const meses = (await filhos(base.id)).filter((x) => x.folder && mesDaPasta(x.name) === +m[1]);
   if (meses.length !== 1) return { erro: meses.length ? `${meses.length} pastas para o mês ${m[1]}/${m[2]}` : `não há pasta do mês ${m[1]}/${m[2]}` };
-  return { pasta: meses[0], caminho: `${RAIZ_MENSAL}/${m[2]}/${meses[0].name}` };
+  return { pasta: meses[0], caminho: `${raiz}/${m[2]}/${meses[0].name}` };
 }
 
 // Pasta do mês ("MM/AAAA") dentro de <raiz>/<ano>: { pasta, caminho } | { erro }.

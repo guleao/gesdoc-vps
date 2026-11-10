@@ -359,6 +359,7 @@ const descr = (i) =>
     : `${i.contratante} | ${i.contrato} | ${i.contratada} | ${i.area} | comp. ${i.competencia} | ${i.status}` +
   (i.qtd_docs_pendentes != null ? ` | ${i.qtd_docs_pendentes} doc(s) pendente(s)` : '');
 
+let inicioLeitura = null; // Passo 4: hora em que a leitura começou (coletas.inicio)
 async function ciclo(page) {
   await garantirLogin(page);
   let itens = [];
@@ -400,6 +401,11 @@ async function ciclo(page) {
   const doc = { coletado_em: agora, incluiu_concluidos: CONCLUIDOS, total: itens.length, itens, relatorio012 };
   gravar(path.join(OUT, 'pendencias.json'), JSON.stringify(doc, null, 2));
   gravar(path.join(HIST, `${agora.replace(/[:.]/g, '-')}.json`), JSON.stringify(doc));
+  // Passo 4 (10/11): os documentos do 012 vão também para o Neon (portal = Bernhoeft), junto com os do Atlas. Sem ROBO_DATABASE_URL, pula.
+  if (process.env.ROBO_DATABASE_URL) {
+    try { await require('./neon-bern').gravar({ doc, inicio: inicioLeitura, log }); }
+    catch (e) { log(`Neon: não gravado (${String(e.message).replace(/postgres(ql)?:\/\/\S+/g, '<url>')}).`); }
+  }
 
   const linhas = [`Coletado em ${agora}: ${itens.length} competência(s)`];
   const com = itens.filter((i) => i.docs_pendentes);
@@ -460,6 +466,7 @@ const abrir = async () => {
   let { ctx, page } = await abrir();
   try {
     do {
+      inicioLeitura = new Date().toISOString();
       try {
         try {
           await ciclo(page);
@@ -487,6 +494,8 @@ const abrir = async () => {
       } catch (e) {
         console.error('ERRO no ciclo:', e.message);
         if (e.codigo) process.exitCode = e.codigo;
+        // Passo 4: a leitura que falhou também fica em coletas (ok = false).
+        if (process.env.ROBO_DATABASE_URL) await require('./neon-bern').gravarFalha({ inicio: inicioLeitura, erro: e.message }).catch(() => {});
         if (!LOOP) throw e;
       }
       if (LOOP) {

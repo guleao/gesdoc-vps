@@ -12,7 +12,7 @@ const OUT = path.join(D, 'out');
 fs.mkdirSync(path.join(OUT, 'envio'), { recursive: true });
 fs.mkdirSync(path.join(OUT, 'downloads', 'sharepoint'), { recursive: true });
 fs.copyFileSync(ORIG, path.join(D, 'enviar.js'));
-for (const f of ['conteudo.js', 'ler-pdf.js']) fs.copyFileSync(path.join(path.dirname(ORIG), f), path.join(D, f));
+for (const f of ['conteudo.js', 'ler-pdf.js', 'eventos.js']) fs.copyFileSync(path.join(path.dirname(ORIG), f), path.join(D, f));
 fs.cpSync(path.join(path.dirname(ORIG), 'vendor'), path.join(D, 'vendor'), { recursive: true });
 
 // [id, status na coleta, status no general-information, resposta do upload]

@@ -39,6 +39,25 @@ const { DatabaseSync } = require('node:sqlite');
 const { conexao } = require('./neon');
 const { APP, GATEWAY, OUT, log, abrir, garantirLogin, esperarToken, api, dormir } = require('./comum');
 const { conferirConteudo, travaDoDocumento } = require('./conteudo');
+const { classificar, gravarEventos, atualizarMotivos, gravarProtocolo, protocoloDaResposta } = require('./eventos');
+
+// Passo 3 (10/11): cada tentativa de envio vira uma linha em documento_eventos (e o envio feito, em documento_protocolos).
+// Só registro: falha aqui é anotada no log e nunca muda o resultado do envio.
+async function registrarEnvio(sql, id, { ok, msg, como, schedule_id = null, status_atlas = null, corpo = null }) {
+  if (!sql || id == null) return;
+  try {
+    const bloqueado = msg === BLOQUEADO || /^NÃO ENVIEI|não está pronta|--confirmo não confere/.test(String(msg));
+    const c = ok ? { motivo: 'enviado', responsavel: null } : classificar(msg, 'envio');
+    await gravarEventos(sql, [{ documento_id: id, robo: 'enviar', tipo: 'envio', resultado: ok ? 'ok' : bloqueado ? 'bloqueado' : 'falha', ...c,
+      detalhe: String(msg ?? '').slice(0, 1000), dados: { como, schedule_id, status_atlas }, sempre: true }]);
+    if (ok) {
+      await gravarProtocolo(sql, { documento_id: id, plataforma: 'Atlas', protocolo: protocoloDaResposta(corpo), local: schedule_id, estado: status_atlas, texto: corpo });
+      await atualizarMotivos(sql, [{ id, motivo: 'enviado', responsavel: null }]);
+    }
+  } catch (e) {
+    log(`#${id}: registro do envio no Neon falhou (${String(e.message).replace(/postgres(ql)?:\/\/\S+/g, '<url>')}); o envio não muda.`);
+  }
+}
 
 const DB = process.env.ATLAS_DB || path.join(__dirname, 'out', 'atlas.db');
 const AMBIGUA = Symbol('ambígua');
@@ -233,6 +252,7 @@ async function enviarUma(ctx, item, sql, como = 'painel') {
   await sql.query(`update documentos set estado = 'ENVIADO', situacao = $4, enviado_em = now(), atualizado_em = now(), tamanho_bytes = $2, hash_arquivo = $3 where id = $1`,
     [item.id, dados.length, hash, como === 'automático' ? 'Enviado pela automação (automático)' : 'Enviado pela automação (botão do painel)']);
   registro(`#${item.id} Neon: estado ENVIADO gravado.`);
+  await registrarEnvio(sql, item.id, { ok: true, msg: `ENVIADO; status no Atlas agora: ${depois.status ?? '?'}`, como, schedule_id: item.schedule_id, status_atlas: depois.status ?? null, corpo });
   return depois.status ?? null;
 }
 
@@ -350,6 +370,7 @@ async function enviarUma(ctx, item, sql, como = 'painel') {
     } catch (e) {
       resultado(opc.id, { acao: 'enviar', ok: false, msg: String(e.message).slice(0, 400) });
       if (item) segurarJaImportado(item.id, String(e.message));
+      await registrarEnvio(neon(url), item?.id ?? Number(opc.id), { ok: false, msg: String(e.message), como: 'painel', schedule_id: item?.schedule_id ?? null });
       throw e;
     }
     return;
@@ -376,6 +397,7 @@ async function enviarUma(ctx, item, sql, como = 'painel') {
           enviadas++;
         } catch (e) {
           resultado(item.id, { acao: 'enviar', auto: true, ok: false, schedule_id: item.schedule_id, msg: String(e.message).slice(0, 400) });
+          await registrarEnvio(sql, item.id, { ok: false, msg: String(e.message), como: 'automático', schedule_id: item.schedule_id });
           if (e.message === BLOQUEADO) { registro(`Envio automático PAROU em #${item.id}: ${e.message}`); break; }
           registro(`Envio automático PULOU #${item.id} e seguiu: ${e.message}`);
           segurarJaImportado(item.id, String(e.message));

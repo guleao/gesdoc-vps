@@ -11,7 +11,7 @@ const D = fs.mkdtempSync(path.join(os.tmpdir(), 't-trava-'));
 const OUT = path.join(D, 'out');
 fs.mkdirSync(path.join(OUT, 'envio'), { recursive: true });
 fs.mkdirSync(path.join(OUT, 'downloads', 'sharepoint'), { recursive: true });
-for (const f of ['enviar.js', 'conteudo.js', 'ler-pdf.js']) fs.copyFileSync(path.join(ATLAS, f), path.join(D, f));
+for (const f of ['enviar.js', 'conteudo.js', 'ler-pdf.js', 'eventos.js']) fs.copyFileSync(path.join(ATLAS, f), path.join(D, f));
 fs.cpSync(path.join(ATLAS, 'vendor'), path.join(D, 'vendor'), { recursive: true });
 
 function pdf(linhas) {

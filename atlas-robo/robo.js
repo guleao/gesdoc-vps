@@ -70,6 +70,8 @@ async function rodada(porque) {
     if (temSharepoint()) r.codigos.sharepoint = await buscarSharepoint();
     fazendo('atualizando a lista de envio'); r.codigos.lista = await rodar('enviar.js');
     if (automatico()) { fazendo('ENVIANDO ao Atlas (automático)'); r.codigos.envio = await rodar('enviar.js', ['--auto']); }
+    // Passo 3: motivo e responsável de cada pendência aberta + eventos de busca/conferência/trava no Neon.
+    fazendo('gravando os motivos no banco'); r.codigos.motivos = await rodar('motivos.js');
   }
   r.fim = new Date().toISOString();
   estado.ultima_rodada = r;
@@ -94,6 +96,7 @@ async function atenderPedidos() {
     else if (p.acao !== 'atualizar') { log(`Pedido ignorado (inválido): ${f}`); continue; }
     // Depois de qualquer ação, a lista de envio é refeita (quem foi enviado sai, quem foi achado entra).
     fazendo('atualizando a lista de envio'); await rodar('enviar.js');
+    fazendo('gravando os motivos no banco'); await rodar('motivos.js');
     estado.ultimo_pedido = { ...p, codigo: code ?? 0, fim: new Date().toISOString() };
     fazendo(null);
   }

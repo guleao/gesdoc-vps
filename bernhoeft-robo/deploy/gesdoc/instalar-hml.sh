@@ -69,10 +69,10 @@ curl -fsS http://127.0.0.1:3010/health >/dev/null && log "Gotenberg OK" || log "
 # 4) Robôs de pendências (O2.6). O código vem das pastas dos robôs (fonte única); aqui só se copia e constrói.
 log "Copiando e construindo o robô Bernhoeft (gesdoc/pendencias-bernhoeft:hml)"
 mkdir -p "$PEND/bernhoeft" "$PEND/atlas"
-cp "$ROBO"/{pendencias.js,entregar.js,login.js,login_auto.py,requirements-captcha.txt,package.json,package-lock.json,Dockerfile,.dockerignore} "$PEND/bernhoeft/"
+cp "$ROBO"/{pendencias.js,entregar.js,neon-bern.js,login.js,login_auto.py,requirements-captcha.txt,package.json,package-lock.json,Dockerfile,.dockerignore} "$PEND/bernhoeft/"
 docker build -q -t gesdoc/pendencias-bernhoeft:hml "$PEND/bernhoeft"
 log "Copiando e construindo o robô Atlas (gesdoc/pendencias-atlas:hml)"
-cp -r "$ATLAS"/{comum.js,login.js,pendencias.js,planilha.js,neon.js,unir-pdfs.js,enviar.js,factorial.js,sharepoint.js,robo.js,ler-pdf.js,conteudo.js,classificar.js,regras-factorial.js,declaracao-vr.js,vendor,package.json,package-lock.json,Dockerfile,.dockerignore} "$PEND/atlas/"
+cp -r "$ATLAS"/{comum.js,login.js,pendencias.js,planilha.js,neon.js,unir-pdfs.js,enviar.js,factorial.js,sharepoint.js,robo.js,ler-pdf.js,conteudo.js,classificar.js,regras-factorial.js,declaracao-vr.js,eventos.js,motivos.js,vendor,package.json,package-lock.json,Dockerfile,.dockerignore} "$PEND/atlas/"
 docker build -q -t gesdoc/pendencias-atlas:hml "$PEND/atlas"
 cp "$PACOTE/services/pendencias/compose.hml.yml" "$PEND/"
 

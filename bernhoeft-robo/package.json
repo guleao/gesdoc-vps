@@ -10,6 +10,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@neondatabase/serverless": "^1.2.0",
     "exceljs": "^4.4.0",
     "playwright": "^1.63.0"
   }

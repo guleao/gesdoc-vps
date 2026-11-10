@@ -25,7 +25,8 @@ const { classificar } = require('./classificar');
 
 const DB = process.env.ATLAS_DB || path.join(__dirname, 'out', 'atlas.db');
 const ESTADO = 'PENDENTE_ENVIO';
-const SITUACAO = { DelayNotSent: 'Não enviado no prazo', DelayRejected: 'Reprovado (atrasado)', PendingNotSent: 'A enviar', Rejected: 'Reprovado' };
+const SITUACAO = { DelayNotSent: 'Não enviado no prazo', DelayRejected: 'Reprovado (atrasado)', PendingNotSent: 'A enviar', Rejected: 'Reprovado',
+  PendingRejected: 'Reprovado (no prazo)' }; // 10/11: antes ia "PendingRejected" cru e o reprovado no prazo não virava REJEITADO
 
 // Nome do documento no Atlas (normalizado) -> doc_id em documento_regras.
 // Pares de 19/10 pelo discovery da Milena (v2): "Comprovante de Pagamento do TRCT" -> 9 (ela pega um arquivo só, o comprovante
@@ -84,6 +85,19 @@ const dia = (d) => (d == null ? null : d instanceof Date ? d.toISOString().slice
 const CAMPOS = ['doc_id', 'colaborador_id', 'competencia', 'estado', 'prazo_envio', 'cliente', 'unidade', 'nome', 'categoria', 'aba', 'situacao',
   'funcionario', 'cpf', 'tipo', 'grupo', 'numero_pedido', 'cnpj_filial', 'qtd_docs', 'enviado_em', 'validado_em', 'validade', 'critico'];
 
+// Colunas do Passo 2 (10/11; criadas no Neon pelo Passo 1). Só entram se existirem no banco (sem elas, grava como antes).
+// portal = de qual portal é a linha (o Bernhoeft também grava nesta tabela); portal_item_id = document_schedule_id do Atlas;
+// status_portal = status cru do Atlas; situacao_portal = vocabulário do ODA (SITUACAO_PORTAL); aberto_no_portal = está em
+// Atrasados/Próximas na última leitura; visto_no_portal_em = hora dessa leitura.
+const EXTRAS = ['portal', 'portal_item_id', 'status_portal', 'situacao_portal', 'motivo_reprovacao', 'aberto_no_portal', 'visto_no_portal_em'];
+const PORTAL = 'Atlas';
+// Vocabulário do ODA, igual ao que o Passo 1 preencheu: aberto = ATRASADO | NO_PRAZO | REPROVADO; saiu das listas =
+// EM_ANALISE | APROVADO | AGUARDANDO_PREDECESSORES | ENTREGUE (Entregues do Atlas) ou FORA_DO_PORTAL (sumiu sem aparecer em Entregues).
+const SITUACAO_PORTAL = { DelayNotSent: 'ATRASADO', PendingNotSent: 'NO_PRAZO', DelayRejected: 'REPROVADO', PendingRejected: 'REPROVADO', Rejected: 'REPROVADO' };
+const SITUACAO_ENTREGUE = { Approved: 'APROVADO', Validated: 'APROVADO', Analysis: 'EM_ANALISE', WaitingAnalysis: 'EM_ANALISE',
+  WaitingValidation: 'EM_ANALISE', ToValidate: 'EM_ANALISE', Pending: 'EM_ANALISE', WaitingForPredecessors: 'AGUARDANDO_PREDECESSORES' };
+const situacaoPortal = (status) => SITUACAO_PORTAL[status] || (/Rejected/.test(status || '') ? 'REPROVADO' : /^Delay/.test(status || '') ? 'ATRASADO' : 'NO_PRAZO');
+
 // CPF e CNPJ só com dígitos (no Neon: cpf varchar(11), cnpj_filial varchar(14)).
 const digitos = (s) => (s ? String(s).replace(/\D/g, '') || null : null);
 
@@ -112,6 +126,13 @@ function montar(l, doc_id) {
     validado_em: l.validado_em,
     validade: l.validade,
     critico: !!l.critico,
+    portal: PORTAL,
+    portal_item_id: l.document_schedule_id || null,
+    status_portal: l.status || null,
+    situacao_portal: situacaoPortal(l.status),
+    motivo_reprovacao: l.motivo_reprovacao || null,
+    aberto_no_portal: true,
+    visto_no_portal_em: l.coletado_em || null,
   };
 }
 
@@ -140,7 +161,17 @@ const STATUS_ENTREGUE = { Approved: 'aprovado', Validated: 'aprovado', Analysis:
 const situacaoEntregue = (s, robo) => `Entregue ${robo ? 'pela automação' : 'manualmente no portal'}: ${STATUS_ENTREGUE[s] || `(${s || 'sem status'})`}`;
 const FORA = { aba: 'Fora do Atlas', situacao: 'Não aparece mais no Atlas' };
 
-async function enviarNeon({ simular = false, log = console.log, sql: sqlTeste = null, entregues = undefined } = {}) {
+// Leitura que falhou (login, 2FA, portal fora): também vira linha em coletas, com ok = false e o erro (Passo 2).
+async function gravarColetaFalha({ portal = PORTAL, inicio, erro, sql: sqlTeste = null } = {}) {
+  const sql = sqlTeste || neon(conexao());
+  const tem = (await sql.query(`select 1 from information_schema.tables where table_schema = 'public' and table_name = 'coletas'`)).length > 0;
+  if (!tem) return false;
+  await sql.query('insert into coletas (portal, inicio, fim, ok, erro) values ($1, $2, now(), false, $3)',
+    [portal, inicio || new Date().toISOString(), String(erro || '').replace(/postgres(ql)?:\/\/\S+/g, '<url>').slice(0, 2000)]);
+  return true;
+}
+
+async function enviarNeon({ simular = false, log = console.log, sql: sqlTeste = null, entregues = undefined, inicio = null } = {}) {
   let sql = sqlTeste;
   if (!sql) {
     const url = conexao();
@@ -156,6 +187,14 @@ async function enviarNeon({ simular = false, log = console.log, sql: sqlTeste = 
   db.close();
 
   const validos = new Set((await sql.query('select doc_id from documento_regras where ativo')).map((r) => r.doc_id));
+  // Passo 2: o que a migração já criou no banco (sem ela, nada muda no que é gravado).
+  const colunasDoc = new Set((await sql.query(`select column_name from information_schema.columns
+    where table_schema = 'public' and table_name = 'documentos'`)).map((r) => r.column_name));
+  const extras = EXTRAS.filter((c) => colunasDoc.has(c));
+  const temColetas = (await sql.query(`select 1 from information_schema.tables where table_schema = 'public' and table_name = 'coletas'`)).length > 0;
+  // portal vazio = linha de antes do Passo 1 (todas do Atlas)
+  const soAtlas = colunasDoc.has('portal') ? `and coalesce(portal, '${PORTAL}') = '${PORTAL}'` : '';
+  const tem = (c) => extras.includes(c);
   const registros = [];
   const semRegra = new Map();
   const porPalavras = new Map(); // nome do Atlas -> { doc, n } reconhecido só pelas palavras
@@ -172,13 +211,13 @@ async function enviarNeon({ simular = false, log = console.log, sql: sqlTeste = 
     if (palavras) porPalavras.set(l.documento, { doc, n: (porPalavras.get(l.documento)?.n || 0) + 1 });
     if (ambiguo) ambiguos.set(l.documento, ambiguo);
     if (!doc || !validos.has(doc)) semRegra.set(l.documento, (semRegra.get(l.documento) || 0) + 1);
-    else registros.push(montar(l, doc));
+    else registros.push(montar({ ...l, coletado_em: coleta.coletado_em }, doc));
   }
 
   // Linhas já gravadas pelo robô (aba preenchida), para atualizar em vez de duplicar.
   const existentes = new Map();
   const atuais = new Map(); // id -> { estado, aba, situacao } (para não regravar quem já está marcado como entregue)
-  for (const r of await sql.query(`select id, estado, aba, situacao, ${CHAVE.join(', ')} from documentos where aba is not null`)) {
+  for (const r of await sql.query(`select id, estado, aba, situacao, ${CHAVE.join(', ')} from documentos where aba is not null ${soAtlas}`)) {
     existentes.set(chave({ ...r, prazo_envio: dia(r.prazo_envio) }), r.id);
     atuais.set(r.id, { estado: r.estado, aba: r.aba, situacao: r.situacao });
   }
@@ -191,19 +230,22 @@ async function enviarNeon({ simular = false, log = console.log, sql: sqlTeste = 
     const k = chave(r);
     if (vistos.has(k)) continue; // mesma pendência repetida na coleta
     vistos.add(k);
-    const vals = CAMPOS.map((c) => r[c] ?? null);
+    const todos = [...CAMPOS, ...extras];
+    const vals = todos.map((c) => r[c] ?? null);
     const id = existentes.get(k);
     if (id) {
       atualizados++;
       // Não toca em estado: quem avança a pendência (COMPOSTO, LOCALIZADO, DIVERGENTE_FACTORIAL...) é o serviço de sincronização.
-      const campos = CAMPOS.filter((c) => c !== 'estado');
+      // O motivo da reprovação não é apagado quando a leitura vem sem ele (consulta falhou ou o item foi reenviado).
+      const campos = todos.filter((c) => c !== 'estado');
       const valsUp = campos.map((c) => r[c] ?? null);
-      consultas.push(sql.query(`update documentos set ${campos.map((c, i) => `${c} = $${i + 1}`).join(', ')}, atualizado_em = now() where id = $${campos.length + 1}`, [...valsUp, id]));
+      const set = campos.map((c, i) => (c === 'motivo_reprovacao' ? `${c} = coalesce($${i + 1}, ${c})` : `${c} = $${i + 1}`));
+      consultas.push(sql.query(`update documentos set ${set.join(', ')}, atualizado_em = now() where id = $${campos.length + 1}`, [...valsUp, id]));
     } else {
       novos++;
       // Já existe no banco com a mesma chave (linha de outro processo, sem aba): não duplica nem derruba a transação inteira.
       inserts.push(consultas.length);
-      consultas.push(sql.query(`insert into documentos (${CAMPOS.join(', ')}) values (${CAMPOS.map((_, i) => `$${i + 1}`).join(', ')})
+      consultas.push(sql.query(`insert into documentos (${todos.join(', ')}) values (${todos.map((_, i) => `$${i + 1}`).join(', ')})
         on conflict (${CHAVE.join(', ')}) do nothing returning id`, vals));
     }
   }
@@ -229,7 +271,8 @@ async function enviarNeon({ simular = false, log = console.log, sql: sqlTeste = 
       if (!l) {
         if (naReprovados.has(k) || at.aba === 'Entregues' || (at.aba === FORA.aba && at.situacao === FORA.situacao)) continue;
         marcadosFora++;
-        consultas.push(sql.query('update documentos set aba = $1, situacao = $2, atualizado_em = now() where id = $3', [FORA.aba, FORA.situacao, id]));
+        const f = (tem('aberto_no_portal') ? 'aberto_no_portal = false, ' : '') + (tem('situacao_portal') ? `situacao_portal = 'FORA_DO_PORTAL', ` : '');
+        consultas.push(sql.query(`update documentos set aba = $1, situacao = $2, ${f}atualizado_em = now() where id = $3`, [FORA.aba, FORA.situacao, id]));
         continue;
       }
       const robo = doRobo.has(Number(id)) || PELA_AUTOMACAO.test(at.situacao || '');
@@ -237,10 +280,31 @@ async function enviarNeon({ simular = false, log = console.log, sql: sqlTeste = 
       const situacao = situacaoEntregue(l.status, robo);
       if (at.estado === 'ENVIADO' && at.aba === 'Entregues' && at.situacao === situacao) { jaEntregues++; continue; }
       marcadosEntregues++;
-      consultas.push(sql.query(`update documentos set estado = 'ENVIADO', aba = 'Entregues', situacao = $1,
-        enviado_em = coalesce($2, enviado_em), validado_em = coalesce($3, validado_em), atualizado_em = now() where id = $4`,
-      [situacao, l.enviado_em || null, l.validado_em || null, id]));
+      const extra = [], vals = [situacao, l.enviado_em || null, l.validado_em || null, id];
+      if (tem('aberto_no_portal')) extra.push('aberto_no_portal = false');
+      if (tem('status_portal')) { vals.push(l.status || null); extra.push(`status_portal = coalesce($${vals.length}, status_portal)`); }
+      if (tem('situacao_portal')) { vals.push(SITUACAO_ENTREGUE[l.status] || 'ENTREGUE'); extra.push(`situacao_portal = $${vals.length}`); }
+      if (tem('portal_item_id') && l.document_schedule_id) { vals.push(l.document_schedule_id); extra.push(`portal_item_id = coalesce(portal_item_id, $${vals.length})`); }
+      consultas.push(sql.query(`update documentos set estado = 'ENVIADO', aba = 'Entregues', situacao = $1, ${extra.map((x) => x + ', ').join('')}
+        enviado_em = coalesce($2, enviado_em), validado_em = coalesce($3, validado_em), atualizado_em = now() where id = $4`, vals));
     }
+  }
+  // Linhas que já estavam como Entregues/Fora sem aberto_no_portal (de antes): fecha (as listas mandam).
+  if (tem('aberto_no_portal')) {
+    consultas.push(sql.query(`update documentos set aberto_no_portal = false where aba in ('Entregues', $1) ${soAtlas}
+      and aberto_no_portal is distinct from false`, [FORA.aba]));
+  }
+  // Uma linha por leitura na tabela coletas (Passo 2). "abertos" = itens distintos em Atrasados + Próximas (a aba
+  // Reprovados repete os reprovados que já estão em Atrasados: só serve para o motivo, nunca para somar).
+  if (temColetas && !simular) {
+    const abertos = new Set(linhas.map((l) => l.document_schedule_id || `${l.documento}|${l.competencia}|${l.pedido}|${l.cpf}`)).size;
+    const totais = { atrasados: coleta.atrasados ?? null, proximas: coleta.proximas ?? null, reprovados: coleta.reprovados ?? null,
+      reprovados_obs: 'a aba Reprovados repete os reprovados de Atrasados: não somar', entregues: coleta.entregues ?? null,
+      abertos, gravadas: vistos.size, sem_regra: linhas.length - registros.length, novos, atualizados,
+      saidos_entregues: marcadosEntregues, saidos_fora: marcadosFora, coletado_em: coleta.coletado_em };
+    consultas.push(sql.query(`insert into coletas (portal, inicio, fim, ok, totais) select $1::varchar, $2::timestamptz, $3::timestamptz, true, $4::jsonb
+      where not exists (select 1 from coletas where portal = $1::varchar and totais->>'coletado_em' = $5::text)`,
+    [PORTAL, inicio || coleta.coletado_em, coleta.coletado_em, JSON.stringify(totais), coleta.coletado_em]));
   }
 
   log(`Neon: ${linhas.length} pendência(s) na coleta ${coleta.id}; ${novos} nova(s), ${atualizados} atualizada(s), ${registros.length - vistos.size} repetida(s), ${linhas.length - registros.length} sem regra.`);
@@ -264,7 +328,7 @@ async function enviarNeon({ simular = false, log = console.log, sql: sqlTeste = 
   return { novos: novos - jaExistiam, atualizados, jaExistiam, semRegra: [...semRegra], entregues: marcadosEntregues, pelaAutomacao, manuais, fora: marcadosFora };
 }
 
-module.exports = { enviarNeon, temConexao, conexao, REGRAS };
+module.exports = { enviarNeon, gravarColetaFalha, temConexao, conexao, REGRAS, situacaoPortal };
 
 if (require.main === module) {
   enviarNeon({ simular: process.argv.includes('--simular') }).catch((e) => {

@@ -16,7 +16,7 @@ const path = require('path');
 const { DatabaseSync } = require('node:sqlite');
 const { OUT, log, abrir, garantirLogin, esperarToken, api, apiPost } = require('./comum');
 const { gerarPlanilha } = require('./planilha');
-const { enviarNeon, temConexao } = require('./neon');
+const { enviarNeon, gravarColetaFalha, temConexao } = require('./neon');
 
 const ABAS = { 0: 'Atrasados', 1: 'Próximas entregas', 2: 'Reprovados' };
 const POR_PAGINA = 100;
@@ -121,6 +121,7 @@ const csv = (v) => (v == null ? '' : /[;"\n]/.test(String(v)) ? `"${String(v).re
 
 (async () => {
   fs.mkdirSync(OUT, { recursive: true });
+  const inicio = new Date().toISOString(); // Passo 2: vai para coletas.inicio
   const { ctx, page } = await abrir();
   try {
     await garantirLogin(page, '/dashboard/provider');
@@ -193,7 +194,7 @@ const csv = (v) => (v == null ? '' : /[;"\n]/.test(String(v)) ? `"${String(v).re
     }
     if (temConexao()) {
       try {
-        await enviarNeon({ log, entregues: listaEntregues });
+        await enviarNeon({ log, entregues: listaEntregues, inicio });
       } catch (e) {
         log(`Neon: não gravado (${String(e.message).replace(/postgres(ql)?:\/\/\S+/g, '<url>')}).`);
         process.exitCode = 3;
@@ -202,6 +203,8 @@ const csv = (v) => (v == null ? '' : /[;"\n]/.test(String(v)) ? `"${String(v).re
   } catch (e) {
     console.error('ERRO:', e.message);
     process.exitCode = e.codigo || 1;
+    // Passo 2: a leitura que falhou também fica em coletas (ok = false), para o painel mostrar desde quando não lê.
+    if (temConexao()) await gravarColetaFalha({ inicio, erro: e.message }).catch((x) => log(`Neon: falha da coleta não gravada (${String(x.message).replace(/postgres(ql)?:\/\/\S+/g, '<url>')}).`));
   } finally {
     await ctx.close();
   }
