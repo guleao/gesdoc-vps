@@ -44,6 +44,10 @@ const PAPEL = {
   // 8 férias: pasta/nome com "férias". "aviso prévio" NÃO é aviso de férias.
   aviso: { rotulo: 'aviso de férias', escopo: /ferias/, achar: (t, n) => /\baviso\b/.test(n) && !/previo/.test(n), periodo: true },
   recibo: { rotulo: 'recibo de férias', escopo: /ferias/, achar: (t, n) => /\brecibo\b/.test(n), periodo: true },
+  // Milena (06/11): "considerar o aviso de férias como o recibo de férias; upload do recibo + comprovante". Vale o recibo; sem recibo
+  // no período, o aviso (nunca o aviso prévio). Os dois no período = o recibo (preferir).
+  reciboOuAviso: { rotulo: 'recibo de férias (ou o aviso, que vale como recibo)', escopo: /ferias/, periodo: true,
+    achar: (t, n) => /\brecibo\b/.test(n) || (/\baviso\b/.test(n) && !/previo/.test(n)), preferir: (n) => /\brecibo\b/.test(n) },
   comprovanteFerias: { rotulo: 'comprovante de pagamento das férias', escopo: /ferias/, achar: (t, n) => /comprovante/.test(n), periodo: true },
   // 9 rescisão (pasta offboarding): TRCT, termo de quitação (Evilásio) e o comprovante do TRCT.
   trct: { rotulo: 'TRCT', escopo: /offboard|rescis|desligament/, achar: (t, n) => /\btrct\b|\btcrt\b|termo de rescisao/.test(n) && !/comprovante|quitacao/.test(n), assinado: true },
@@ -58,8 +62,8 @@ const PAPEL = {
 // aviso: avisos que vão para o painel porque a regra ainda não foi confirmada pela Milena.
 function pecasDoDoc(docId, nomeAtlas) {
   const n = normalizar(nomeAtlas);
-  if (docId === 8) return { pecas: /\baviso\b/.test(n) ? ['aviso', 'recibo', 'comprovanteFerias'] : ['recibo', 'comprovanteFerias'],
-    aviso: /\baviso\b/.test(n) ? null : 'o item do Atlas não pede aviso: montado só com recibo + comprovante (confirmar com a Milena)' };
+  // 8 férias (Milena, 06/11): recibo (ou o aviso, que vale como recibo) + comprovante, para qualquer nome do item no Atlas.
+  if (docId === 8) return { pecas: ['reciboOuAviso', 'comprovanteFerias'], aviso: null };
   if (docId === 9) {
     if (/^comprovante de pagamento do trct/.test(n)) return { pecas: ['comprovanteTrct'], aviso: 'o item do Atlas pede só o comprovante do TRCT (a Milena baixa só ele): confirmar' };
     return { pecas: /comprovante/.test(n) ? ['trct', 'quitacao', 'comprovanteTrct'] : ['trct', 'quitacao'], aviso: null };
@@ -84,6 +88,7 @@ function escolherPartes(docId, nomeAtlas, competencia, docs, pastas) {
       if (p.periodo && !noPer.length) return { ok: false, motivo: `${p.rotulo}: ${cand.length} arquivo(s), nenhum do período ${competencia}` };
       if (noPer.length) cand = noPer;
     }
+    if (cand.length > 1 && p.preferir) { const pref = cand.filter((d) => p.preferir(nomeDe(d))); if (pref.length) cand = pref; }
     if (cand.length > 1) return { ok: false, motivo: `${p.rotulo}: ${cand.length} arquivos possíveis (${cand.map((d) => d.id).join(', ')}): alguém escolhe` };
     const d = cand[0];
     if (!ehPdf(d)) return { ok: false, motivo: `${p.rotulo} não é PDF` };

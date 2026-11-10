@@ -62,11 +62,11 @@ td.fix.none .t{color:var(--muted)}
   <header>
     <h1>Envios GESDOC EQT</h1>
     <div class="date">06/11/2026, 10:25 · depois da sincronização das 09:49 e da rodada do robô Atlas das 10:16–10:20</div>
-    <div class="resumo"><b>Erros de sistema em aberto: nenhum.</b> 10 e 60/61 corrigidos e no ar desde 06/11 às 09:48; 69, 83 e 84 já estavam publicados desde 05/11. <b>Enviados hoje às 10:19: 7 documentos</b> (6 do 80 e 1 do 78), todos aceitos e em validação no Atlas. Fica com você a conferência de 2 ASO em imagem; o resto depende do cliente.</div>
+    <div class="resumo">Aqui se avalia o trabalho do robô: buscar o documento na origem, conferir se ele está certo e subir no lugar certo. <b>Reprovação no portal depois do envio não conta como falha.</b> <b>Com o sistema: só o 78</b> (o robô ainda não confere o ASO escaneado). 10 e 60/61 foram corrigidos e estão no ar desde 06/11 às 09:48; 69, 83 e 84 estão publicados desde 05/11. <b>Enviados hoje às 10:19: 7 documentos</b> (6 do 80 e 1 do 78). O resto depende do cliente.</div>
   </header>
 
   <section class="ok">
-    <h2>OK <span class="count">8</span></h2>
+    <h2>OK <span class="count">10</span></h2>
     <div class="wrap"><table>
       <thead><tr><th>Nº</th><th>Documento</th><th>Status</th></tr></thead>
       <tbody>
@@ -78,65 +78,92 @@ td.fix.none .t{color:var(--muted)}
         <tr><td class="n">64</td><td class="doc">CRF – Regularidade do FGTS</td><td><span class="tag">OK</span></td></tr>
         <tr><td class="n">67</td><td class="doc">ASO demissional</td><td><span class="tag">OK</span></td></tr>
         <tr><td class="n">68</td><td class="doc">Baixa na CTPS e eSocial</td><td><span class="tag">OK</span></td></tr>
+        <tr><td class="n">69</td><td class="doc">Pedido de demissão</td><td><span class="tag">OK</span></td></tr>
+        <tr><td class="n">80</td><td class="doc">Comprovante de registro eSocial</td><td><span class="tag">OK</span></td></tr>
       </tbody>
     </table></div>
   </section>
 
   <section class="no">
-    <h2>Não OK <span class="count">17</span></h2>
+    <h2>Não OK <span class="count">15</span></h2>
     <div class="wrap"><table>
       <thead><tr><th>Nº</th><th>Documento</th><th>Falha de</th><th>Motivo</th><th>Correção (nosso lado)</th></tr></thead>
       <tbody>
         <tr><td class="n">4</td><td class="doc">Seguro de vida</td><td><span class="pill cli">Cliente</span></td>
-          <td class="why">06 e 08/2026: aditamento da Prudential na pasta, sem definição de onde entra. 07/2026: pasta vazia</td>
+          <td class="why">O robô procura na pasta do mês a relação de beneficiários, o boleto e o comprovante, e só junta quando acha os três.<br>
+            <b>O que falta:</b> em 06 e 08/2026 há também um aditamento da Prudential na pasta, e ninguém definiu se ele entra no PDF. Em 07/2026 a pasta está vazia.<br>
+            <b>Quem resolve:</b> a Milena (o aditamento) e a NIP (os arquivos de 07/2026).</td>
           <td class="fix none" tabindex="0" data-tip="Nada a corrigir do nosso lado. O robô só monta o PDF final (relação de beneficiários → boleto → comprovante) quando todas as peças estão na pasta do mês, como foi pedido. Em 06 e 08/2026 há também um aditamento da Prudential, que não é nenhuma das três peças: a Milena precisa dizer se ele entra no PDF (e em que posição) ou fica de fora. Em 07/2026 a pasta está vazia e a NIP precisa colocar os arquivos. Com a resposta, ajustamos a montagem se o aditamento tiver de entrar."><span class="t">—</span></td></tr>
         <tr><td class="n">6</td><td class="doc">Vale refeição</td><td><span class="pill cli">Cliente</span></td>
-          <td class="why">Vai uma declaração; falta definir quem escreve e o modelo</td>
+          <td class="why">Para o vale refeição, o Atlas pede uma declaração. Ela não existe pronta em nenhuma pasta, então não há o que buscar.<br>
+            <b>O que falta:</b> dizer quem assina a declaração e passar o modelo.<br>
+            <b>Quem resolve:</b> a NIP. Com o modelo, o robô passa a gerar a declaração sozinho.</td>
           <td class="fix none" tabindex="0" data-tip="Nada a corrigir do nosso lado agora. Para o vale refeição o Atlas aceita uma declaração no lugar da relação, do boleto e do comprovante. Falta a NIP dizer quem assina a declaração e passar o modelo. Com o modelo em mãos, o robô pode gerar a declaração de cada colaborador automaticamente."><span class="t">—</span></td></tr>
         <tr><td class="n">8</td><td class="doc">Aviso e recibo de férias</td><td><span class="pill cli">Cliente</span></td>
-          <td class="why">1 pedido aberto no Atlas. Na Factorial falta o aviso de férias (26 de 28 conferidos) ou o aviso e o comprovante (2)</td>
+          <td class="why">O Atlas pede o aviso de férias, o recibo e o comprovante do mesmo mês, juntos num PDF.<br>
+            <b>O que falta:</b> dos 28 casos conferidos na Factorial, 25 não têm o aviso de férias, 2 têm o aviso de outro mês e 1 não tem o comprovante. Hoje há 1 pedido aberto no Atlas.<br>
+            <b>Quem resolve:</b> o RH, subindo o aviso de férias na Factorial. Depois disso a montagem é automática.</td>
           <td class="fix none" tabindex="0" data-tip="Nada a corrigir do nosso lado (revisado em 06/11). Simulamos a regra “recibo + comprovante sem aviso” e ela não montaria nenhum dos 28 pedidos: 27 são do item “Aviso + Recibo de férias + Comprovante”, que pede o aviso, e o aviso não está na Factorial (25) ou é de outro mês (2). O único item que não pede aviso (#543) não tem o comprovante. O RH precisa subir o aviso de férias (e o comprovante) na Factorial; aí a sincronização monta sozinha."><span class="t">—</span></td></tr>
         <tr><td class="n">9</td><td class="doc">TRCT</td><td><span class="pill cli">Cliente</span></td>
-          <td class="why">2 pedidos abertos no Atlas: colaborador ativo na Factorial (rescisão cobrada de quem não saiu). Na Factorial, 22 TRCT ou termos de quitação sem assinatura</td>
+          <td class="why">O robô junta o TRCT assinado e o comprovante de pagamento, que ficam na pasta de desligamento do colaborador.<br>
+            <b>O que falta:</b> na Factorial, 22 TRCT (ou termos de quitação) estão sem assinatura. Os 2 pedidos abertos no Atlas são de colaboradores que continuam ativos: a Equatorial está cobrando a rescisão de quem não saiu.<br>
+            <b>Quem resolve:</b> o RH (as assinaturas) e a Milena, com a Equatorial (os 2 ativos).</td>
           <td class="fix none" tabindex="0" data-tip="Nada a corrigir do nosso lado. O TRCT é um documento composto (TRCT assinado → comprovante de pagamento) e só é entregue quando as duas peças estão na pasta de offboarding do colaborador. Em 22 pedidos falta o TRCT assinado. Falta também a Milena confirmar, para cada nome do Atlas (“TRCT”, “TRCT com comprovante de pagamento” e “Comprovante de pagamento do TRCT”), se vai só o comprovante; se for, ajustamos a montagem desse nome."><span class="t">—</span></td></tr>
         <tr><td class="n">10</td><td class="doc">GFD rescisória</td><td><span class="pill cli">Cliente</span></td>
-          <td class="why">2 pedidos abertos no Atlas: 1 reprovado no portal e 1 com colaborador ativo na Factorial. Na Factorial, 2 sem o comprovante de pagamento da guia</td>
+          <td class="why">O robô junta a guia rescisória do FGTS e o comprovante de pagamento.<br>
+            <b>O que falta:</b> na Factorial, 2 guias estão sem o comprovante. Há também 1 pedido de um colaborador que continua ativo. Outro pedido foi reprovado no portal, o que não conta como falha.<br>
+            <b>Quem resolve:</b> o RH (os comprovantes) e a Milena (o colaborador ativo).</td>
           <td class="fix none" tabindex="0" data-tip="Corrigido do nosso lado em 06/11 às 09:48. A guia do FGTS Digital tem o mesmo modelo na mensal e na rescisória, então palavra-chave não separa. Agora a conferência lê o valor: na rescisória, a indenização compensatória e os encargos (linha “total fgts”) têm valor; na mensal são 0,00. A RE é a relação de trabalhadores, todos “mensal”, sem o total da guia. O 10, o 24 e o 25 se barram entre si (testado em 17, 7 e 6 PDFs reais, 100% certo). O que resta é do cliente: excluir no portal o arquivo reprovado, conferir o colaborador ativo e subir o comprovante da guia."><span class="t">—</span></td></tr>
         <tr><td class="n">25</td><td class="doc">RE – Relação de empregados</td><td><span class="pill cli">Cliente</span></td>
-          <td class="why">8 pedidos abertos, todos de 10/2026 e no prazo (25/11), aguardando o arquivo no SharePoint. Os de 09/2026 já saíram do Atlas</td>
+          <td class="why">Os 8 pedidos abertos são de 10/2026 e ainda estão no prazo (25/11).<br>
+            <b>O que falta:</b> a RE de 10/2026 ainda não está no SharePoint. Quando estiver, o robô busca, confere e envia. Os de 09/2026 foram entregues por outra pessoa antes.<br>
+            <b>Quem resolve:</b> a NIP, colocando o arquivo no SharePoint.</td>
           <td class="fix none" tabindex="0" data-tip="Nada a corrigir do nosso lado (revisado em 06/11). Os pedidos de 09/2026 de Alagoas, Maranhão, Pará, Piauí e Rio Grande do Sul saíram das abas do Atlas em 20/10, entregues por outra pessoa, antes de o robô achar os arquivos (26/10). Por isso o robô não enviou: estava certo. Goiás e ESCE saíram dos reprovados em 21/10 e Amapá (CEA) em 28/10. Hoje só há os 8 pedidos de 10/2026, no prazo: assim que a RE estiver no SharePoint, o robô busca, confere e envia."><span class="t">—</span></td></tr>
         <tr><td class="n">56</td><td class="doc">Comprovante de pagamento da folha</td><td><span class="pill cli">Cliente</span></td>
-          <td class="why">CEA 09/2026: arquivo não está no SharePoint (prazo 10/10 vencido). 10/2026, 8 unidades: arquivo ainda não está no SharePoint (prazo 10/11)</td>
+          <td class="why">O robô procura os comprovantes na pasta de cada unidade no SharePoint e não acha.<br>
+            <b>O que falta:</b> o do Amapá (CEA) de 09/2026 nunca foi colocado, e o prazo venceu em 10/10. Os de 10/2026 das 8 unidades ainda não estão lá (prazo 10/11).<br>
+            <b>Quem resolve:</b> a NIP, colocando os arquivos no SharePoint.</td>
           <td class="fix none" tabindex="0" data-tip="Nada a corrigir do nosso lado. O robô procura os comprovantes na pasta do tomador e não encontrou: Amapá (CEA) de 09/2026 nunca foi colocado, e os de 10/2026 ainda não estão no SharePoint (prazo 10/11). Assim que a NIP colocar os arquivos, o robô monta e envia."><span class="t">—</span></td></tr>
         <tr><td class="n">59</td><td class="doc">Comprovante de recolhimento</td><td><span class="pill cli">Cliente</span></td>
-          <td class="why">Envio travado de propósito: já sobe por outro meio</td>
+          <td class="why">O robô acha o documento, mas o envio está travado de propósito: a Milena disse que ele já sobe por outro caminho, e mandar duas vezes daria problema.<br>
+            <b>O que falta:</b> confirmar quem sobe hoje, para manter a trava ou passar o envio para o robô.<br>
+            <b>Quem resolve:</b> a Milena.</td>
           <td class="fix none" tabindex="0" data-tip="Nada a corrigir do nosso lado. O envio está travado de propósito porque a Milena informou que este documento já sobe por outro meio; assim evitamos envio em dobro. Falta só confirmar quem sobe hoje para manter a trava ou passar o envio para o robô."><span class="t">—</span></td></tr>
         <tr><td class="n">60</td><td class="doc">Recibo da DCTFWeb</td><td><span class="pill cli">Cliente</span></td>
-          <td class="why">2 pedidos abertos: 10/2026 do grupo (no prazo, 25/11) e ESCE (pasta da filial não mapeada no SharePoint). O de 09/2026 já saiu do Atlas</td>
+          <td class="why">Há 2 pedidos abertos.<br>
+            <b>O que falta:</b> o de 10/2026 ainda não está no SharePoint (o prazo é 25/11). No da ESCE, não sabemos em que pasta do SharePoint ficam os arquivos dessa filial. O de 09/2026 foi entregue por outra pessoa antes.<br>
+            <b>Quem resolve:</b> a NIP (o arquivo de 10/2026) e o cliente (dizer onde fica a pasta da ESCE).</td>
           <td class="fix none" tabindex="0" data-tip="Corrigido do nosso lado em 06/11 às 09:48: a conferência do conteúdo separa o recibo (“recibo de entrega da declaração”) do relatório (“declaração completa”), e um barra o outro (testado nos PDFs reais). O pedido de 09/2026 do grupo saiu do Atlas em 20/10, entregue por outra pessoa, antes de o robô achar o arquivo: não era erro. Falta do cliente: o arquivo de 10/2026 no SharePoint e dizer onde fica a pasta da ESCE (filial ...0001-00), que o robô ainda não conhece."><span class="t">—</span></td></tr>
         <tr><td class="n">61</td><td class="doc">Relatório da DCTFWeb</td><td><span class="pill cli">Cliente</span></td>
-          <td class="why">2 pedidos abertos: 10/2026 do grupo (no prazo, 25/11) e ESCE (pasta da filial não mapeada no SharePoint). O de 09/2026 já saiu do Atlas</td>
+          <td class="why">Há 2 pedidos abertos.<br>
+            <b>O que falta:</b> o de 10/2026 ainda não está no SharePoint (o prazo é 25/11). No da ESCE, não sabemos em que pasta do SharePoint ficam os arquivos dessa filial. O de 09/2026 foi entregue por outra pessoa antes.<br>
+            <b>Quem resolve:</b> a NIP (o arquivo de 10/2026) e o cliente (dizer onde fica a pasta da ESCE).</td>
           <td class="fix none" tabindex="0" data-tip="Corrigido do nosso lado em 06/11 às 09:48: a conferência do conteúdo separa o relatório (“declaração completa”) do recibo (“recibo de entrega da declaração”), e um barra o outro (testado nos PDFs reais). O pedido de 09/2026 do grupo saiu do Atlas em 20/10, entregue por outra pessoa, antes de o robô achar o arquivo: não era erro. Falta do cliente: o arquivo de 10/2026 no SharePoint e dizer onde fica a pasta da ESCE (filial ...0001-00)."><span class="t">—</span></td></tr>
         <tr><td class="n">63</td><td class="doc">Extrato mensal da folha</td><td><span class="pill cli">Cliente</span></td>
-          <td class="why">Envio travado de propósito: já sobe por outro meio</td>
+          <td class="why">O robô acha o documento, mas o envio está travado de propósito: a Milena disse que ele já sobe por outro caminho, e mandar duas vezes daria problema.<br>
+            <b>O que falta:</b> confirmar quem sobe hoje, para manter a trava ou passar o envio para o robô.<br>
+            <b>Quem resolve:</b> a Milena.</td>
           <td class="fix none" tabindex="0" data-tip="Nada a corrigir do nosso lado. O envio está travado de propósito porque a Milena informou que este documento já está automatizado por outro meio; assim evitamos envio em dobro. Falta só confirmar quem sobe hoje para manter a trava ou passar o envio para o robô."><span class="t">—</span></td></tr>
         <tr><td class="n">66</td><td class="doc">Relatório mensal de ocorrências</td><td><span class="pill cli">Cliente</span></td>
-          <td class="why">Preenchido à mão no modelo do Atlas; sem robô</td>
+          <td class="why">É um formulário do próprio Atlas que a equipe preenche à mão com as ocorrências do mês. Não existe arquivo pronto para o robô buscar.<br>
+            <b>Quem resolve:</b> a equipe, preenchendo o formulário todo mês.</td>
           <td class="fix none" tabindex="0" data-tip="Nada a corrigir do nosso lado. Este relatório é um modelo baixado do próprio Atlas e preenchido pela equipe com as ocorrências do mês; não existe arquivo pronto para o robô buscar."><span class="t">—</span></td></tr>
-        <tr><td class="n">69</td><td class="doc">Pedido de demissão</td><td><span class="pill cli">Cliente</span></td>
-          <td class="why">1 pedido aberto (ESCE), reprovado no portal</td>
-          <td class="fix none" tabindex="0" data-tip="Nada a corrigir do nosso lado. O filtro que barra aviso prévio do empregador e fim de experiência está no ar desde 05/11, e os 13 itens que eram aviso prévio já não estão no Atlas (não podem ser enviados). Resta 1 pedido da ESCE reprovado no portal: alguém precisa excluir o arquivo reprovado no Atlas antes de um novo envio."><span class="t">—</span></td></tr>
-        <tr><td class="n">78</td><td class="doc">ASO admissional e periódico</td><td><span class="pill voc">Você</span></td>
-          <td class="why">#548 enviado em 06/11 às 10:19 (em validação no Atlas). Faltam: #539 e #541 segurados (só imagem); #544 (2 arquivos possíveis) e #547 (imagem sem o tipo no nome) sem arquivo escolhido</td>
-          <td class="fix" tabindex="0" data-tip="A busca está no ar desde 05/11 e, por segurança, a 1ª rodada segurou tudo para conferência humana. O #548 (ASO admissional apto, CPF certo, com o laudo junto) foi solto e enviado em 06/11 às 10:19 e está em validação. #539 e #541 são digitalizados (sem texto): abrir na aba 6, conferir se é o ASO certo e se não há anamnese ou ficha clínica, e soltar. #544 e #547: escolher o arquivo na Factorial e subir à mão no Atlas."><span class="t">Abrir o #539 e o #541 na aba 6 e soltar; escolher o arquivo do #544 e do #547</span></td></tr>
-        <tr><td class="n">80</td><td class="doc">Comprovante de registro eSocial</td><td><span class="pill voc">Você</span></td>
-          <td class="why">6 enviados em 06/11 às 10:19 (#540, #542, #545, #546, #549, #550), todos em validação no Atlas. Falta só o #551, reprovado no Atlas</td>
-          <td class="fix" tabindex="0" data-tip="Conferimos o texto dos 7 PDFs em 06/11: todos são o recibo de admissão do eSocial (4 páginas), com o CPF da pendência e nenhum texto de desligamento. Os 6 foram soltos e enviados às 10:19 e o Atlas aceitou todos (em validação). O #551 está reprovado no portal: alguém exclui o arquivo antigo no Atlas e depois ele pode ser solto (a exclusão automática não será feita pelo robô: entra nos alertas do Evilásio)."><span class="t">#551: excluir o arquivo reprovado no portal e soltar</span></td></tr>
+        <tr><td class="n">78</td><td class="doc">ASO admissional e periódico</td><td><span class="pill sys">Sistema</span></td>
+          <td class="why">O robô achou o ASO certo de todos. O problema é que o PDF vem escaneado, só em imagem, com a ficha clínica e os exames junto. O robô não lê imagem, então não consegue tirar o que não pode ir ao Atlas (LGPD).<br>
+            <b>#548:</b> enviado às 10:19, mas foi junto um laudo de acuidade visual.<br>
+            <b>#539, #541 e #544:</b> a página do ASO foi separada à mão. Estão segurados, prontos para soltar na aba 6.<br>
+            <b>#547:</b> a mesma pessoa tem 2 ASO no mesmo dia, com cargos diferentes. Quem escolhe é o RH.<br>
+            <b>Quem resolve:</b> nós, fazendo o robô ler a imagem (OCR) e enviar só a página do ASO.</td>
+          <td class="fix" tabindex="0" data-tip="Busca: ok (o ASO certo foi achado na Factorial e o CPF confere). Conferência: falha. O PDF escaneado é só imagem, então o robô não lê o texto e não percebe que, junto do ASO, vieram anamnese, tipagem sanguínea e acuidade visual (que não podem ir ao Atlas, por LGPD). Em 06/11 a página do ASO dos #539, #541 e #544 foi separada à mão e eles estão segurados, prontos para soltar. O #548 saiu às 10:19 com o laudo de acuidade junto: é preciso excluir no portal e reenviar só o ASO. Correção: o robô passar a ler a imagem (OCR) de cada página, ficar só com a página do ASO e segurar quando não tiver certeza. O #547 (2 ASO do mesmo dia com cargos diferentes) depende do RH dizer qual vale."><span class="t">Ler o PDF escaneado (OCR) e enviar só a página do ASO</span></td></tr>
         <tr><td class="n">83</td><td class="doc">Cartão de ponto</td><td><span class="pill amb">Ambos</span></td>
-          <td class="why">9 pedidos abertos. A busca está no ar, mas o Atlas pede por unidade e não por funcionário, então a busca pelo CPF não acha ninguém (16 tentativas)</td>
+          <td class="why">O robô busca o cartão de ponto de cada colaborador pelo CPF. Mas o Atlas pede um cartão por unidade, e não por pessoa, então a busca não acha nada (9 pedidos abertos, 16 tentativas).<br>
+            <b>O que falta:</b> a Milena dizer se vale juntar num PDF os cartões de todos os colaboradores da unidade, ou se tem que ser o relatório único que ela exporta.<br>
+            <b>Quem resolve:</b> a Milena responde e nós ajustamos o robô.</td>
           <td class="fix" tabindex="0" data-tip="A busca do cartão de ponto (o PDF de cada colaborador na pasta BR-Folha do ponto, com o mês no nome) está no ar desde 05/11. Mas o pedido do Atlas é por unidade, e a busca é pelo CPF do colaborador: por isso não acha. Falta a Milena dizer se vale um PDF por colaborador (aí juntamos os PDFs de todos da unidade no mês) ou se tem que ser o PDF único da equipe que ela exporta. Com a resposta, ajustamos a busca."><span class="t">Com a resposta da Milena, juntar os PDFs dos colaboradores de cada unidade</span></td></tr>
         <tr><td class="n">84</td><td class="doc">Convenção coletiva (AC, CC ou AIT)</td><td><span class="pill cli">Cliente</span></td>
-          <td class="why">7 pedidos abertos: 2 achados (RS e PI, 12/2024), reprovados no portal; 5 sem convenção da unidade na pasta 06 Convenções Coletivas</td>
+          <td class="why">O robô busca a convenção de cada unidade na pasta "06 Convenções Coletivas" do SharePoint.<br>
+            <b>O que falta:</b> 5 unidades não têm convenção na pasta, e ninguém disse qual convenção vale para cada uma. As de RS e PI foram achadas, mas esses pedidos estão reprovados no portal, o que não conta como falha.<br>
+            <b>Quem resolve:</b> o cliente, dizendo qual convenção vale e colocando o arquivo.</td>
           <td class="fix none" tabindex="0" data-tip="Nada a corrigir do nosso lado. A busca em 06 Convenções Coletivas (por unidade e vigência) está no ar desde 05/11 e achou as de RS e PI, mas esses dois pedidos estão reprovados no Atlas: excluir o arquivo reprovado antes de reenviar. Para as outras 5 unidades não há convenção na pasta: falta o cliente definir qual convenção vale para cada unidade e colocar o arquivo."><span class="t">—</span></td></tr>
       </tbody>
     </table></div>

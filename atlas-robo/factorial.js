@@ -7,10 +7,11 @@
 //   78/79/80 não valem para quem já saiu) · 83 cartão de ponto (1 PDF do colaborador no mês)   (todos estes: ligados por padrão)
 // Antes de gravar, o PDF baixado passa pela conferência do conteúdo (conteudo.js): CPF de outra pessoa, outro documento, dado clínico.
 // VÁRIAS PEÇAS, unidas pelo Gotenberg na ordem (COMPOSTO, caminho_origem "factorial:unido-<doc>-<id do Neon>"):
-//   8 férias: aviso → recibo → comprovante · 9 TRCT: TRCT → termo de quitação → comprovante (ou só o comprovante, pelo nome do Atlas)
-//   10 GFD rescisória: guia do FGTS → comprovante
-// O 8, 9 e 10 hoje são da sincronização do Evilásio (VPS, a cada 2 h): por isso ficam DESLIGADOS por padrão. Para ligar/simular:
-//   node factorial.js --simular --docs 8,9,10        (ou FACTORIAL_DOCS=67,68,69,8,9,10). Só um dono por documento: ligar aqui = desligar lá.
+//   8 férias: recibo (ou o aviso, que vale como recibo: Milena, 06/11) → comprovante · 9 TRCT: TRCT → termo de quitação → comprovante
+//   (ou só o comprovante, pelo nome do Atlas) · 10 GFD rescisória: guia do FGTS → comprovante
+// 09/11: o 8 passou para este robô (ligado por padrão) e saiu da sincronização do Evilásio (SINC_DOCS = 9,10). As montagens do 8
+// saem SEGURADAS (out/envio/segurar.json) até o usuário conferir e soltar. O 9 e o 10 continuam da sincronização (DESLIGADOS aqui):
+//   node factorial.js --simular --docs 9,10        (ou FACTORIAL_DOCS=...). Só um dono por documento: ligar aqui = desligar lá.
 //
 // Para cada linha do robô no Neon com estado PENDENTE_ENVIO e um desses doc_id:
 //   acha o funcionário pelo CPF (tem que ser exatamente 1), lista os documentos dele e aplica a regra;
@@ -38,7 +39,29 @@ const normalizar = rf.normalizar;
 const digitos = (s) => String(s || '').replace(/\D/g, '');
 const REGRAS = rf.UNICOS; // documentos de arquivo único (nome mantido para o teste e para quem lia daqui)
 const COMPOSTOS = [8, 9, 10]; // várias peças
-const PADRAO = [67, 68, 69, 78, 79, 80, 83];
+const PADRAO = [67, 68, 69, 78, 79, 80, 83, 8];
+// Tipos novos neste robô: o que ele montar sai segurado (o envio automático pula) até o usuário conferir o PDF e soltar no painel.
+const SEGURAR_DOCS = { 8: 'férias pela regra nova da Milena (06/11: o aviso vale como recibo), 1ª vez neste robô' };
+const ARQ_SEGURAR = path.join(OUT, 'envio', 'segurar.json');
+function segurar(itens) {
+  if (!itens.length) return 0;
+  let seg = {};
+  try { seg = JSON.parse(fs.readFileSync(ARQ_SEGURAR, 'utf8')) || {}; } catch {}
+  let n = 0;
+  for (const { id, doc } of itens) {
+    if (seg[id]) continue;
+    seg[id] = { motivo: `${SEGURAR_DOCS[doc]}: conferir o PDF na ficha e soltar`, em: new Date().toISOString(), auto: true };
+    n++;
+  }
+  if (!n) return 0;
+  fs.mkdirSync(path.dirname(ARQ_SEGURAR), { recursive: true });
+  const tmp = ARQ_SEGURAR + '.tmp';
+  fs.writeFileSync(tmp, JSON.stringify(seg, null, 2), 'utf8');
+  try { const { uid, gid } = fs.statSync(path.dirname(ARQ_SEGURAR)); fs.chownSync(tmp, uid, gid); } catch {}
+  fs.renameSync(tmp, ARQ_SEGURAR);
+  return n;
+}
+const aSegurar = [];
 const ASSINATURA_OK = rf.ASSINATURA_OK;
 
 // Quais documentos buscar: --docs 8,9,10 ou FACTORIAL_DOCS; padrão 67,68,69. Número sem regra é recusado (não ignora em silêncio).
@@ -102,9 +125,14 @@ if (require.main === module) (async () => {
   const sql = neon(url);
   // Só PENDENTE_ENVIO é gravado. Na simulação dos compostos também aparecem os estados que a sincronização do Evilásio põe
   // (para comparar o resultado das duas buscas lado a lado).
-  const estados = simular ? ['PENDENTE_ENVIO', 'NAO_ENCONTRADO_FACTORIAL', 'AGUARDANDO_ASSINATURA', 'ERRO_COMPOSICAO'] : ['PENDENTE_ENVIO'];
+  const DA_SINC = ['NAO_ENCONTRADO_FACTORIAL', 'AGUARDANDO_ASSINATURA', 'ERRO_COMPOSICAO'];
+  const estados = simular ? ['PENDENTE_ENVIO', ...DA_SINC] : ['PENDENTE_ENVIO'];
+  // Tipos que este robô assumiu da sincronização (8, em 09/11): as pendências que ela deixou num estado de "não achou" voltam a ser
+  // buscadas aqui; se agora fecharem, avançam a partir do estado em que estavam.
+  const ASSUMIDOS = Object.keys(SEGURAR_DOCS).map(Number).filter((d) => docs.includes(d));
   const linhas = await sql.query(`select id, doc_id, nome, cpf, competencia, estado from documentos
-    where aba is not null and estado = any($1) and doc_id = any($2) order by id`, [estados, docs]);
+    where aba is not null and doc_id = any($2) and (estado = any($1) or (doc_id = any($3) and estado = any($4))) order by id`,
+  [estados, docs, ASSUMIDOS, DA_SINC]);
   log(`Busca na Factorial (docs ${docs.join(', ')}): ${linhas.length} pendência(s) esperando documento.`);
   const relatorio = { em: new Date().toISOString(), docs, itens: [] };
   if (linhas.length) {
@@ -175,13 +203,17 @@ if (require.main === module) (async () => {
       // O mesmo arquivo já na pendência de outro funcionário = anexado na pessoa errada na Factorial (19/10: o mesmo "eSocial.pdf" em 4 pessoas).
       const outros = (await sql.query('select id, cpf from documentos where hash_arquivo = $1 and id <> $2', [hash, l.id])).filter((x) => digitos(x.cpf) && digitos(x.cpf) !== cpf);
       if (outros.length) { r.achou = false; r.motivo = `o mesmo arquivo já está na pendência de outro funcionário (#${outros.map((x) => x.id).join(', #')}): conferir na Factorial em quem ele foi anexado`; continue; }
-      // Só avança quem ainda está PENDENTE_ENVIO (se outro processo mexeu no meio, não sobrescreve).
+      // Só avança quem ainda está no estado lido (PENDENTE_ENVIO, ou o "não achou" da sincronização nos tipos assumidos):
+      // se outro processo mexeu no meio, não sobrescreve.
       await sql.query(`update documentos set estado = $5, caminho_origem = $2, tamanho_bytes = $3, hash_arquivo = $4, atualizado_em = now()
-        where id = $1 and estado = 'PENDENTE_ENVIO'`, [l.id, caminho, buf.length, hash, estadoNovo]);
+        where id = $1 and estado = $6`, [l.id, caminho, buf.length, hash, estadoNovo, l.estado]);
       r.paginas = paginas(buf);
+      if (SEGURAR_DOCS[l.doc_id]) aSegurar.push({ id: l.id, doc: l.doc_id });
       log(`#${l.id} ${l.nome} (${l.competencia}): achado na Factorial (${partes.length} peça(s)), ${buf.length} bytes -> ${estadoNovo}`);
     }
   }
+  const nSeg = segurar(aSegurar);
+  if (nSeg) log(`${nSeg} pendência(s) de tipo novo neste robô ficaram SEGURADAS (conferir o PDF no painel e soltar).`);
   const achados = relatorio.itens.filter((x) => x.achou).length;
   for (const x of relatorio.itens.filter((i) => !i.achou)) log(`#${x.id} ${x.nome} (${x.competencia}): ${x.motivo}`);
   log(`Busca na Factorial: ${achados} achado(s), ${relatorio.itens.length - achados} sem documento${simular ? ' (simulação: nada gravado)' : ''}.`);

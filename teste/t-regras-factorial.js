@@ -24,22 +24,27 @@ t(!rf.noPeriodo(D(1, 'Aviso 03-2025.pdf'), '08/2026'), 'janela: nome cita 03/202
 t(rf.noPeriodo(D(1, 'Aviso 09-2026.pdf', { created_at: '2020-01-01T00:00:00Z' }), '08/2026'), 'janela: nome cita mês vizinho');
 t(!rf.noPeriodo(D(4, 'ponto.pdf'), '08/2026', 'exato'), 'exato: sem mês no nome não vale');
 
-// ---- doc 8 férias
+// ---- doc 8 férias (Milena, 06/11): recibo (ou o aviso, que vale como recibo) + comprovante, para qualquer nome do item
+const AV = 'Aviso + Recibo de férias + Comprovante de pagamento';
 let docs = [D(1, 'Aviso de férias.pdf'), D(1, 'Recibo de férias.pdf'), D(1, 'Comprovante de pagamento.pdf'), D(2, 'Aviso prévio.pdf')];
-let e = rf.escolherPartes(8, 'Aviso + Recibo de férias + Comprovante de pagamento', '08/2026', docs, PASTAS);
-t(e.ok && papeis(e) === 'aviso>recibo>comprovanteFerias', `8 completo: ${JSON.stringify(e.motivo || papeis(e))}`);
+let e = rf.escolherPartes(8, AV, '08/2026', docs, PASTAS);
+t(e.ok && papeis(e) === 'reciboOuAviso>comprovanteFerias' && /Recibo/.test(e.partes[0].d.filename), `8 com aviso e recibo = o recibo: ${JSON.stringify(e.motivo || papeis(e))}`);
 e = rf.escolherPartes(8, 'Recibo de férias + Comprovante de pagamento', '08/2026', docs, PASTAS);
-t(e.ok && papeis(e) === 'recibo>comprovanteFerias' && /não pede aviso/.test(e.avisos[0]), '8 sem aviso quando o Atlas não pede');
-e = rf.escolherPartes(8, 'Aviso + Recibo de férias + Comprovante de pagamento', '08/2026', [D(2, 'Aviso prévio.pdf'), D(1, 'Recibo de férias.pdf'), D(1, 'Comprovante.pdf')], PASTAS);
-t(!e.ok && /aviso de férias/.test(e.motivo), '8: "aviso prévio" não vale como aviso de férias');
-e = rf.escolherPartes(8, 'Aviso + Recibo de férias + Comprovante de pagamento', '08/2026', [...docs, D(1, 'Aviso de férias 2.pdf')], PASTAS);
-t(!e.ok && /alguém escolhe/.test(e.motivo), '8: dois avisos no período = ninguém escolhe');
-e = rf.escolherPartes(8, 'Aviso + Recibo de férias + Comprovante de pagamento', '08/2026', [D(1, 'Aviso de férias.pdf', { created_at: '2025-02-01T00:00:00Z' }), D(1, 'Recibo de férias.pdf'), D(1, 'Comprovante.pdf')], PASTAS);
-t(!e.ok && /nenhum do período/.test(e.motivo), '8: aviso de outro ano não entra');
-e = rf.escolherPartes(8, 'Aviso + Recibo de férias + Comprovante de pagamento', '08/2026', [D(1, 'Aviso de férias.pdf', { created_at: '2025-02-01T00:00:00Z' }), D(1, 'Aviso de férias.pdf'), D(1, 'Recibo de férias.pdf'), D(1, 'Comprovante.pdf')], PASTAS);
-t(e.ok && papeis(e) === 'aviso>recibo>comprovanteFerias', '8: dois avisos, só um do período = escolhe o do período');
-e = rf.escolherPartes(8, 'Aviso + Recibo de férias + Comprovante de pagamento', '08/2026', [D(1, 'Aviso de férias.pdf'), D(1, 'Recibo de férias.png', { extension: '.png' }), D(1, 'Comprovante.pdf')], PASTAS);
+t(e.ok && papeis(e) === 'reciboOuAviso>comprovanteFerias' && !e.avisos.length, '8: item sem "aviso" monta igual, sem aviso de confirmação');
+e = rf.escolherPartes(8, AV, '08/2026', [D(1, 'Aviso de férias.pdf'), D(1, 'Comprovante.pdf')], PASTAS);
+t(e.ok && /Aviso de férias/.test(e.partes[0].d.filename), '8: só o aviso (sem recibo) vale como recibo');
+e = rf.escolherPartes(8, AV, '08/2026', [D(2, 'Aviso prévio.pdf'), D(1, 'Comprovante.pdf')], PASTAS);
+t(!e.ok && /recibo de férias/.test(e.motivo), '8: "aviso prévio" não vale como recibo de férias');
+e = rf.escolherPartes(8, AV, '08/2026', [D(1, 'Recibo de férias.pdf'), D(1, 'Recibo de férias 2.pdf'), D(1, 'Comprovante.pdf')], PASTAS);
+t(!e.ok && /alguém escolhe/.test(e.motivo), '8: dois recibos no período = ninguém escolhe');
+e = rf.escolherPartes(8, AV, '08/2026', [D(1, 'Recibo de férias.pdf', { created_at: '2025-02-01T00:00:00Z' }), D(1, 'Comprovante.pdf')], PASTAS);
+t(!e.ok && /nenhum do período/.test(e.motivo), '8: recibo de outro ano não entra');
+e = rf.escolherPartes(8, AV, '08/2026', [D(1, 'Recibo de férias.pdf', { created_at: '2025-02-01T00:00:00Z' }), D(1, 'Recibo de férias.pdf'), D(1, 'Comprovante.pdf')], PASTAS);
+t(e.ok && papeis(e) === 'reciboOuAviso>comprovanteFerias', '8: dois recibos, só um do período = escolhe o do período');
+e = rf.escolherPartes(8, AV, '08/2026', [D(1, 'Recibo de férias.png', { extension: '.png' }), D(1, 'Comprovante.pdf')], PASTAS);
 t(!e.ok && /não é PDF/.test(e.motivo), '8: imagem não é PDF');
+e = rf.escolherPartes(8, AV, '08/2026', [D(1, 'Recibo de férias.pdf')], PASTAS);
+t(!e.ok && /comprovante/.test(e.motivo), '8: sem comprovante não monta');
 
 // ---- doc 9 TRCT
 const rescisao = [D(2, 'Termo de Rescisão (TRCT).pdf', { signature_status: 'signed' }), D(2, 'Termo de quitação.pdf', { signature_status: 'completed' }), D(2, 'Comprovante pagamento TRCT.pdf')];
@@ -90,7 +95,7 @@ t(!un(83, 2, 'time_tracking_August_2026.pdf', '08/2026'), '83 pasta errada');
 t(un(67, 5, 'ASO Demissional.pdf'), '67 BR ASO'); t(un(68, 2, 'Baixa CTPS.pdf'), '68'); t(un(69, 2, 'Pedido de demissão.pdf'), '69'); t(!un(69, 2, 'Aviso prévio.pdf'), '69 aviso prévio fora');
 
 // ---- docsLigados
-t(fa.docsLigados(['node', 'f.js'], {}).join() === '67,68,69,78,79,80,83', 'padrão 67,68,69,78,79,80,83 (8,9,10 ficam desligados)');
+t(fa.docsLigados(['node', 'f.js'], {}).join() === '67,68,69,78,79,80,83,8', 'padrão 67,68,69,78,79,80,83 e 8 (09/11; 9 e 10 ficam desligados)');
 t(fa.docsLigados(['node', 'f.js', '--docs', '8,9,10'], {}).join() === '8,9,10', '--docs 8,9,10');
 t(fa.docsLigados(['node', 'f.js'], { FACTORIAL_DOCS: '67,8' }).join() === '67,8', 'FACTORIAL_DOCS');
 t(fa.docsLigados(['node', 'f.js', '--docs', '8,8'], {}).join() === '8', 'sem repetir');

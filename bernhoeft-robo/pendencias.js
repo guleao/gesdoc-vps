@@ -152,6 +152,7 @@ async function lerTela(page, { nome, tipo }) {
 // SOLICITAR_012=0 desliga.
 const SOLICITAR_012 = process.env.SOLICITAR_012 !== '0';
 const MARCA_012 = path.join(OUT, 'relatorios', 'solicitado-012.json');
+const OPCOES_012 = ['Exibir CNPJ', 'Exibir comentários e recomendações'];
 const hojeBR = () => new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
 
 async function lerPedidos012(rel) {
@@ -192,6 +193,17 @@ async function solicitar012(rel, pedidos) {
       await rel.locator('.q-menu .q-item', { hasText: 'Equatorial' }).first().click();
       await rel.waitForTimeout(800);
       await rel.keyboard.press('Escape').catch(() => {});
+    }
+    // 09/11: desde 07/10 todo pedido com estas duas caixas desmarcadas volta "Sem Conteúdo" (o portal só registra o
+    // contratante na lista, mas o pedido leva ExibirCnpj/ExibirComentariosRecomendacoes). O de 30/10 10:42, com as duas
+    // marcadas, saiu certo (19 colunas). O lerXlsx lê pelo nome da coluna, então as colunas a mais não atrapalham.
+    for (const rotulo of OPCOES_012) {
+      const caixa = rel.locator(`[role=checkbox][aria-label="${rotulo}"]`).first();
+      if (!(await caixa.count())) { log(`Relatório 012: caixa "${rotulo}" não achada; peço assim mesmo.`); continue; }
+      if ((await caixa.getAttribute('aria-checked')) !== 'true') {
+        await caixa.click();
+        await rel.waitForTimeout(300);
+      }
     }
     await rel.locator('button:visible', { hasText: /^\s*solicitar\s*$/i }).first().click();
     await rel.waitForTimeout(1500);

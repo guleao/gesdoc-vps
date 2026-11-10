@@ -553,8 +553,8 @@ async function regrasNeon() {
 }
 
 // Por que uma pendência do Atlas continua na fila (PENDENTE_ENVIO, sem nenhuma busca registrada): quem deveria buscar este tipo.
-const SINC_FACTORIAL = new Set([8, 9, 10]); // SINC_DOCS do services/sincronizacao/rodar.py
-const ROBO_FACTORIAL = new Set([67, 68, 69]); // tipos de arquivo único que o factorial.js do robô Atlas busca a cada leitura
+const SINC_FACTORIAL = new Set([9, 10]); // SINC_DOCS do services/sincronizacao/rodar.py (o 8 passou ao robô Atlas em 09/11)
+const ROBO_FACTORIAL = new Set([8, 67, 68, 69, 78, 79, 80, 83]); // PADRAO do factorial.js do robô Atlas (busca a cada leitura)
 function porQueNaFila(x, regra) {
   const doc = Number(x.doc_id);
   if (!regra) return { fila_grupo: 'sem_regra', fila_motivo: 'não buscado: o banco não tem regra de onde buscar este documento (falta em documento_regras)' };
@@ -567,7 +567,7 @@ function porQueNaFila(x, regra) {
   }
   if (regra.origem === 'Factorial') {
     return { fila_grupo: 'sem_busca', fila_motivo: 'não buscado: vem da Factorial, mas nenhum robô busca este tipo hoje. '
-      + 'A sincronização só busca férias (8), TRCT (9) e GFD (10); o robô Atlas só busca ASO demissional (67), baixa na CTPS/e-Social (68) e pedido de demissão (69)' };
+      + 'A sincronização só busca TRCT (9) e GFD (10); o robô Atlas busca férias (8), ASO (67/78), baixa na CTPS/e-Social (68), pedido de demissão (69), ficha de registro (79), eSocial (80) e cartão de ponto (83)' };
   }
   if (regra.origem === 'SharePoint') {
     return { fila_grupo: 'sharepoint', fila_motivo: 'ainda não buscado: a busca no SharePoint roda a cada leitura do robô Atlas e ainda não passou por esta pendência' };

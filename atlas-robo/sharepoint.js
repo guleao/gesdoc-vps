@@ -32,6 +32,25 @@ const SITE = 'igneos.sharepoint.com:/sites/brasil/rh';
 const RAIZ_MENSAL = '13 Auditorias/Auditoria 20102080 Equatorial';
 const RAIZ_CERTIDOES = '13 Auditorias/0 - CERTIDÕES DE REGULARIDADE';
 const FILIAL_20102080 = '02867678000797';
+// 09/11 (e-mail da Lorena aprovado pela Ediliz em 29/10 + respostas da Milena de 06/11): os comprovantes de benefícios passam a ficar
+// SÓ na pasta de Benefícios do DP, por projeto (o da Equatorial é o 80: "PROJETO 2010008001", "20102080" ou "Proj 80"; no seguro,
+// a apólice "NIP GRUPO AP I"). O robô procura lá primeiro e, se não fechar, na pasta de auditoria (meses antigos).
+//   <base>/<ano>/<pasta do mês>/[uma subpasta, ex. "CAJU MOBILIDADE"]/<pasta do projeto>
+const RAIZ_BENEFICIOS = '00 Rotina ADM-RH/02 - Benefícios';
+const PROJETO_80 = /^(projeto )?2010008001$|^20102080$|^proj(eto)? 80$/;
+const BENEFICIO_DP = {
+  2: { base: '01 - Alimentação', alvo: PROJETO_80 },
+  3: { base: '03 - VT- GVBus - Mobilidade', alvo: PROJETO_80 },
+  4: { base: '04 - Seguro/4 - Boletos', alvo: /^(nip )?grupo ap i$/ },
+};
+// DCTFWeb (60/61): a Milena diz que sai em "09 - FOPAG - Informações/<ano>/<mês>/05 - DCTFWEB" (subpastas FGTS e INSS, como a
+// auditoria). É da empresa toda (CNPJ raiz), então serve à Equatorial. Só é usada quando a auditoria não tem o arquivo.
+const RAIZ_FOPAG = '00 Rotina ADM-RH/09 - FOPAG - Informações';
+// ESCE é de outro projeto (EDP), não é Equatorial (Milena, 06/11): fica fora da automação.
+const FORA_ESCE = 'ESCE é de outro projeto (EDP), não é Equatorial (Milena, 06/11): fora da automação da Equatorial';
+// Montagens que o robô passa a fazer por um caminho novo saem SEGURADAS (out/envio/segurar.json, o mesmo do botão do painel):
+// o envio automático pula; o usuário confere o PDF na ficha e clica em Soltar.
+const ARQ_SEGURAR = path.join(OUT, 'envio', 'segurar.json');
 const PASTA = path.join(OUT, 'downloads', 'sharepoint');
 const ARQ_BUSCA = path.join(OUT, 'envio', 'busca-sharepoint.json');
 // De que arquivos e pasta saiu o PDF de cada pendência (id do Neon). Não é refeito a cada rodada como o busca-sharepoint.json:
@@ -130,12 +149,15 @@ const REGRAS = {
   // Comprovantes de salário: um PDF por funcionário na pasta do tomador; a Milena baixa todos e une. A NIP às vezes já deixa
   // um "01 - Salarios - Equatorial MA.pdf" com todos: aí vale ele.
   56: { raiz: 'mensal', tipo: /^salario|comprovantes? de salario/, porTomador: true, uniao: 'todos', pronto: (n) => /^\d* ?salarios\b/.test(n) },
+  // Vale Refeição: a NIP não dá VR; vai a declaração modelo (já assinada) da pasta do V.A com a data do dia (declaracao-vr.js).
+  6: { raiz: 'declaracao', achar: (n) => /declaracao/.test(n) && /\bvr\b|refeicao/.test(n) },
 };
+REGRAS[60].fopag = true;
+REGRAS[61].fopag = true;
 // Documentos que o robô procura aqui mesmo se a origem no banco disser outra coisa (82 CNDT: a origem certa é o TST, mas se alguém
 // salvar a certidão na pasta de certidões o robô acha; 66 não tem busca).
 const DOCS_FORCADOS = [82];
 const SEM_REGRA = {
-  6: 'Vale Refeição não é um arquivo: é uma declaração para cada colaborador (Milena). Falta saber quem escreve e se há modelo',
   66: 'Relatório mensal de ocorrências não vem do SharePoint: a Milena baixa o modelo no Atlas e preenche (a origem no banco está errada)',
   84: 'Convenção coletiva fica em "06 Convenções Coletivas" (não é mensal): falta a regra',
 };
@@ -145,6 +167,10 @@ const SEM_REGRA = {
 function papelBeneficio(nome) {
   const n = normalizar(nome.replace(/\.pdf$/i, ''));
   const compl = /complem/.test(n);
+  // Fora da montagem (Milena, 06/11): o aditamento do seguro (a Equatorial pede só relação + boleto + comprovante) e a declaração
+  // do vale refeição, que fica na mesma pasta do V.A mas é outro documento (doc 6).
+  if (/aditamento/.test(n)) return { papel: 'aditamento' };
+  if (/\bdeclaracao\b/.test(n)) return { papel: 'declaracao' };
   if (/beneficiarios ?\+ ?boleto ?\+ ?comprovante|vida ?\+ ?boleto ?\+ ?comprovante|^pdfsam|\bmerge\b/.test(n)) return { papel: 'pronto' };
   if (/\bnf\b|nota fiscal/.test(n) && !/boleto/.test(n)) return { papel: 'nf' };
   if (/boleto|cobranca|^projeto \d|^mob ?\d|^\d{8} \d{2} \d{4}\b/.test(n)) return { papel: 'boleto', compl };
@@ -161,9 +187,12 @@ const NOME_PAPEL = { relacao: 'relação', 'relacao+': 'relação complementar',
 // boleto antes da relação), com nota fiscal e sem a relação (01 e 02/2025). O unido da NIP só vale quando não há partes, e com aviso.
 function partesBeneficio(pdfs) {
   if (!pdfs.length) return { erro: 'pasta sem PDF' };
-  for (const x of pdfs) { const p = papelBeneficio(x.name); x.papel = p.papel === 'pronto' || p.papel === 'nf' || p.papel === 'outro' ? p.papel : p.papel + (p.compl ? '+' : ''); }
+  const SOZINHOS = ['pronto', 'nf', 'outro', 'aditamento', 'declaracao'];
+  for (const x of pdfs) { const p = papelBeneficio(x.name); x.papel = SOZINHOS.includes(p.papel) ? p.papel : p.papel + (p.compl ? '+' : ''); }
   const prontos = pdfs.filter((x) => x.papel === 'pronto');
-  const deixados = pdfs.filter((x) => x.papel === 'nf').map((x) => ({ nome: x.name, motivo: 'nota fiscal não vai (Milena)' }));
+  const FORA = { nf: 'nota fiscal não vai (Milena)', aditamento: 'aditamento não vai: a Equatorial pede só relação + boleto + comprovante (Milena, 06/11)',
+    declaracao: 'declaração do vale refeição: é o doc 6, não entra no vale alimentação' };
+  const deixados = pdfs.filter((x) => FORA[x.papel]).map((x) => ({ nome: x.name, motivo: FORA[x.papel] }));
   const problemas = [];
   const outros = pdfs.filter((x) => x.papel === 'outro');
   if (outros.length) problemas.push(`não sei onde entra: ${outros.map((x) => x.name).join(', ')}`);
@@ -273,6 +302,134 @@ async function pastaDoMes(regra, competencia, l) {
   return { pasta: meses[0], caminho: `${RAIZ_MENSAL}/${m[2]}/${meses[0].name}` };
 }
 
+// Pasta do mês ("MM/AAAA") dentro de <raiz>/<ano>: { pasta, caminho } | { erro }.
+async function mesEm(raiz, competencia) {
+  const m = String(competencia || '').match(/^(\d{2})\/(\d{4})$/);
+  if (!m) return { erro: `competência "${competencia}" fora do formato MM/AAAA` };
+  const base = await porCaminho(`${raiz}/${m[2]}`);
+  if (!base) return { erro: `não há pasta ${m[2]} em ${raiz}` };
+  const meses = (await filhos(base.id)).filter((x) => x.folder && mesDaPasta(x.name) === +m[1]);
+  if (meses.length !== 1) return { erro: meses.length ? `${meses.length} pastas para o mês ${m[1]}/${m[2]} em ${raiz}` : `não há pasta do mês ${m[1]}/${m[2]} em ${raiz}` };
+  return { pasta: meses[0], caminho: `${raiz}/${m[2]}/${meses[0].name}` };
+}
+
+// Benefício na pasta do DP: <base>/<ano>/<mês>/(até 2 níveis)/<pasta do projeto>. { pasta, caminho } | { erro }.
+async function pastaBeneficioDP(docId, competencia) {
+  const cfg = BENEFICIO_DP[docId];
+  if (!cfg) return { erro: 'sem pasta de Benefícios do DP para este tipo' };
+  const mes = await mesEm(`${RAIZ_BENEFICIOS}/${cfg.base}`, competencia);
+  if (mes.erro) return mes;
+  const achadas = [];
+  const andar = async (dir, cam, nivel) => {
+    for (const x of (await filhos(dir.id)).filter((y) => y.folder)) {
+      if (cfg.alvo.test(normalizar(x.name))) achadas.push({ pasta: x, caminho: `${cam}/${x.name}` });
+      else if (nivel < 1) await andar(x, `${cam}/${x.name}`, nivel + 1);
+    }
+  };
+  await andar(mes.pasta, mes.caminho, 0);
+  if (achadas.length !== 1) return { erro: achadas.length ? `${achadas.length} pastas do projeto em ${mes.caminho}` : `não há pasta do projeto 80 em ${mes.caminho}` };
+  return achadas[0];
+}
+
+// DCTFWeb na pasta FOPAG: <RAIZ_FOPAG>/<ano>/<mês>/<"05 - DCTFWEB"> (o passo do tipo, INSS/FGTS, vem depois, como na auditoria).
+async function mesFopag(competencia) {
+  const mes = await mesEm(RAIZ_FOPAG, competencia);
+  if (mes.erro) return mes;
+  const d = (await filhos(mes.pasta.id)).filter((x) => x.folder && /dctf ?web/.test(normalizar(x.name)));
+  if (d.length !== 1) return { erro: d.length ? `${d.length} pastas DCTFWEB em ${mes.caminho}` : `não há pasta DCTFWEB em ${mes.caminho}` };
+  return { pasta: d[0], caminho: `${mes.caminho}/${d[0].name}` };
+}
+
+// A auditoria tem o arquivo do tipo (60/61)? Se não, vale a pasta FOPAG. Devolve o "mes" a usar.
+async function mesComReservaFopag(regra, l) {
+  const aud = await pastaDoMes(regra, l.competencia, l);
+  if (!aud.erro) {
+    const esc = escolherPasta((await filhos(aud.pasta.id)).filter((x) => x.folder), regra.tipo);
+    if (esc.pasta && (await filhos(esc.pasta.id)).some((x) => x.file && PDF(x.name) && regra.achar(normalizar(x.name)))) return aud;
+  }
+  const f = await mesFopag(l.competencia);
+  if (f.erro) return aud.erro ? { erro: `${aud.erro}; FOPAG: ${f.erro}` } : aud;
+  const esc = escolherPasta((await filhos(f.pasta.id)).filter((x) => x.folder), regra.tipo);
+  if (!esc.pasta || !(await filhos(esc.pasta.id)).some((x) => x.file && PDF(x.name) && regra.achar(normalizar(x.name)))) return aud.erro ? { erro: `${aud.erro}; FOPAG: sem o arquivo em ${f.caminho}` } : aud;
+  return { ...f, aviso: 'achado na pasta FOPAG (05 - DCTFWEB), não na auditoria (Milena, 06/11)' };
+}
+
+// Modelo da declaração do VR: o mais novo (data de modificação) das pastas do projeto 80 no V.A, do ano da competência ao ano atual.
+async function modeloDeclaracaoVR(regra, competencia) {
+  const ano = Number(String(competencia).slice(-4));
+  const achados = [];
+  for (let a = ano; a <= new Date().getFullYear() + (new Date().getMonth() === 11 ? 1 : 0); a++) {
+    const base = await porCaminho(`${RAIZ_BENEFICIOS}/01 - Alimentação/${a}`);
+    if (!base) continue;
+    for (const m of (await filhos(base.id)).filter((x) => x.folder && mesDaPasta(x.name))) {
+      for (const p of (await filhos(m.id)).filter((x) => x.folder && PROJETO_80.test(normalizar(x.name)))) {
+        for (const x of (await filhos(p.id)).filter((y) => y.file && PDF(y.name) && regra.achar(normalizar(y.name)))) {
+          achados.push({ x, caminho: `${RAIZ_BENEFICIOS}/01 - Alimentação/${a}/${m.name}/${p.name}` });
+        }
+      }
+    }
+  }
+  if (!achados.length) return { erro: 'não há "Declaração MODELO - VR" nas pastas do projeto 80 do V.A (Benefícios do DP)' };
+  achados.sort((p, q) => String(q.x.lastModifiedDateTime).localeCompare(String(p.x.lastModifiedDateTime)));
+  return achados[0];
+}
+
+// Declaração do VR (doc 6): modelo mais novo da pasta do V.A + data do dia (declaracao-vr.js), um PDF por competência
+// (PASTA/declaracao-6-<MM-AAAA>.pdf), o mesmo para todas as unidades. Só gera de novo se o modelo mudou (a data não muda todo dia).
+const declaracoes = new Map();
+async function declaracaoVR(l, r, regra, { baixa, gravar, sql }) {
+  const mod = await modeloDeclaracaoVR(regra, l.competencia);
+  if (mod.erro) { r.motivo = mod.erro; return; }
+  Object.assign(r, { pasta: mod.caminho, achou: true, sharepoint_id: mod.x.id, arquivo: `declaração gerada de "${mod.x.name}"`,
+    modificado: String(mod.x.lastModifiedDateTime || '').slice(0, 10), segurar: 'declaração do VR gerada do modelo',
+    aviso: 'declaração MODELO da Milena (pasta do V.A) com a data trocada pela do dia; o resto da página é o modelo assinado' });
+  if (!baixa) { r.motivo = 'simulação: não gerada'; return; }
+  const nome = `declaracao-6-${String(l.competencia).replace('/', '-')}`, arq = path.join(PASTA, `${nome}.pdf`);
+  const assinatura = `${mod.x.id}:${mod.x.size}`;
+  if (!declaracoes.has(nome)) declaracoes.set(nome, (async () => {
+    const b = await baixar(mod.x);
+    if (b.erro) return { erro: `modelo não baixado: ${b.erro}` };
+    const antes = (anterior?.itens || []).find((i) => i.local === `${nome}.pdf`);
+    let data = null;
+    if (antes?.assinatura !== assinatura || !fs.existsSync(arq)) {
+      const { gerarDeclaracaoVR } = require('./declaracao-vr');
+      const g = await gerarDeclaracaoVR(b.buf);
+      if (g.erro) return { erro: g.erro };
+      fs.writeFileSync(arq, g.buf, { mode: 0o600 });
+      try { const { uid, gid } = fs.statSync(PASTA); fs.chownSync(arq, uid, gid); } catch {}
+      data = g.depois;
+    }
+    const buf = fs.readFileSync(arq);
+    return { buf, data, modelo: path.basename(b.arq), hash: crypto.createHash('sha256').update(buf).digest('hex') };
+  })());
+  const d = await declaracoes.get(nome);
+  if (d.erro) { r.achou = false; r.motivo = d.erro; return; }
+  r.local = `${nome}.pdf`;
+  r.assinatura = assinatura;
+  r.partes = [{ nome: mod.x.name, sharepoint_id: mod.x.id, papel: 'modelo (data trocada)', local: d.modelo, modificado: r.modificado }];
+  if (d.data) r.aviso += `; data posta: "${d.data}"`;
+  if (!gravar) { r.motivo = 'gerada só para o painel: o banco continua PENDENTE_ENVIO'; return; }
+  await sql.query(`update documentos set estado = 'LOCALIZADO', caminho_origem = $2, tamanho_bytes = $3, hash_arquivo = $4, atualizado_em = now()
+    where id = $1 and estado = 'PENDENTE_ENVIO'`, [l.id, `sharepoint:${nome}`, d.buf.length, d.hash]);
+  r.gravado = true;
+  log(`#${l.id} ${l.nome} (${l.competencia}): declaração do VR gerada do modelo, ${d.buf.length} bytes -> LOCALIZADO`);
+}
+
+// Segura as pendências montadas por caminho novo (não mexe nas que já estão no arquivo, nem nas que o usuário já soltou e foram enviadas).
+function segurarNovos(itens) {
+  if (!itens.length) return 0;
+  let seg = {};
+  try { seg = JSON.parse(fs.readFileSync(ARQ_SEGURAR, 'utf8')) || {}; } catch {}
+  let n = 0;
+  for (const r of itens) {
+    if (seg[r.id]) continue;
+    seg[r.id] = { motivo: `1ª montagem pelo caminho novo (${r.segurar}): conferir o PDF na ficha e soltar`, em: new Date().toISOString(), auto: true };
+    n++;
+  }
+  if (n) gravarJson(ARQ_SEGURAR, seg);
+  return n;
+}
+
 // Baixa um item do SharePoint em PASTA/<id>.pdf (pula se já está lá com o mesmo tamanho). Devolve { buf, arq } ou { erro }.
 async function baixar(item) {
   const arq = path.join(PASTA, `${item.id}.pdf`);
@@ -339,7 +496,8 @@ function gravarMontagens(rel) {
 }
 
 // Para o teste (teste/t-achar-arquivo.js) ler as regras sem rodar a busca.
-module.exports = { REGRAS, UNIDADES, papelBeneficio, mesDaPasta, escolherPasta, filtrarPorUnidade, escolherConvencao, normalizar };
+module.exports = { REGRAS, UNIDADES, papelBeneficio, partesBeneficio, mesDaPasta, escolherPasta, filtrarPorUnidade, escolherConvencao, normalizar,
+  BENEFICIO_DP, PROJETO_80, FORA_ESCE };
 
 if (require.main === module) (async () => {
   const gravar = process.argv.includes('--gravar');
@@ -365,13 +523,30 @@ if (require.main === module) (async () => {
       r.achou = false;
       const regra = REGRAS[l.doc_id];
       if (!regra) { r.motivo = SEM_REGRA[l.doc_id] || 'sem regra para este tipo'; continue; }
+      if (normalizar(l.unidade) === 'esce') { r.motivo = FORA_ESCE; r.fora = 'EDP'; continue; }
       if (String(l.cnpj_filial).replace(/\D/g, '') !== FILIAL_20102080) { r.motivo = `filial ${l.cnpj_filial} não é a do 20102080 (Equatorial): pasta ainda não mapeada`; continue; }
-      const mes = await pastaDoMes(regra, l.competencia, l);
-      if (mes.erro) { r.motivo = mes.erro; continue; }
+      if (regra.raiz === 'declaracao') { await declaracaoVR(l, r, regra, { baixa, gravar, sql }); continue; }
+      let mes = null, dpFinal = false;
+      if (regra.uniao === 'beneficio' && BENEFICIO_DP[l.doc_id]) {
+        // 1º a pasta de Benefícios do DP; ela só vale se as partes fecharem (senão, auditoria, e o motivo do DP vai junto).
+        const dp = await pastaBeneficioDP(l.doc_id, l.competencia);
+        if (!dp.erro) {
+          const t = partesBeneficio((await filhos(dp.pasta.id)).filter((x) => x.file && PDF(x.name)).map((x) => ({ ...x })));
+          if (!t.erro) { mes = { pasta: dp.pasta, caminho: dp.caminho, aviso: 'pasta de Benefícios do DP (e-mail de 29/10 e Milena, 06/11)' }; dpFinal = true; r.segurar = 'pasta de Benefícios do DP'; }
+          else r.dp = `${dp.caminho}: ${t.erro}`;
+        } else r.dp = dp.erro;
+      }
+      if (!mes) mes = regra.fopag ? await mesComReservaFopag(regra, l) : await pastaDoMes(regra, l.competencia, l);
+      if (mes.erro) { r.motivo = r.dp ? `auditoria: ${mes.erro} | Benefícios do DP: ${r.dp}` : mes.erro; continue; }
+      if (/FOPAG/.test(mes.aviso || '')) r.segurar = 'pasta FOPAG (05 - DCTFWEB)';
       let pasta = mes.pasta, caminho = mes.caminho;
-      if (regra.tipo) {
+      if (regra.tipo && !dpFinal) {
         const escolha = escolherPasta((await filhos(pasta.id)).filter((x) => x.folder), regra.tipo);
-        if (!escolha.pasta) { r.motivo = escolha.n ? `${escolha.n} pastas do tipo em ${caminho}` : `não há pasta deste tipo em ${caminho}`; continue; }
+        if (!escolha.pasta) {
+          r.motivo = escolha.n ? `${escolha.n} pastas do tipo em ${caminho}` : `não há pasta deste tipo em ${caminho}`;
+          if (r.dp) r.motivo = `auditoria: ${r.motivo} | Benefícios do DP: ${r.dp}`;
+          continue;
+        }
         pasta = escolha.pasta; caminho += `/${pasta.name}`;
         if (escolha.aviso) mes.aviso = [mes.aviso, escolha.aviso].filter(Boolean).join('; ');
       }
@@ -413,11 +588,11 @@ if (require.main === module) (async () => {
           r.partes = [];
           for (const x of lista) {
             const p = { nome: x.name, sharepoint_id: x.id, modificado: String(x.lastModifiedDateTime || '').slice(0, 10) };
-            if (x.papel) p.papel = NOME_PAPEL[x.papel] || { nf: 'nota fiscal (não vai)', outro: 'não sei' }[x.papel] || x.papel;
+            if (x.papel) p.papel = NOME_PAPEL[x.papel] || { nf: 'nota fiscal (não vai)', outro: 'não sei', aditamento: 'aditamento (não vai)', declaracao: 'declaração do VR (outro documento)' }[x.papel] || x.papel;
             if (baixa) { const b = await baixar(x); if (b.erro) p.erro = b.erro; else p.local = path.basename(b.arq); }
             r.partes.push(p);
           }
-          if (esc.erro) { r.motivo = esc.erro; continue; }
+          if (esc.erro) { r.motivo = r.dp ? `${esc.erro} | Benefícios do DP: ${r.dp}` : esc.erro; continue; }
           r.achou = true;
           r.unido = true;
           r.arquivo = `PDF unido de ${lista.length} parte(s)`;
@@ -429,6 +604,7 @@ if (require.main === module) (async () => {
           if (!gravar) { r.motivo = 'unido só para o painel: o banco continua PENDENTE_ENVIO'; continue; }
           await sql.query(`update documentos set estado = 'COMPOSTO', caminho_origem = $2, tamanho_bytes = $3, hash_arquivo = $4, atualizado_em = now()
             where id = $1 and estado = 'PENDENTE_ENVIO'`, [l.id, `sharepoint:${path.parse(u.arq).name}`, u.buf.length, u.hash]);
+          r.gravado = true;
           log(`#${l.id} ${l.nome} (${l.competencia}): unido de ${lista.length} parte(s) do SharePoint, ${u.buf.length} bytes -> COMPOSTO`);
           continue;
         }
@@ -463,8 +639,13 @@ if (require.main === module) (async () => {
       // Só avança quem ainda está PENDENTE_ENVIO (se outro processo mexeu no meio, não sobrescreve).
       await sql.query(`update documentos set estado = 'LOCALIZADO', caminho_origem = $2, tamanho_bytes = $3, hash_arquivo = $4, atualizado_em = now()
         where id = $1 and estado = 'PENDENTE_ENVIO'`, [l.id, `sharepoint:${a.id}`, buf.length, hash]);
+      r.gravado = true;
       log(`#${l.id} ${l.nome} (${l.competencia}): achado no SharePoint ${a.name}, ${buf.length} bytes -> LOCALIZADO`);
     }
+  }
+  if (gravar) {
+    const n = segurarNovos(relatorio.itens.filter((i) => i.gravado && i.segurar));
+    if (n) log(`${n} pendência(s) montada(s) pelo caminho novo ficaram SEGURADAS (conferir o PDF no painel e soltar).`);
   }
   const achados = relatorio.itens.filter((x) => x.achou).length;
   for (const x of relatorio.itens.filter((i) => !i.achou)) log(`#${x.id} doc ${x.doc_id} (${x.competencia}, ${x.unidade}): ${x.motivo}`);

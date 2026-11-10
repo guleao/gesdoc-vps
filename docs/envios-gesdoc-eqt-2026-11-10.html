@@ -1,0 +1,206 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Envios GESDOC EQT</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: uma coluna, três tabelas (OK / Não OK / Não solicitado) */
+:root{
+  --bg:#f6f7f9; --surface:#ffffff; --fg:#1b2230; --muted:#5d6676; --line:#dfe3ea;
+  --ok:#1f7a4d; --ok-bg:#e4f3eb; --no:#b3402e; --no-bg:#fbe9e5;
+  --sys:#b3402e; --sys-bg:#fbe9e5; --cli:#8a5a00; --cli-bg:#fbf0d9; --amb:#5b46b0; --amb-bg:#ece8fb;
+  --tip-bg:#1b2230; --tip-fg:#f6f7f9;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12161d; --surface:#1a2029; --fg:#e6eaf0; --muted:#9aa4b3; --line:#2c3440;
+  --ok:#5fcf95; --ok-bg:#16301f; --no:#f08a77; --no-bg:#3a1f1a; --sys:#f08a77; --sys-bg:#3a1f1a; --cli:#e8b45a; --cli-bg:#352a14; --amb:#b9a3f5; --amb-bg:#2a2340;
+  --tip-bg:#e6eaf0; --tip-fg:#12161d; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12161d; --surface:#1a2029; --fg:#e6eaf0; --muted:#9aa4b3; --line:#2c3440;
+  --ok:#5fcf95; --ok-bg:#16301f; --no:#f08a77; --no-bg:#3a1f1a; --sys:#f08a77; --sys-bg:#3a1f1a; --cli:#e8b45a; --cli-bg:#352a14; --amb:#b9a3f5; --amb-bg:#2a2340;
+  --tip-bg:#e6eaf0; --tip-fg:#12161d; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:15px/1.5 var(--sans);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:32px 48px}
+main{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:32px}
+h1{font-size:1.5rem;font-weight:600;margin:0;text-wrap:balance}
+.date{color:var(--muted);font-size:.875rem;margin-top:4px}
+h2{font-size:1rem;font-weight:600;margin:0 0 10px;display:flex;align-items:center;gap:8px}
+.count{font:500 .8rem var(--mono);padding:2px 8px;border-radius:999px}
+.ok .count{background:var(--ok-bg);color:var(--ok)}
+.no .count{background:var(--no-bg);color:var(--no)}
+.na .count{background:var(--line);color:var(--muted)}
+.na td.why{color:var(--muted)}
+.pill{font:500 .75rem var(--mono);padding:2px 8px;border-radius:999px;white-space:nowrap}
+.pill.sys{background:var(--sys-bg);color:var(--sys)}
+.pill.cli{background:var(--cli-bg);color:var(--cli)}
+.pill.amb{background:var(--amb-bg);color:var(--amb)}
+.pill.voc{background:var(--voc-bg);color:var(--voc)}
+:root{--voc:#1d5fa8;--voc-bg:#e3eefb}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--voc:#8bb8f0;--voc-bg:#1b2a3d}}
+:root[data-theme="dark"]{--voc:#8bb8f0;--voc-bg:#1b2a3d}
+.resumo{margin-top:10px;color:var(--fg);font-size:.9rem}
+.resumo b{font-weight:600}
+.wrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+th{font-size:.75rem;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+td.n{font:500 .875rem var(--mono);color:var(--muted);width:3.5em;font-variant-numeric:tabular-nums}
+td.doc{font-weight:500;min-width:14em;max-width:22em}
+.tag{font:500 .8rem var(--mono);color:var(--ok)}
+td.why{color:var(--fg);min-width:16em}
+td.fix{min-width:14em;cursor:help}
+td.fix:focus-visible{outline:2px solid var(--amb);outline-offset:-2px}
+td.fix .t{text-decoration:underline dotted var(--muted);text-underline-offset:3px}
+td.fix.none .t{color:var(--muted)}
+#tip{position:fixed;z-index:20;background:var(--tip-bg);color:var(--tip-fg);padding:10px 12px;border-radius:6px;
+  font-size:.85rem;line-height:1.5;box-shadow:0 6px 20px rgb(0 0 0 / .25);pointer-events:none}
+@media (max-width:560px){td.doc{min-width:10em}}
+</style>
+<main>
+  <header>
+    <h1>Envios GESDOC EQT</h1>
+    <div class="date">10/11/2026, 14:05 · Atlas lido às 13:28 · nomes dos documentos como aparecem no Atlas</div>
+    <div class="resumo">Aqui se avalia o trabalho do robô: buscar o documento na origem, conferir se ele está certo e subir no lugar certo. <b>Reprovação no portal depois do envio não conta como falha.</b>
+      Na leitura das 13:28, o Atlas tem 169 pedidos abertos: 101 a enviar, 37 reprovados e atrasados e 7 enviados pelo robô aguardando validação. Nenhum envio novo do robô desde 06/11, porque as montagens novas saem seguradas para conferência.
+      <b>Mudou desde as 08:30:</b> os pedidos de Aviso + Recibo de Férias, de TRCT e de GFD Rescisória da Equatorial não estão mais abertos no Atlas (sobraram só os da ESCE), e os ASO #539, #541, #544 e #547 também saíram da lista. <b>Com o sistema: só o 78 (ASO escaneado).</b>
+      Os 7 Vale Alimentação de 10/2026 enviados em 26/10 continuam como "a enviar" no Atlas e vencem hoje, junto com as 7 Vale Refeição seguradas. O Plano Odontológico (5 pedidos) não existe para a NIP: a Equatorial precisa retirar.</div>
+  </header>
+
+  <section class="ok">
+    <h2>OK <span class="count">10</span></h2>
+    <div class="wrap"><table>
+      <thead><tr><th>Nº</th><th>Documento no Atlas</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td class="n">4</td><td class="doc">Seguro de Vida (Relação de Beneficiários + Boleto + Comprovante)</td><td><span class="tag">OK</span> · aditamento fora (Milena); 12 montados e segurados; 10/2026 sem arquivo na pasta; 2 reprovados no Atlas (excluir o arquivo antigo)</td></tr>
+        <tr><td class="n">6</td><td class="doc">Vale Refeição (Relação de Beneficiários + Boleto + Comprovante)</td><td><span class="tag">OK</span> · declaração gerada do modelo; 7 de 10/2026 prontas e seguradas (vencem hoje)</td></tr>
+        <tr><td class="n">7</td><td class="doc">Plano de Saúde (Relação de Beneficiários + Boleto + Comprovante)</td><td><span class="tag">OK</span></td></tr>
+        <tr><td class="n">24</td><td class="doc">FGTS - Guia de recolhimento (boleto)</td><td><span class="tag">OK</span> · 10/2026 vence em 25/11</td></tr>
+        <tr><td class="n">26</td><td class="doc">FGTS - Comprovante de pagamento</td><td><span class="tag">OK</span> · 10/2026 vence em 25/11</td></tr>
+        <tr><td class="n">64</td><td class="doc">Certidão de Regularidade do FGTS ou CND do FGTS</td><td><span class="tag">OK</span></td></tr>
+        <tr><td class="n">67</td><td class="doc">ASO Demissional</td><td><span class="tag">OK</span> · 4 reprovados no Atlas (#127, #154, #297, #319)</td></tr>
+        <tr><td class="n">68</td><td class="doc">Baixa na CTPS e/ou E-social</td><td><span class="tag">OK</span></td></tr>
+        <tr><td class="n">69</td><td class="doc">Pedido de demissão ou carta de desligamento</td><td><span class="tag">OK</span> · só resta 1 da ESCE</td></tr>
+        <tr><td class="n">80</td><td class="doc">Comprovante de Registro E-Social</td><td><span class="tag">OK</span> · 6 enviados em 06/11 aguardando validação; #551 reprovado (excluir o antigo)</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section class="no">
+    <h2>Não OK <span class="count">12</span></h2>
+    <div class="wrap"><table>
+      <thead><tr><th>Nº</th><th>Documento no Atlas</th><th>Falha de</th><th>Motivo</th><th>Correção (nosso lado)</th></tr></thead>
+      <tbody>
+        <tr><td class="n">2</td><td class="doc">Vale Alimentação (Relação de Beneficiários + Boleto + Comprovante)</td><td><span class="pill amb">A conferir</span></td>
+          <td class="why">O robô passou a buscar na pasta de Benefícios do DP (projeto 80), como o e-mail de 29/10 definiu.<br>
+            <b>Atenção:</b> os 7 de 10/2026 que o robô enviou em 26/10 continuam como "a enviar" no Atlas na leitura das 13:28, e o prazo é hoje.<br>
+            <b>Quem resolve:</b> nós, conferindo no portal se o envio entrou. Se não entrou, reenviar.</td>
+          <td class="fix" tabindex="0" data-tip="Em 26/10 o envio automático subiu os 7 Vale Alimentação de 10/2026 (Alagoas, Piauí, Goiás, Pará, Maranhão, Amapá e Rio Grande do Sul) e o portal respondeu ok. Mesmo assim, a coleta das 13:28 ainda mostra esses itens em “a enviar”, com prazo 10/11. É preciso conferir no portal se o arquivo está lá. Se não estiver, reenviar hoje."><span class="t">Conferir no portal os 7 envios de 26/10</span></td></tr>
+        <tr><td class="n">3</td><td class="doc">Vale Transporte (Relação de Beneficiários + Boleto + Comprovante)</td><td><span class="pill cli">Cliente</span></td>
+          <td class="why">O robô busca na pasta do projeto 80 (DP e auditoria) e junta relação, boleto e comprovante.<br>
+            <b>O que falta:</b> em 03, 04 e 05/2026 (e em 11 e 12/2025) a pasta tem 2 boletos e 2 comprovantes no mesmo mês, além de arquivos individuais de colaboradores. São 14 reprovados MA/PI.<br>
+            <b>Quem resolve:</b> a Milena, dizendo qual conjunto vale; a equipe, excluindo o reprovado no Atlas.</td>
+          <td class="fix none" tabindex="0" data-tip="Nada a corrigir do nosso lado. Com 2 boletos e 2 comprovantes no mesmo mês, o robô não escolhe sozinho qual conjunto vai (03/2026: “boleto VT proj 80 03.2026” e “Mob2080_03-2026”; “comp2080” e “Comprovante VT 03.2026”). Pergunta enviada à Milena. Depois, para reenviar, o arquivo reprovado precisa ser excluído no Atlas."><span class="t">—</span></td></tr>
+        <tr><td class="n">25</td><td class="doc">FGTS - RE - Relação de Empregados/Trabalhadores</td><td><span class="pill cli">Cliente</span></td>
+          <td class="why"><b>Resposta da Milena:</b> o arquivo sai perto do vencimento, em "05 - DCTFWEB" ou na auditoria "10-OUTUBRO".<br>
+            <b>O que falta:</b> a RE de 10/2026 de cada unidade (prazo 20 a 25/11). Quando estiver na pasta, o robô busca, confere e envia.</td>
+          <td class="fix none" tabindex="0" data-tip="A pasta FOPAG “05 - DCTFWEB” tem só a RE da empresa inteira, e o Atlas pede uma por unidade; por isso o robô busca a RE na auditoria, por unidade."><span class="t">—</span></td></tr>
+        <tr><td class="n">56</td><td class="doc">Comprovante Bancário de Pagamento de Salários</td><td><span class="pill cli">Cliente</span></td>
+          <td class="why"><b>Resposta da Milena:</b> a Lorena vai dizer em que pasta os comprovantes ficam.<br>
+            <b>O que falta:</b> os de 10/2026 das 7 unidades (prazo hoje) e o do Amapá de 09/2026.</td>
+          <td class="fix none" tabindex="0" data-tip="Nada a corrigir do nosso lado. Com a pasta definida, ajustamos o caminho da busca."><span class="t">—</span></td></tr>
+        <tr><td class="n">59</td><td class="doc">Comprovante de Recolhimento</td><td><span class="pill cli">Cliente</span></td>
+          <td class="why"><b>Resposta da Milena:</b> confirmar com o Wellington se a automação dele envia este documento.<br>
+            <b>Até lá:</b> o envio continua travado, para não mandar em dobro.</td>
+          <td class="fix none" tabindex="0" data-tip="Nada a corrigir do nosso lado. Se o Wellington disser que a automação dele não envia, basta liberar o 59 no robô."><span class="t">—</span></td></tr>
+        <tr><td class="n">60</td><td class="doc">Recibo de Entrega da Declaração de Débitos e Créditos Tributários Federais Previdenciários – DCTFWeb</td><td><span class="pill cli">Cliente</span></td>
+          <td class="why"><b>Resposta da Milena:</b> a ESCE é do projeto EDP; saiu da automação da Equatorial.<br>
+            <b>O que falta:</b> o arquivo de 10/2026 (prazo 25/11). O robô agora busca também na pasta FOPAG "05 - DCTFWEB".</td>
+          <td class="fix none" tabindex="0" data-tip="Feito em 09/11: a ESCE saiu da conta e a DCTFWeb também é buscada em 09 - FOPAG - Informações/<ano>/<mês>/05 - DCTFWEB (é da empresa toda, serve à Equatorial)."><span class="t">—</span></td></tr>
+        <tr><td class="n">61</td><td class="doc">Relatório da Declaração Completa – DCTFWeb</td><td><span class="pill cli">Cliente</span></td>
+          <td class="why"><b>Resposta da Milena:</b> a ESCE é do projeto EDP; saiu da automação da Equatorial.<br>
+            <b>O que falta:</b> o arquivo de 10/2026 (prazo 25/11). O robô agora busca também na pasta FOPAG "05 - DCTFWEB".</td>
+          <td class="fix none" tabindex="0" data-tip="Feito em 09/11: a ESCE saiu da conta e a DCTFWeb também é buscada na pasta FOPAG."><span class="t">—</span></td></tr>
+        <tr><td class="n">63</td><td class="doc">Folha de Pagamento Mensal Analítica</td><td><span class="pill cli">Cliente</span></td>
+          <td class="why"><b>Resposta da Milena:</b> confirmar com o Wellington; se a automação dele não funcionar, o documento está no SharePoint.<br>
+            <b>Até lá:</b> o envio continua travado. Os 8 de 10/2026 vencem hoje.</td>
+          <td class="fix none" tabindex="0" data-tip="Nada a corrigir do nosso lado. Com a confirmação do Wellington, liberamos o 63 no robô ou mantemos a trava."><span class="t">—</span></td></tr>
+        <tr><td class="n">66</td><td class="doc">Relatório Mensal de Ocorrências</td><td><span class="pill amb">Ambos</span></td>
+          <td class="why"><b>Resposta da Milena:</b> o robô deve baixar o modelo no Atlas e preencher todo mês, como ela mostrou.<br>
+            <b>O que falta:</b> o modelo preenchido de um mês, para sabermos o que vai em cada campo e de onde vem. Os 7 de 10/2026 vencem hoje (preenchimento manual).</td>
+          <td class="fix" tabindex="0" data-tip="Passa a ser trabalho nosso: baixar o modelo no Atlas, preencher com as ocorrências do mês e enviar. Depende do exemplo preenchido para saber a origem de cada campo."><span class="t">Com o exemplo, o robô preenche o modelo do Atlas</span></td></tr>
+        <tr><td class="n">78</td><td class="doc">ASO admissional/Periódico</td><td><span class="pill sys">Sistema</span></td>
+          <td class="why">O robô achou o ASO certo de todos. O problema é que o PDF vem escaneado, só em imagem, com a ficha clínica e os exames junto. O robô não lê imagem, então não consegue tirar o que não pode ir ao Atlas (LGPD).<br>
+            <b>#548:</b> enviado em 06/11 junto com um laudo de acuidade visual; é o único que continua aberto no Atlas.<br>
+            <b>#539, #541, #544 e #547:</b> não aparecem mais na leitura das 13:28 (saíram da lista do Atlas).</td>
+          <td class="fix" tabindex="0" data-tip="Correção: o robô passar a ler a imagem (OCR) de cada página, ficar só com a página do ASO e segurar quando não tiver certeza. Até lá, ASO com várias páginas em imagem não sai sem conferência."><span class="t">Ler o PDF escaneado (OCR) e enviar só a página do ASO</span></td></tr>
+        <tr><td class="n">83</td><td class="doc">Cartão de Ponto</td><td><span class="pill amb">Ambos</span></td>
+          <td class="why"><b>Resposta da Milena:</b> buscar na Factorial o PDF único da equipe, por unidade.<br>
+            <b>O que encontramos:</b> esse PDF não fica salvo na Factorial nem sai pela integração; só existem os PDFs de cada colaborador. Os 7 de 10/2026 vencem hoje.<br>
+            <b>Quem resolve:</b> a Milena escolhe: salvar o PDF da equipe numa pasta todo mês, liberar um usuário da Factorial para o robô ou aceitar os cartões unidos.</td>
+          <td class="fix" tabindex="0" data-tip="Procurado em 09/11, só leitura: na pasta BR-Folha do ponto só há PDFs por colaborador; o PDF da equipe é gerado na hora pela tela de ponto e a API não tem rota de exportação. Com a escolha da Milena, ajustamos a busca."><span class="t">Ajustar a busca conforme a escolha da Milena</span></td></tr>
+        <tr><td class="n">84</td><td class="doc">Acordo Coletivo, Convenção Coletiva ou Acordo Individual de Trabalho</td><td><span class="pill cli">Cliente</span></td>
+          <td class="why"><b>Resposta da Milena:</b> as reprovações estão em análise pela Ediliz, e a Equatorial está ciente.<br>
+            <b>O que falta:</b> a decisão da Ediliz (6 reprovadas desde março).</td>
+          <td class="fix none" tabindex="0" data-tip="Nada a corrigir do nosso lado. A busca por unidade e vigência está no ar desde 05/11."><span class="t">—</span></td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section class="na">
+    <h2>Não solicitado ou fora <span class="count">15</span></h2>
+    <div class="wrap"><table>
+      <thead><tr><th>Nº</th><th>Documento no Atlas</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td class="n">5</td><td class="doc">Plano Odontológico (Relação de Beneficiários + Boleto + Comprovante)</td><td class="why">Não existe para a NIP; o Atlas pede 5 (vencem hoje). A Equatorial precisa retirar</td></tr>
+        <tr><td class="n">—</td><td class="doc">ESCE (todos os tipos)</td><td class="why">Projeto EDP, não é Equatorial (Milena, 06/11): fora da automação da Equatorial</td></tr>
+        <tr><td class="n">8</td><td class="doc">Aviso + Recibo de Férias + Comprovante de Pagamento</td><td class="why">Sem pedido aberto no Atlas às 13:28 (os 28 de hoje cedo saíram). A regra da Milena (recibo ou aviso + comprovante) está no ar para os próximos</td></tr>
+        <tr><td class="n">9</td><td class="doc">Termo de Rescisão do Contrato de Trabalho - TRCT / com Comprovante de Pagamento</td><td class="why">Os 22 pedidos que aguardavam assinatura na Factorial saíram do Atlas; só restam 2 da ESCE</td></tr>
+        <tr><td class="n">10</td><td class="doc">Guia do FGTS Digital Rescisória (GFD Rescisória) + Comprovante de Pagamento</td><td class="why">Sem pedido aberto da Equatorial; só resta 1 da ESCE</td></tr>
+        <tr><td class="n">65</td><td class="doc">DARF - Documento de Arrecadação de Receitas Federais</td><td class="why">Sem pedido aberto no Atlas hoje</td></tr>
+        <tr><td class="n">79</td><td class="doc">Ficha de Registro</td><td class="why">Sem pedido no Atlas</td></tr>
+        <tr><td class="n">81</td><td class="doc">CND Federal</td><td class="why">Sem pedido aberto</td></tr>
+        <tr><td class="n">82</td><td class="doc">CNDT - Débitos trabalhistas</td><td class="why">Sem pedido no Atlas</td></tr>
+        <tr><td class="n">95</td><td class="doc">Ficha de entrega de EPI</td><td class="why">Bernhoeft; sem pedido registrado</td></tr>
+        <tr><td class="n">112</td><td class="doc">Certificado de Direção Defensiva</td><td class="why">Bernhoeft; sem pedido registrado</td></tr>
+        <tr><td class="n">113</td><td class="doc">Certificado de Qualificação</td><td class="why">Bernhoeft; sem pedido registrado</td></tr>
+        <tr><td class="n">114</td><td class="doc">Certificado de Integração</td><td class="why">Bernhoeft; sem pedido registrado</td></tr>
+        <tr><td class="n">115</td><td class="doc">Certificado de Primeiros Socorros</td><td class="why">Bernhoeft; sem pedido registrado</td></tr>
+        <tr><td class="n">116</td><td class="doc">Treinamentos internos</td><td class="why">Bernhoeft; sem pedido registrado</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+</main>
+<div id="tip" role="tooltip" hidden></div>
+<script>
+(function () {
+  var tip = document.getElementById('tip');
+  var cur = null;
+  function place(el) {
+    var r = el.getBoundingClientRect();
+    var w = Math.min(380, window.innerWidth - 32);
+    tip.style.width = w + 'px';
+    var left = Math.min(Math.max(16, r.left), window.innerWidth - w - 16);
+    tip.style.left = left + 'px';
+    var h = tip.offsetHeight;
+    var top = r.bottom + 8;
+    if (top + h > window.innerHeight - 8) top = r.top - h - 8;
+    tip.style.top = Math.max(8, top) + 'px';
+  }
+  function show(el) { cur = el; tip.textContent = el.getAttribute('data-tip'); tip.hidden = false; place(el); }
+  function hide() { cur = null; tip.hidden = true; }
+  document.addEventListener('mouseover', function (e) {
+    var el = e.target.closest('[data-tip]');
+    if (el) { if (el !== cur) show(el); } else if (cur && document.activeElement !== cur) hide();
+  });
+  document.addEventListener('focusin', function (e) { var el = e.target.closest('[data-tip]'); if (el) show(el); });
+  document.addEventListener('focusout', hide);
+  document.addEventListener('click', function (e) { var el = e.target.closest('[data-tip]'); if (el) show(el); else hide(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') hide(); });
+  window.addEventListener('scroll', function () { if (cur) place(cur); }, true);
+  window.addEventListener('resize', function () { if (cur) place(cur); });
+})();
+</script>
+
+</body></html>

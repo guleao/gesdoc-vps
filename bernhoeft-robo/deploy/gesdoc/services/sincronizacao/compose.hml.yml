@@ -1,4 +1,4 @@
-# Sincronização Factorial do Evilásio (homologação na VPS): roda e sai, não fica no ar. Só os doc_id de SINC_DOCS (8, 9, 10);
+# Sincronização Factorial do Evilásio (homologação na VPS): roda e sai, não fica no ar. Só os doc_id de SINC_DOCS (9, 10; o 8 férias passou ao robô Atlas em 09/11);
 # 67/68/69 são do robô Atlas. Sem --gravar só simula (nada no Neon). Rodar sempre pelo cofre:
 #   cd /opt/gesdoc && sops exec-env infra/secrets/hml.enc.env 'docker compose -f services/sincronizacao/compose.hml.yml run --rm sincronizacao'
 #   ... run --rm sincronizacao --gravar      (precisa de SINC_DATABASE_URL = role gesdoc_sync no cofre e do OK do Augusto)
@@ -10,7 +10,7 @@ services:
   sincronizacao:
     image: gesdoc/sincronizacao-factorial:hml
     environment:
-      SINC_DOCS: "8,9,10"
+      SINC_DOCS: "9,10"
       TZ: America/Sao_Paulo
       SINC_DATABASE_URL:
       ROBO_DATABASE_URL:

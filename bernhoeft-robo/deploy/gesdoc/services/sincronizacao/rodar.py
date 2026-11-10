@@ -11,7 +11,7 @@ sem alterar o código dele: este arquivo só escolhe a conexão, filtra os tipos
                                   antes, volta para PENDENTE_ENVIO os COMPOSTO/LOCALIZADO de SINC_DOCS cujo PDF foi feito em outra
                                   máquina (caminho_origem fora de /srv/gesdoc/), para refazer aqui (passo 6.2 do DEPLOY.md dele).
 
-SINC_DOCS (padrão "8,9,10"): só estes doc_id. 67/68/69 são do robô Atlas (factorial.js, regras do discovery v2 da Milena);
+SINC_DOCS (padrão "9,10"; o 8 férias passou ao robô Atlas em 09/11, regra nova da Milena): só estes doc_id. 8/67/68/69 são do robô Atlas (factorial.js, regras do discovery v2 da Milena);
 83 (cartão de ponto) não tem regra no código do Evilásio e viraria NAO_ENCONTRADO_FACTORIAL "Sem regra".
 Relatório sem nome nem CPF em /out/ultima-<simulacao|gravacao>.json (o painel lê de /opt/gesdoc/data/hml/sincronizacao).
 """
@@ -34,7 +34,7 @@ import sincronizacao_factorial as sf
 
 OUT = Path(os.getenv("SINC_OUT", "/out"))
 PASTA_REAL = os.getenv("FACTORIAL_PASTA_DOWNLOAD", "/srv/gesdoc/downloads")
-DOCS = {int(x) for x in os.getenv("SINC_DOCS", "8,9,10").split(",") if x.strip()}
+DOCS = {int(x) for x in os.getenv("SINC_DOCS", "9,10").split(",") if x.strip()}
 
 
 class CursorSimulado:

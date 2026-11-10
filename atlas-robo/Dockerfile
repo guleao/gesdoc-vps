@@ -4,7 +4,7 @@ FROM node:22-bookworm-slim
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev && npx playwright install --with-deps chromium && rm -rf /var/lib/apt/lists/*
-COPY comum.js login.js pendencias.js planilha.js neon.js unir-pdfs.js enviar.js factorial.js sharepoint.js robo.js ler-pdf.js conteudo.js classificar.js regras-factorial.js ./
+COPY comum.js login.js pendencias.js planilha.js neon.js unir-pdfs.js enviar.js factorial.js sharepoint.js robo.js ler-pdf.js conteudo.js classificar.js regras-factorial.js declaracao-vr.js ./
 COPY vendor ./vendor
 # profile/ (sessão do Atlas) fica no volume /data; out/ (dados, codigo.txt) é montado de fora.
 # Credenciais e ROBO_DATABASE_URL vêm de variáveis (cofre SOPS na VPS).

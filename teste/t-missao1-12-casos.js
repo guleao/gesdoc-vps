@@ -75,10 +75,11 @@ t(c.negativos.length > 0, `80 conteúdo: S-2299 sozinho barrado (${c.negativos})
 
 // ===== 4. Caso 12: Recibo de férias + comprovante (doc 8) - regra de várias peças (sem aviso, porque o Atlas não pede)
 const pecas = rf.pecasDoDoc(8, 'Recibo de férias + comprovante de pagamento');
-t(pecas.pecas.join() === 'recibo,comprovanteFerias', 'caso 12: só recibo + comprovante (sem exigir aviso)');
+// 09/11 (Milena): o aviso vale como recibo; a peça é "reciboOuAviso" para qualquer nome do item.
+t(pecas.pecas.join() === 'reciboOuAviso,comprovanteFerias', 'caso 12: só recibo + comprovante (sem exigir aviso)');
 e = rf.escolherPartes(8, 'Recibo de férias + comprovante de pagamento', '09/2026',
   [D(3, 'Recibo de férias.pdf'), D(3, 'Comprovante de pagamento férias.pdf'), D(4, 'Aviso prévio.pdf')], PASTAS);
-t(e.ok && e.partes.map((p) => p.papel).join() === 'recibo,comprovanteFerias', `caso 12: monta recibo > comprovante (${e.motivo || ''})`);
+t(e.ok && e.partes.map((p) => p.papel).join() === 'reciboOuAviso,comprovanteFerias', `caso 12: monta recibo > comprovante (${e.motivo || ''})`);
 e = rf.escolherPartes(8, 'Recibo de férias + comprovante de pagamento', '09/2026', [D(3, 'Recibo de férias.pdf')], PASTAS);
 t(!e.ok && /comprovante/.test(e.motivo), 'caso 12: sem o comprovante não monta (diz o que falta)');
 
