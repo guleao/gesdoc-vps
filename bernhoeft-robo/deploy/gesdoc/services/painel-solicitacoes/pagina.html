@@ -171,6 +171,7 @@ body > .sg { max-width: 1200px; margin: 0 auto; }
 .sg-intervalo { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin-left: 6px; }
 .sg-h3, .sg-conf h3 { margin: 0; font-size: var(--cds-font-size-body); font-weight: var(--cds-font-weight-medium); }
 .sg-conf { display: grid; gap: var(--cds-gap-xs); background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); }
+.sg-porque:empty { display: none; }
 .sg-conf p { margin: 0; max-width: 75ch; font-size: var(--cds-font-size-body); }
 .sg-conf .sg-nota { font-size: var(--cds-font-size-caption); }
 .sg-alerta { margin: 0; color: var(--color-warn); font-weight: var(--cds-font-weight-medium); font-size: var(--cds-font-size-body); }
@@ -325,7 +326,7 @@ body > .sg { max-width: 1200px; margin: 0 auto; }
     </div>
 
     <p class="sg-alerta" data-draw="p-sem-confirmacao" data-source="proc_resumo"></p>
-    <div class="sg-conf" data-draw="p-porque" data-source="proc_resumo motivos" hidden></div>
+    <div class="sg-conf sg-porque" data-draw="p-porque" data-source="proc_resumo motivos"></div>
 
     <div class="sg-conf" id="conferencia">
       <h3>Conferência com o portal</h3>
@@ -736,27 +737,33 @@ dash.draw('p-intervalo', (el) => {
 });
 
 dash.draw('p-porque', (el) => {
-  const r = dash.data('proc_resumo'); const m = dash.data('motivos');
-  const periodo = dash.params().periodo || 'hoje';
-  if (periodo !== 'hoje' || r.status !== 'ok' || m.status !== 'ok' || !r.data[0] || Number(r.data[0].enviados_robo) > 0) { el.hidden = true; el.replaceChildren(); return; }
-  const linhas = m.data.map((x) => ({ cod: String(x.motivo || '').toUpperCase(), desc: x.descricao, resp: x.responsavel, n: Number(x.quantidade) }));
-  const total = linhas.reduce((s, x) => s + x.n, 0);
-  const prontas = linhas.filter((x) => x.cod === 'PRONTO_PARA_ENVIO' || x.cod === 'PRONTO').reduce((s, x) => s + x.n, 0);
-  const h = document.createElement('h3'); h.textContent = 'Por que o robô não enviou nada hoje';
-  const p = document.createElement('p');
-  const nota = document.createElement('p'); nota.className = 'sg-nota';
-  const RESP = { CLIENTE: 'cliente', OPERACAO: 'operação', SISTEMA: 'sistema' };
-  if (prontas > 0) {
-    p.textContent = SG.fmt.format(prontas) + ' pendentes estão prontas para envio e mesmo assim nada foi enviado hoje. Conferir no painel da automação se o envio está liberado e se o robô de envio está rodando.';
-    p.className = 'sg-alerta';
-  } else {
-    p.textContent = 'Nenhuma das ' + SG.fmt.format(total) + ' pendentes tem documento pronto para enviar. O robô procura a cada rodada e envia assim que o documento aparecer.';
+  try {
+    const r = dash.data('proc_resumo'); const m = dash.data('motivos');
+    let periodo = 'hoje';
+    try { periodo = (dash.params() || {}).periodo || 'hoje'; } catch (e) {}
+    const resumo = r && r.status === 'ok' && Array.isArray(r.data) ? r.data[0] : null;
+    if (periodo !== 'hoje' || !resumo || Number(resumo.enviados_robo) > 0 || !m || m.status !== 'ok' || !Array.isArray(m.data)) { el.replaceChildren(); return; }
+    const linhas = m.data.map((x) => ({ cod: String(x.motivo || '').toUpperCase(), desc: String(x.descricao || x.motivo || ''), resp: String(x.responsavel || '').toUpperCase(), n: Number(x.quantidade) || 0 }));
+    const total = linhas.reduce((s, x) => s + x.n, 0);
+    const ehPronto = (x) => x.cod === 'PRONTO_PARA_ENVIO' || x.cod === 'PRONTO';
+    const prontas = linhas.filter(ehPronto).reduce((s, x) => s + x.n, 0);
+    const fmt = (v) => SG.fmt.format(v);
+    const h = document.createElement('h3'); h.textContent = 'Por que o robô não enviou nada hoje';
+    const p = document.createElement('p');
+    if (prontas > 0) {
+      p.className = 'sg-alerta';
+      p.textContent = fmt(prontas) + ' pendentes estão prontas para envio e mesmo assim nada foi enviado hoje. Conferir no painel da automação se o envio está liberado e se o robô de envio está rodando.';
+    } else {
+      p.textContent = 'Nenhuma das ' + fmt(total) + ' pendentes tem documento pronto para enviar. O robô procura a cada rodada e envia assim que o documento aparecer.';
+    }
+    const RESP = { CLIENTE: 'cliente', OPERACAO: 'operação', SISTEMA: 'sistema' };
+    const lista = linhas.filter((x) => !ehPronto(x)).map((x) => fmt(x.n) + ' ' + x.desc.charAt(0).toLowerCase() + x.desc.slice(1) + (RESP[x.resp] ? ' (' + RESP[x.resp] + ')' : ''));
+    const nota = document.createElement('p'); nota.className = 'sg-nota';
+    nota.textContent = lista.length ? 'Onde as pendentes estão paradas agora: ' + lista.join(' · ') + '.' : '';
+    el.replaceChildren(h, p, nota);
+  } catch (e) {
+    el.textContent = 'Erro ao montar "Por que o robô não enviou nada hoje": ' + (e && e.message ? e.message : e);
   }
-  const lista = linhas.filter((x) => x.cod !== 'PRONTO_PARA_ENVIO' && x.cod !== 'PRONTO')
-    .map((x) => SG.fmt.format(x.n) + ' ' + String(x.desc || x.cod).replace(/^./, (c) => c.toLowerCase()) + (RESP[x.resp] ? ' (' + RESP[x.resp] + ')' : ''));
-  nota.textContent = lista.length ? 'Onde as pendentes estão paradas agora: ' + lista.join(' · ') + '.' : '';
-  el.hidden = false;
-  el.replaceChildren(h, p, nota);
 });
 
 dash.draw('p-sem-confirmacao', (el) => {
