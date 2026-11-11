@@ -195,27 +195,20 @@ body > .sg { max-width: 1200px; margin: 0 auto; }
 
 
   <section class="sg-cards" id="grupos">
-    <div class="sg-card sg-acao" id="card-pendentes">
-      <h2>Pendentes</h2>
-      <div class="sg-big" data-draw="t-pendentes" data-source="totais" data-field="pendentes" data-row="0">—</div>
-      <p class="sg-sub"><b data-draw="t-pend_atrasados" data-source="totais" data-field="pend_atrasados" data-row="0">—</b> atrasadas · <b data-draw="t-pend_no_prazo" data-source="totais" data-field="pend_no_prazo" data-row="0">—</b> no prazo. Ainda sem envio; o sistema vai buscar o documento e tentar enviar.</p>
-    </div>
-    <div class="sg-card" id="card-enviados">
-      <h2>Enviados</h2>
-      <div class="sg-big" data-draw="t-enviados" data-source="totais" data-field="enviados" data-row="0">—</div>
-      <div class="sg-barra sg-barra-st" data-draw="barra-status" data-source="totais" role="img" aria-label="Status dos enviados"></div>
-      <p class="sg-sub"><span class="sg-pt sg-pt-ok"></span><b data-draw="t-aprovados" data-source="totais" data-field="aprovados" data-row="0">—</b> aprovados · <span class="sg-pt sg-pt-ag"></span><b data-draw="t-aguardando" data-source="totais" data-field="aguardando" data-row="0">—</b> aguardando análise · <span class="sg-pt sg-pt-rep"></span><b data-draw="t-reprovados" data-source="totais" data-field="reprovados" data-row="0">—</b> reprovados</p>
-      <p class="sg-sub">Robô e equipe, desde 13/10.</p>
-    </div>
-    <div class="sg-card" id="card-robo-total">
-      <h2>Enviados pelo robô</h2>
-      <div class="sg-big" data-draw="t-robo" data-source="totais" data-field="robo" data-row="0">—</div>
-      <p class="sg-sub"><b data-draw="t-robo_aprovados" data-source="totais" data-field="robo_aprovados" data-row="0">—</b> aprovados · <b data-draw="t-robo_aguardando" data-source="totais" data-field="robo_aguardando" data-row="0">—</b> aguardando análise · <b data-draw="t-robo_reprovados" data-source="totais" data-field="robo_reprovados" data-row="0">—</b> reprovados.</p>
-    </div>
     <div class="sg-card" id="card-abertas">
       <h2>Abertas no portal</h2>
       <div class="sg-big" data-draw="ab-total" data-source="saude">—</div>
       <div data-draw="ab-sub" data-source="saude" style="display:grid;gap:4px">—</div>
+    </div>
+    <div class="sg-card sg-acao" id="card-pendentes">
+      <h2>− Pendentes</h2>
+      <div class="sg-big" data-draw="t-pendentes" data-source="totais" data-field="pendentes" data-row="0">—</div>
+      <p class="sg-sub"><b data-draw="t-pend_atrasados" data-source="totais" data-field="pend_atrasados" data-row="0">—</b> atrasadas · <b data-draw="t-pend_no_prazo" data-source="totais" data-field="pend_no_prazo" data-row="0">—</b> no prazo. Ainda sem envio; o sistema vai buscar o documento e tentar enviar.</p>
+    </div>
+    <div class="sg-card" id="card-diferenca">
+      <h2>= Diferença: já enviadas</h2>
+      <div class="sg-big" data-draw="ab-dif" data-source="saude">—</div>
+      <div data-draw="ab-dif-sub" data-source="saude" style="display:grid;gap:4px">—</div>
     </div>
   </section>
 
@@ -229,6 +222,23 @@ body > .sg { max-width: 1200px; margin: 0 auto; }
         <thead><tr><th data-field="dias_para_prazo">Vence</th><th data-field="documento">Documento</th><th data-field="unidade">Unidade</th><th data-field="competencia">Competência</th><th data-field="prazo">Prazo</th><th data-field="responsavel">Responsável</th><th data-field="descricao">Motivo</th></tr></thead>
         <tbody data-draw="alertas"></tbody>
       </table>
+    </div>
+  </section>
+  <section class="sg-sec" id="envios">
+    <h2>Todos os envios desde 13/10 (inclui os aprovados, que já saíram das abertas)</h2>
+    <div class="sg-cards">
+      <div class="sg-card" id="card-enviados">
+        <h2>Enviados</h2>
+        <div class="sg-big" data-draw="t-enviados" data-source="totais" data-field="enviados" data-row="0">—</div>
+        <div class="sg-barra sg-barra-st" data-draw="barra-status" data-source="totais" role="img" aria-label="Status dos enviados"></div>
+        <p class="sg-sub"><span class="sg-pt sg-pt-ok"></span><b data-draw="t-aprovados" data-source="totais" data-field="aprovados" data-row="0">—</b> aprovados · <span class="sg-pt sg-pt-ag"></span><b data-draw="t-aguardando" data-source="totais" data-field="aguardando" data-row="0">—</b> aguardando análise · <span class="sg-pt sg-pt-rep"></span><b data-draw="t-reprovados" data-source="totais" data-field="reprovados" data-row="0">—</b> reprovados</p>
+        <p class="sg-sub">Robô e equipe, desde 13/10.</p>
+      </div>
+      <div class="sg-card" id="card-robo-total">
+        <h2>Enviados pelo robô</h2>
+        <div class="sg-big" data-draw="t-robo" data-source="totais" data-field="robo" data-row="0">—</div>
+        <p class="sg-sub"><b data-draw="t-robo_aprovados" data-source="totais" data-field="robo_aprovados" data-row="0">—</b> aprovados · <b data-draw="t-robo_aguardando" data-source="totais" data-field="robo_aguardando" data-row="0">—</b> aguardando análise · <b data-draw="t-robo_reprovados" data-source="totais" data-field="robo_reprovados" data-row="0">—</b> reprovados.</p>
+      </div>
     </div>
   </section>
   <section class="sg-sec" id="responsaveis">
@@ -495,14 +505,19 @@ dash.draw('ab-total', (el) => { const a = dash.data('abertas'); el.textContent =
 dash.draw('ab-sub', (el) => {
   const a = dash.data('abertas');
   if (a.status !== 'ok' || !a.data) { el.textContent = '—'; return; }
-  const d = a.data; const linhas = [];
-  const item = (v, txt) => { const s = document.createElement('span'); const b = document.createElement('b'); b.textContent = SG.fmt.format(v); s.append(b, ' ' + txt); return s; };
   const p = document.createElement('p'); p.className = 'sg-sub';
-  p.append(item(d.pendentes, 'pendentes'), ' · ', item(d.reprovadas, 'enviadas e reprovadas'), ' · ', item(d.analise, 'enviadas, aguardando análise'));
-  if (d.fora > 0) p.append(' · ', item(d.fora, 'fora do painel'));
-  const p2 = document.createElement('p'); p2.className = 'sg-sub';
-  p2.textContent = d.por_portal.join(' · ') + '. Ficam abertas até o portal aceitar o documento.';
-  el.replaceChildren(p, p2);
+  p.textContent = a.data.por_portal.join(' · ') + '. Solicitações que o portal ainda não aceitou.';
+  el.replaceChildren(p);
+});
+dash.draw('ab-dif', (el) => { const a = dash.data('abertas'); el.textContent = a.status === 'ok' && a.data ? SG.fmt.format(a.data.portal - a.data.pendentes) : '—'; });
+dash.draw('ab-dif-sub', (el) => {
+  const a = dash.data('abertas');
+  if (a.status !== 'ok' || !a.data) { el.textContent = '—'; return; }
+  const d = a.data;
+  const linha = (v, txt) => { const p = document.createElement('p'); p.className = 'sg-sub'; const b = document.createElement('b'); b.textContent = SG.fmt.format(v); p.append(b, ' ' + txt); return p; };
+  const ps = [linha(d.analise, 'enviadas, em análise no portal'), linha(d.reprovadas, 'enviadas e reprovadas, esperando o cliente substituir')];
+  if (d.fora > 0) ps.push(linha(d.fora, 'fora do painel (sem regra ou fora do escopo)'));
+  el.replaceChildren(...ps);
 });
 
 dash.draw('matriz', (el) => {
