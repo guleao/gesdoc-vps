@@ -325,6 +325,7 @@ body > .sg { max-width: 1200px; margin: 0 auto; }
     </div>
 
     <p class="sg-alerta" data-draw="p-sem-confirmacao" data-source="proc_resumo"></p>
+    <div class="sg-conf" data-draw="p-porque" data-source="proc_resumo motivos" hidden></div>
 
     <div class="sg-conf" id="conferencia">
       <h3>Conferência com o portal</h3>
@@ -732,6 +733,30 @@ dash.draw('p-intervalo', (el) => {
   if (r.status !== 'ok' || !r.data[0]) { el.textContent = '—'; return; }
   const ini = SG.dataBR(r.data[0].inicio), fim = SG.dataBR(r.data[0].fim);
   el.textContent = ini === fim ? ini : 'de ' + ini + ' a ' + fim;
+});
+
+dash.draw('p-porque', (el) => {
+  const r = dash.data('proc_resumo'); const m = dash.data('motivos');
+  const periodo = dash.params().periodo || 'hoje';
+  if (periodo !== 'hoje' || r.status !== 'ok' || m.status !== 'ok' || !r.data[0] || Number(r.data[0].enviados_robo) > 0) { el.hidden = true; el.replaceChildren(); return; }
+  const linhas = m.data.map((x) => ({ cod: String(x.motivo || '').toUpperCase(), desc: x.descricao, resp: x.responsavel, n: Number(x.quantidade) }));
+  const total = linhas.reduce((s, x) => s + x.n, 0);
+  const prontas = linhas.filter((x) => x.cod === 'PRONTO_PARA_ENVIO' || x.cod === 'PRONTO').reduce((s, x) => s + x.n, 0);
+  const h = document.createElement('h3'); h.textContent = 'Por que o robô não enviou nada hoje';
+  const p = document.createElement('p');
+  const nota = document.createElement('p'); nota.className = 'sg-nota';
+  const RESP = { CLIENTE: 'cliente', OPERACAO: 'operação', SISTEMA: 'sistema' };
+  if (prontas > 0) {
+    p.textContent = SG.fmt.format(prontas) + ' pendentes estão prontas para envio e mesmo assim nada foi enviado hoje. Conferir no painel da automação se o envio está liberado e se o robô de envio está rodando.';
+    p.className = 'sg-alerta';
+  } else {
+    p.textContent = 'Nenhuma das ' + SG.fmt.format(total) + ' pendentes tem documento pronto para enviar. O robô procura a cada rodada e envia assim que o documento aparecer.';
+  }
+  const lista = linhas.filter((x) => x.cod !== 'PRONTO_PARA_ENVIO' && x.cod !== 'PRONTO')
+    .map((x) => SG.fmt.format(x.n) + ' ' + String(x.desc || x.cod).replace(/^./, (c) => c.toLowerCase()) + (RESP[x.resp] ? ' (' + RESP[x.resp] + ')' : ''));
+  nota.textContent = lista.length ? 'Onde as pendentes estão paradas agora: ' + lista.join(' · ') + '.' : '';
+  el.hidden = false;
+  el.replaceChildren(h, p, nota);
 });
 
 dash.draw('p-sem-confirmacao', (el) => {
