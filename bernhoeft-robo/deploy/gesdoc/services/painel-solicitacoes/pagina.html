@@ -191,6 +191,7 @@ body > .sg { max-width: 1200px; margin: 0 auto; }
     <h1 class="sg-title">Solicitações ODA NIP</h1>
     <p class="sg-lead" id="resumo"><b data-draw="t-pendentes" data-source="totais" data-field="pendentes" data-row="0" data-fetchpriority="high">—</b> solicitações pendentes, que o sistema vai tentar enviar, e <b data-draw="t-enviados" data-source="totais" data-field="enviados" data-row="0">—</b> enviadas: <b data-draw="t-aprovados" data-source="totais" data-field="aprovados" data-row="0">—</b> aprovadas, <b data-draw="t-aguardando" data-source="totais" data-field="aguardando" data-row="0">—</b> aguardando análise e <b data-draw="t-reprovados" data-source="totais" data-field="reprovados" data-row="0">—</b> reprovadas.</p>
     <ul class="sg-saude" id="leituras" data-draw="saude" data-source="saude diferenca"></ul>
+    <p class="sg-nota">Aberta no portal não é o mesmo que pendente: o portal só fecha a solicitação quando aceita o documento. Por isso as já enviadas que foram reprovadas, ou que ainda esperam a análise, seguem abertas lá, mas aqui contam como enviadas, não como pendentes.</p>
   </header>
 
 
@@ -472,6 +473,13 @@ dash.draw('saude', (el) => {
     const nb = document.createElement('span'); nb.textContent = l.abertos_no_banco ?? '—';
     nb.dataset.source = 'saude'; nb.dataset.field = 'abertos_no_banco'; nb.dataset.where = 'portal=' + encodeURIComponent(l.portal);
     n.append('· ', np, ' solicitações abertas no portal (atrasadas, no prazo ou reprovadas: ainda esperam um documento aceito) · ', nb, ' acompanhadas neste painel');
+    if (l.abertos_pendentes != null) {
+      const q = (v) => SG.fmt.format(Number(v || 0));
+      const partes = [q(l.abertos_pendentes) + ' pendentes (sem envio ainda)'];
+      if (Number(l.abertos_reprovados) > 0) partes.push(q(l.abertos_reprovados) + ' enviadas e reprovadas (o cliente precisa mandar o documento certo)');
+      if (Number(l.abertos_enviados_analise) > 0) partes.push(q(l.abertos_enviados_analise) + ' enviadas, aguardando a análise do portal');
+      n.append(': ' + partes.join(', '));
+    }
     li.appendChild(n);
     const f = faltando.get(l.portal) || 0;
     if (f > 0) {
