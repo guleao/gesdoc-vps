@@ -191,7 +191,6 @@ body > .sg { max-width: 1200px; margin: 0 auto; }
     <h1 class="sg-title">Solicitações ODA NIP</h1>
     <p class="sg-lead" id="resumo"><b data-draw="t-pendentes" data-source="totais" data-field="pendentes" data-row="0" data-fetchpriority="high">—</b> solicitações pendentes, que o sistema vai tentar enviar, e <b data-draw="t-enviados" data-source="totais" data-field="enviados" data-row="0">—</b> enviadas: <b data-draw="t-aprovados" data-source="totais" data-field="aprovados" data-row="0">—</b> aprovadas, <b data-draw="t-aguardando" data-source="totais" data-field="aguardando" data-row="0">—</b> aguardando análise e <b data-draw="t-reprovados" data-source="totais" data-field="reprovados" data-row="0">—</b> reprovadas.</p>
     <ul class="sg-saude" id="leituras" data-draw="saude" data-source="saude diferenca"></ul>
-    <p class="sg-nota">Aberta no portal não é o mesmo que pendente: o portal só fecha a solicitação quando aceita o documento. Por isso as já enviadas que foram reprovadas, ou que ainda esperam a análise, seguem abertas lá, mas aqui contam como enviadas, não como pendentes.</p>
   </header>
 
 
@@ -212,6 +211,11 @@ body > .sg { max-width: 1200px; margin: 0 auto; }
       <h2>Enviados pelo robô</h2>
       <div class="sg-big" data-draw="t-robo" data-source="totais" data-field="robo" data-row="0">—</div>
       <p class="sg-sub"><b data-draw="t-robo_aprovados" data-source="totais" data-field="robo_aprovados" data-row="0">—</b> aprovados · <b data-draw="t-robo_aguardando" data-source="totais" data-field="robo_aguardando" data-row="0">—</b> aguardando análise · <b data-draw="t-robo_reprovados" data-source="totais" data-field="robo_reprovados" data-row="0">—</b> reprovados.</p>
+    </div>
+    <div class="sg-card" id="card-abertas">
+      <h2>Abertas no portal</h2>
+      <div class="sg-big" data-draw="ab-total" data-source="saude">—</div>
+      <div data-draw="ab-sub" data-source="saude" style="display:grid;gap:4px">—</div>
     </div>
   </section>
 
@@ -458,42 +462,47 @@ dash.calc('diferenca', {
 
 dash.draw('saude', (el) => {
   const s = dash.data('saude');
-  const dif = dash.data('diferenca');
   if (s.status !== 'ok') { el.replaceChildren(); return; }
-  const faltando = new Map(((dif.status === 'ok' && dif.data) || []).map((d) => [d.portal, d.faltando]));
   el.replaceChildren(...s.data.map((l) => {
     const li = document.createElement('li');
     const b = document.createElement('b'); b.textContent = l.portal; li.appendChild(b);
     const quando = document.createElement('span');
     quando.textContent = l.ultima_leitura ? 'lido em ' + l.ultima_leitura + (l.minutos != null ? ' (há ' + l.minutos + ' min)' : '') : 'sem leitura registrada';
     li.appendChild(quando);
-    const n = document.createElement('span');
-    const np = document.createElement('span'); np.textContent = l.abertos_no_portal ?? '—';
-    np.dataset.source = 'saude'; np.dataset.field = 'abertos_no_portal'; np.dataset.where = 'portal=' + encodeURIComponent(l.portal);
-    const nb = document.createElement('span'); nb.textContent = l.abertos_no_banco ?? '—';
-    nb.dataset.source = 'saude'; nb.dataset.field = 'abertos_no_banco'; nb.dataset.where = 'portal=' + encodeURIComponent(l.portal);
-    n.append('· ', np, ' solicitações abertas no portal (atrasadas, no prazo ou reprovadas: ainda esperam um documento aceito) · ', nb, ' acompanhadas neste painel');
-    if (l.abertos_pendentes != null) {
-      const q = (v) => SG.fmt.format(Number(v || 0));
-      const partes = [q(l.abertos_pendentes) + ' pendentes (sem envio ainda)'];
-      if (Number(l.abertos_reprovados) > 0) partes.push(q(l.abertos_reprovados) + ' enviadas e reprovadas (o cliente precisa mandar o documento certo)');
-      if (Number(l.abertos_enviados_analise) > 0) partes.push(q(l.abertos_enviados_analise) + ' enviadas, aguardando a análise do portal');
-      n.append(': ' + partes.join(', '));
-    }
-    li.appendChild(n);
-    const f = faltando.get(l.portal) || 0;
-    if (f > 0) {
-      const w = document.createElement('span'); w.className = 'sg-warn';
-      const fv = document.createElement('span'); fv.textContent = f;
-      fv.dataset.source = 'diferenca'; fv.dataset.field = 'faltando'; fv.dataset.where = 'portal=' + encodeURIComponent(l.portal);
-      w.append('· ', fv, ' não acompanhadas: tipo de documento sem regra cadastrada ou fora do escopo, como plano odontológico');
-      li.appendChild(w);
-    }
     if (l.desatualizado === true || l.desatualizado === 'true') {
       const d = document.createElement('span'); d.className = 'sg-bad'; d.textContent = '· dados desatualizados'; li.appendChild(d);
     }
     return li;
   }));
+});
+
+dash.calc('abertas', {
+  inputs: ['saude'],
+  title: 'Abertas no portal, divididas',
+  description: 'Soma dos portais: abertas no portal = pendentes + enviadas e reprovadas + enviadas aguardando análise + fora do painel.',
+  fn: (leituras) => {
+    const n = (v) => Number(v || 0);
+    const r = { portal: 0, pendentes: 0, reprovadas: 0, analise: 0, fora: 0, por_portal: [] };
+    leituras.forEach((l) => {
+      r.portal += n(l.abertos_no_portal); r.pendentes += n(l.abertos_pendentes); r.reprovadas += n(l.abertos_reprovados);
+      r.analise += n(l.abertos_enviados_analise); r.fora += Math.max(0, n(l.abertos_no_portal) - n(l.abertos_no_banco));
+      r.por_portal.push(l.portal + ' ' + SG.fmt.format(n(l.abertos_no_portal)));
+    });
+    return r;
+  },
+});
+dash.draw('ab-total', (el) => { const a = dash.data('abertas'); el.textContent = a.status === 'ok' && a.data ? SG.fmt.format(a.data.portal) : '—'; });
+dash.draw('ab-sub', (el) => {
+  const a = dash.data('abertas');
+  if (a.status !== 'ok' || !a.data) { el.textContent = '—'; return; }
+  const d = a.data; const linhas = [];
+  const item = (v, txt) => { const s = document.createElement('span'); const b = document.createElement('b'); b.textContent = SG.fmt.format(v); s.append(b, ' ' + txt); return s; };
+  const p = document.createElement('p'); p.className = 'sg-sub';
+  p.append(item(d.pendentes, 'pendentes'), ' · ', item(d.reprovadas, 'enviadas e reprovadas'), ' · ', item(d.analise, 'enviadas, aguardando análise'));
+  if (d.fora > 0) p.append(' · ', item(d.fora, 'fora do painel'));
+  const p2 = document.createElement('p'); p2.className = 'sg-sub';
+  p2.textContent = d.por_portal.join(' · ') + '. Ficam abertas até o portal aceitar o documento.';
+  el.replaceChildren(p, p2);
 });
 
 dash.draw('matriz', (el) => {
