@@ -118,6 +118,13 @@ body > .sg { max-width: 1200px; margin: 0 auto; }
 .sg-lead { margin: 0; font-size: var(--cds-font-size-body); max-width: 70ch; }
 .sg-lead b { font-variant-numeric: tabular-nums; }
 .sg-saude { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--cds-gap-xs) var(--cds-gap-lg); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.sg-relogio { display: flex; flex-wrap: wrap; gap: var(--cds-gap-sm); list-style: none; margin: 0; padding: 0; }
+.sg-relogio li { display: flex; align-items: baseline; gap: 8px; background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: 999px; padding: 6px 14px; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.sg-relogio li b { color: var(--color-fg); }
+.sg-relogio .sg-min { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); color: var(--color-fg); font-variant-numeric: tabular-nums; }
+.sg-relogio li.sg-velho .sg-min { color: var(--color-warn); }
+.sg-relogio li.sg-parado { border-color: var(--color-bad); }
+.sg-relogio li.sg-parado .sg-min { color: var(--color-bad); }
 .sg-saude li { display: flex; flex-wrap: wrap; gap: 4px; align-items: baseline; }
 .sg-warn { color: var(--color-warn); font-weight: var(--cds-font-weight-medium); }
 .sg-bad { color: var(--color-bad); font-weight: var(--cds-font-weight-medium); }
@@ -190,7 +197,7 @@ body > .sg { max-width: 1200px; margin: 0 auto; }
   <header class="sg-head" id="topo">
     <h1 class="sg-title">Solicitações ODA NIP</h1>
     <p class="sg-lead" id="resumo"><b data-draw="t-pendentes" data-source="totais" data-field="pendentes" data-row="0" data-fetchpriority="high">—</b> solicitações pendentes, que o sistema vai tentar enviar, e <b data-draw="t-enviados" data-source="totais" data-field="enviados" data-row="0">—</b> enviadas: <b data-draw="t-aprovados" data-source="totais" data-field="aprovados" data-row="0">—</b> aprovadas, <b data-draw="t-aguardando" data-source="totais" data-field="aguardando" data-row="0">—</b> aguardando análise e <b data-draw="t-reprovados" data-source="totais" data-field="reprovados" data-row="0">—</b> reprovadas.</p>
-    <ul class="sg-saude" id="leituras" data-draw="saude" data-source="saude diferenca"></ul>
+    <ul class="sg-relogio" id="leituras" data-draw="saude" data-source="saude" aria-live="polite"></ul>
   </header>
 
 
@@ -473,18 +480,26 @@ dash.calc('diferenca', {
 dash.draw('saude', (el) => {
   const s = dash.data('saude');
   if (s.status !== 'ok') { el.replaceChildren(); return; }
+  const agora = Date.now();
   el.replaceChildren(...s.data.map((l) => {
     const li = document.createElement('li');
-    const b = document.createElement('b'); b.textContent = l.portal; li.appendChild(b);
-    const quando = document.createElement('span');
-    quando.textContent = l.ultima_leitura ? 'lido em ' + l.ultima_leitura + (l.minutos != null ? ' (há ' + l.minutos + ' min)' : '') : 'sem leitura registrada';
-    li.appendChild(quando);
-    if (l.desatualizado === true || l.desatualizado === 'true') {
-      const d = document.createElement('span'); d.className = 'sg-bad'; d.textContent = '· dados desatualizados'; li.appendChild(d);
+    const b = document.createElement('b'); b.textContent = 'Robô ' + l.portal;
+    const m = document.createElement('span'); m.className = 'sg-min';
+    const resto = document.createElement('span');
+    const ms = Number(l.leitura_ms);
+    if (!ms) { m.textContent = '—'; resto.textContent = 'sem leitura registrada'; li.classList.add('sg-parado'); }
+    else {
+      const min = Math.max(0, Math.floor((agora - ms) / 60000));
+      m.textContent = min < 60 ? min + ' min' : Math.floor(min / 60) + ' h ' + (min % 60) + ' min';
+      resto.textContent = 'desde a última leitura (' + (l.ultima_leitura || '') + ')';
+      if (l.desatualizado === true || l.desatualizado === 'true') { li.classList.add('sg-parado'); resto.textContent += ' · parado'; }
+      else if (min >= 60) li.classList.add('sg-velho');
     }
+    li.append(b, m, resto);
     return li;
   }));
 });
+setInterval(() => dash.draw('saude'), 30000);
 
 dash.calc('abertas', {
   inputs: ['saude'],
