@@ -471,14 +471,14 @@ dash.draw('saude', (el) => {
     np.dataset.source = 'saude'; np.dataset.field = 'abertos_no_portal'; np.dataset.where = 'portal=' + encodeURIComponent(l.portal);
     const nb = document.createElement('span'); nb.textContent = l.abertos_no_banco ?? '—';
     nb.dataset.source = 'saude'; nb.dataset.field = 'abertos_no_banco'; nb.dataset.where = 'portal=' + encodeURIComponent(l.portal);
-    n.append('· ', np, ' abertas no portal, ', nb, ' acompanhadas aqui');
+    n.append('· ', np, ' solicitações abertas no portal (atrasadas, no prazo ou reprovadas: ainda esperam um documento aceito) · ', nb, ' acompanhadas neste painel');
     li.appendChild(n);
     const f = faltando.get(l.portal) || 0;
     if (f > 0) {
       const w = document.createElement('span'); w.className = 'sg-warn';
       const fv = document.createElement('span'); fv.textContent = f;
       fv.dataset.source = 'diferenca'; fv.dataset.field = 'faltando'; fv.dataset.where = 'portal=' + encodeURIComponent(l.portal);
-      w.append('· ', fv, ' fora do painel (tipos sem regra ou fora do escopo)');
+      w.append('· ', fv, ' não acompanhadas: tipo de documento sem regra cadastrada ou fora do escopo, como plano odontológico');
       li.appendChild(w);
     }
     if (l.desatualizado === true || l.desatualizado === 'true') {
