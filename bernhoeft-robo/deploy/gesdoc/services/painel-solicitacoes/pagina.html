@@ -492,9 +492,9 @@ dash.calc('abertas', {
   description: 'Soma dos portais: abertas no portal = pendentes + enviadas e reprovadas + enviadas aguardando análise + fora do painel.',
   fn: (leituras) => {
     const n = (v) => Number(v || 0);
-    const r = { portal: 0, pendentes: 0, reprovadas: 0, analise: 0, fora: 0, por_portal: [] };
+    const r = { portal: 0, pendentes: 0, reprovadas: 0, rep_no_prazo: 0, rep_atrasadas: 0, analise: 0, fora: 0, por_portal: [] };
     leituras.forEach((l) => {
-      r.portal += n(l.abertos_no_portal); r.pendentes += n(l.abertos_pendentes); r.reprovadas += n(l.abertos_reprovados);
+      r.portal += n(l.abertos_no_portal); r.pendentes += n(l.abertos_pendentes); r.reprovadas += n(l.abertos_reprovados); r.rep_no_prazo += n(l.abertos_reprovados_no_prazo); r.rep_atrasadas += n(l.abertos_reprovados_atrasados);
       r.analise += n(l.abertos_enviados_analise); r.fora += Math.max(0, n(l.abertos_no_portal) - n(l.abertos_no_banco));
       r.por_portal.push(l.portal + ' ' + SG.fmt.format(n(l.abertos_no_portal)));
     });
@@ -515,7 +515,7 @@ dash.draw('ab-dif-sub', (el) => {
   if (a.status !== 'ok' || !a.data) { el.textContent = '—'; return; }
   const d = a.data;
   const linha = (v, txt) => { const p = document.createElement('p'); p.className = 'sg-sub'; const b = document.createElement('b'); b.textContent = SG.fmt.format(v); p.append(b, ' ' + txt); return p; };
-  const ps = [linha(d.analise, 'enviadas, em análise no portal'), linha(d.reprovadas, 'enviadas e reprovadas, esperando o cliente substituir')];
+  const ps = [linha(d.analise, 'enviadas, em análise no portal'), linha(d.reprovadas, 'enviadas e reprovadas, esperando o cliente substituir: ' + SG.fmt.format(d.rep_atrasadas) + ' fora do prazo · ' + SG.fmt.format(d.rep_no_prazo) + ' no prazo')];
   if (d.fora > 0) ps.push(linha(d.fora, 'fora do painel (sem regra ou fora do escopo)'));
   el.replaceChildren(...ps);
 });
