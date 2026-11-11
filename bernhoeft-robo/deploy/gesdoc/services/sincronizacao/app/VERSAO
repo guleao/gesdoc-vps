@@ -1,0 +1,3 @@
+Código da sincronização Factorial, agora mantido NESTE repositório (bernhoeft-robo/deploy/gesdoc/services/sincronizacao/app).
+Trazido do repositório antigo evilasioferreira/gestao-documental-equatorial, commit 96f0781 (10/11/2026), que deixa de ser a fonte.
+Antes disso a VPS rodava o commit cafc56d, copiado pelo publicar-sincronizacao.sh.

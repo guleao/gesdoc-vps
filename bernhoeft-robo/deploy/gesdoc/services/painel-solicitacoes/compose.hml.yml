@@ -1,0 +1,27 @@
+# Painel "Solicitações ODA NIP" (só leitura no Neon, role painel_leitura). Acesso SÓ pelo Tailscale: http://100.103.196.93:3022
+# Não toca em portal, robô nem arquivo: só lê a view v_solicitacoes e as tabelas de apoio (migrações em /migracoes).
+# Subir (o PAINEL_DATABASE_URL já está no cofre, é o mesmo do painel da automação):
+#   cd /opt/gesdoc && sops exec-env infra/secrets/hml.enc.env 'docker compose -f services/painel-solicitacoes/compose.hml.yml up -d'
+name: gesdoc-painel-solicitacoes-hml
+
+services:
+  painel-solicitacoes:
+    image: node:22-alpine
+    working_dir: /app
+    command: ["node", "server.js"]
+    user: "1000:1000"
+    network_mode: host
+    environment:
+      ESCUTAR: "100.103.196.93"
+      PORTA: "3022"
+      CACHE_SEGUNDOS: "60"
+      PAINEL_DATABASE_URL:
+      TZ: America/Sao_Paulo
+    volumes:
+      - ./server.js:/app/server.js:ro
+      - ./consultas.json:/app/consultas.json:ro
+      - ./pagina.html:/app/pagina.html:ro
+    read_only: true
+    mem_limit: 128m
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped

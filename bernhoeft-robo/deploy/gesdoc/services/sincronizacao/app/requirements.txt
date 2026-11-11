@@ -1,0 +1,7 @@
+# Só o que a sincronização usa (o app.py/Flask do repositório antigo não roda na VPS).
+psycopg2-binary>=2.9.0
+requests>=2.31.0
+python-dotenv>=1.0.0
+pypdf>=4.0.0
+Pillow>=10.0.0
+# Testes (app/tests, não entram na imagem): pip install pytest e rodar dentro de app/ com .env.test apontando para o branch de teste do Neon.
