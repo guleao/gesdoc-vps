@@ -134,6 +134,7 @@ body > .sg { max-width: 1200px; margin: 0 auto; }
 .sg-big { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: 40px; line-height: 1.1; font-variant-numeric: tabular-nums; }
 .sg-sub { margin: 0; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
 .sg-desde { font-family: var(--font-anthropic-sans); font-size: var(--cds-font-size-caption); font-weight: 400; color: var(--color-fg-muted); margin-left: 8px; }
+.sg-recuo { padding-left: 16px; }
 .sg-quem { font-size: var(--cds-font-size-body); color: var(--color-fg); }
 .sg-quem b { font-family: var(--font-anthropic-serif); font-size: 26px; font-weight: 400; margin-right: 6px; }
 .sg-sub b { color: var(--color-fg); font-variant-numeric: tabular-nums; }
@@ -243,7 +244,10 @@ body > .sg { max-width: 1200px; margin: 0 auto; }
         <div class="sg-big" data-draw="t-enviados" data-field="enviados" data-source="totais" data-row="0">—</div>
         <div class="sg-barra sg-barra-st" data-draw="barra-status" data-source="totais" role="img" aria-label="Como estão os enviados"></div>
         <p class="sg-sub"><span class="sg-pt sg-pt-ok"></span><b data-draw="t-aprovados" data-field="aprovados" data-source="totais" data-row="0">—</b> o portal aceitou</p>
-        <p class="sg-sub"><span class="sg-pt sg-pt-ag"></span><b data-draw="t-aguardando" data-field="aguardando" data-source="totais" data-row="0">—</b> o portal ainda vai olhar</p>
+        <p class="sg-sub"><span class="sg-pt sg-pt-ag"></span><b data-draw="t-aguardando" data-field="aguardando" data-source="totais" data-row="0">—</b> ainda sem resposta do portal:</p>
+        <p class="sg-sub sg-recuo"><b data-draw="t-em_analise" data-field="em_analise" data-source="totais" data-row="0">—</b> em análise</p>
+        <p class="sg-sub sg-recuo"><b data-draw="t-aguard_outro" data-field="aguard_outro" data-source="totais" data-row="0">—</b> esperando outro documento ser aceito</p>
+        <p class="sg-sub sg-recuo"><b data-draw="t-sem_atualizar" data-field="sem_atualizar" data-source="totais" data-row="0">—</b> enviados, o portal ainda não atualizou</p>
         <p class="sg-sub"><span class="sg-pt sg-pt-rep"></span><b data-draw="t-reprovados" data-field="reprovados" data-source="totais" data-row="0">—</b> o portal recusou: o cliente precisa mandar outro</p>
       </div>
       <div class="sg-card" id="card-quem">
@@ -471,7 +475,7 @@ document.querySelectorAll('.sg').forEach((root) => {
   root.style.setProperty('--sg-op', dash.colors[1] || dash.colors[0]);
 });
 
-['pendentes', 'pend_atrasados', 'pend_no_prazo', 'enviados', 'aprovados', 'aguardando', 'reprovados', 'robo', 'equipe', 'sem_id', 'robo_aprovados', 'robo_aguardando', 'robo_reprovados', 'cliente', 'operacao', 'sistema'].forEach((campo) => {
+['pendentes', 'pend_atrasados', 'pend_no_prazo', 'enviados', 'aprovados', 'aguardando', 'reprovados', 'robo', 'equipe', 'sem_id', 'em_analise', 'aguard_outro', 'sem_atualizar', 'robo_aprovados', 'robo_aguardando', 'robo_reprovados', 'cliente', 'operacao', 'sistema'].forEach((campo) => {
   dash.draw('t-' + campo, (el) => {
     const t = dash.data('totais');
     el.textContent = t.status === 'ok' && t.data[0] ? SG.fmt.format(Number(t.data[0][campo])) : '—';
@@ -538,7 +542,7 @@ dash.draw('ab-dif-sub', (el) => {
   if (a.status !== 'ok' || !a.data) { el.textContent = '—'; return; }
   const d = a.data;
   const linha = (v, txt) => { const p = document.createElement('p'); p.className = 'sg-sub'; const b = document.createElement('b'); b.textContent = SG.fmt.format(v); p.append(b, ' ' + txt); return p; };
-  const ps = [linha(d.reprovadas, 'o portal recusou: o cliente precisa mandar outro (' + SG.fmt.format(d.rep_atrasadas) + ' já fora do prazo)'), linha(d.analise, 'o portal ainda vai olhar')];
+  const ps = [linha(d.reprovadas, 'o portal recusou: o cliente precisa mandar outro (' + SG.fmt.format(d.rep_atrasadas) + ' já fora do prazo)'), linha(d.analise, 'enviados, o portal ainda não atualizou')];
   if (d.fora > 0) ps.push(linha(d.fora, 'são de tipos que não acompanhamos'));
   el.replaceChildren(...ps);
 });
