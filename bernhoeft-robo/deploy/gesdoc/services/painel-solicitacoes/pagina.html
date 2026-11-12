@@ -133,6 +133,8 @@ body > .sg { max-width: 1200px; margin: 0 auto; }
 .sg-card h2 { margin: 0; font-size: var(--cds-font-size-caption); font-weight: var(--cds-font-weight-medium); color: var(--color-fg-muted); text-transform: uppercase; letter-spacing: .05em; }
 .sg-big { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: 40px; line-height: 1.1; font-variant-numeric: tabular-nums; }
 .sg-sub { margin: 0; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.sg-quem { font-size: var(--cds-font-size-body); color: var(--color-fg); }
+.sg-quem b { font-family: var(--font-anthropic-serif); font-size: 26px; font-weight: 400; margin-right: 6px; }
 .sg-sub b { color: var(--color-fg); font-variant-numeric: tabular-nums; }
 .sg-card.sg-acao { border-top: 3px solid var(--color-warn); }
 .sg-sec { display: grid; gap: var(--cds-gap-md); min-width: 0; }
@@ -197,24 +199,24 @@ body > .sg { max-width: 1200px; margin: 0 auto; }
 
   <header class="sg-head" id="topo">
     <h1 class="sg-title">Solicitações ODA NIP</h1>
-    <p class="sg-lead" id="resumo"><b data-draw="t-pendentes" data-source="totais" data-field="pendentes" data-row="0" data-fetchpriority="high">—</b> solicitações pendentes, que o sistema vai tentar enviar, e <b data-draw="t-enviados" data-source="totais" data-field="enviados" data-row="0">—</b> enviadas: <b data-draw="t-aprovados" data-source="totais" data-field="aprovados" data-row="0">—</b> aprovadas, <b data-draw="t-aguardando" data-source="totais" data-field="aguardando" data-row="0">—</b> aguardando análise e <b data-draw="t-reprovados" data-source="totais" data-field="reprovados" data-row="0">—</b> reprovadas.</p>
+    <p class="sg-lead" id="resumo">O portal pede documentos. O robô procura cada um e envia sozinho. Aqui você vê o que falta, o que já foi e quem enviou.</p>
     <ul class="sg-relogio" id="leituras" data-draw="saude" data-source="saude" aria-live="polite"></ul>
   </header>
 
 
   <section class="sg-cards" id="grupos">
     <div class="sg-card" id="card-abertas">
-      <h2>Abertas no portal</h2>
+      <h2>O portal está pedindo</h2>
       <div class="sg-big" data-draw="ab-total" data-source="saude">—</div>
       <div data-draw="ab-sub" data-source="saude" style="display:grid;gap:4px">—</div>
     </div>
     <div class="sg-card sg-acao" id="card-pendentes">
-      <h2>− Pendentes</h2>
-      <div class="sg-big" data-draw="t-pendentes" data-source="totais" data-field="pendentes" data-row="0">—</div>
-      <p class="sg-sub"><b data-draw="t-pend_atrasados" data-source="totais" data-field="pend_atrasados" data-row="0">—</b> atrasadas · <b data-draw="t-pend_no_prazo" data-source="totais" data-field="pend_no_prazo" data-row="0">—</b> no prazo. Ainda sem envio; o sistema vai buscar o documento e tentar enviar.</p>
+      <h2>Falta enviar</h2>
+      <div class="sg-big" data-draw="t-pendentes" data-field="pendentes" data-source="totais" data-row="0">—</div>
+      <p class="sg-sub"><b data-draw="t-pend_atrasados" data-field="pend_atrasados" data-source="totais" data-row="0">—</b> já passaram do prazo · <b data-draw="t-pend_no_prazo" data-field="pend_no_prazo" data-source="totais" data-row="0">—</b> ainda estão no prazo</p>
     </div>
     <div class="sg-card" id="card-diferenca">
-      <h2>= Diferença: já enviadas</h2>
+      <h2>Já enviamos, o portal ainda não fechou</h2>
       <div class="sg-big" data-draw="ab-dif" data-source="saude">—</div>
       <div data-draw="ab-dif-sub" data-source="saude" style="display:grid;gap:4px">—</div>
     </div>
@@ -223,7 +225,7 @@ body > .sg { max-width: 1200px; margin: 0 auto; }
 
 
   <section class="sg-sec sg-alertas" id="alertas">
-    <h2>Alertas: vencem em até 7 dias</h2>
+    <h2>Vencem nos próximos 7 dias</h2>
     <p class="sg-lead"><b data-draw="a-total" data-source="alertas_resumo" data-field="total" data-row="0">—</b> pendentes ainda no prazo vencem nos próximos 7 dias: <b data-draw="a-vence_hoje" data-source="alertas_resumo" data-field="vence_hoje" data-row="0">—</b> hoje, <b data-draw="a-em_1_a_3" data-source="alertas_resumo" data-field="em_1_a_3" data-row="0">—</b> em 1 a 3 dias e <b data-draw="a-em_4_a_7" data-source="alertas_resumo" data-field="em_4_a_7" data-row="0">—</b> em 4 a 7 dias. Cliente <b data-draw="a-cliente" data-source="alertas_resumo" data-field="cliente" data-row="0">—</b> · Operação <b data-draw="a-operacao" data-source="alertas_resumo" data-field="operacao" data-row="0">—</b> · Sistema <b data-draw="a-sistema" data-source="alertas_resumo" data-field="sistema" data-row="0">—</b>.</p>
     <div class="sg-tab">
       <table class="sg-alerta-tab" data-source="alertas" data-row-key="id">
@@ -233,40 +235,43 @@ body > .sg { max-width: 1200px; margin: 0 auto; }
     </div>
   </section>
   <section class="sg-sec" id="envios">
-    <h2>Todos os envios desde 13/10 (inclui os aprovados, que já saíram das abertas)</h2>
+    <h2>Tudo o que já enviamos</h2>
     <div class="sg-cards">
       <div class="sg-card" id="card-enviados">
         <h2>Enviados</h2>
-        <div class="sg-big" data-draw="t-enviados" data-source="totais" data-field="enviados" data-row="0">—</div>
-        <div class="sg-barra sg-barra-st" data-draw="barra-status" data-source="totais" role="img" aria-label="Status dos enviados"></div>
-        <p class="sg-sub"><span class="sg-pt sg-pt-ok"></span><b data-draw="t-aprovados" data-source="totais" data-field="aprovados" data-row="0">—</b> aprovados · <span class="sg-pt sg-pt-ag"></span><b data-draw="t-aguardando" data-source="totais" data-field="aguardando" data-row="0">—</b> aguardando análise · <span class="sg-pt sg-pt-rep"></span><b data-draw="t-reprovados" data-source="totais" data-field="reprovados" data-row="0">—</b> reprovados</p>
-        <p class="sg-sub">Robô e equipe, desde 13/10.</p>
+        <div class="sg-big" data-draw="t-enviados" data-field="enviados" data-source="totais" data-row="0">—</div>
+        <div class="sg-barra sg-barra-st" data-draw="barra-status" data-source="totais" role="img" aria-label="Como estão os enviados"></div>
+        <p class="sg-sub"><span class="sg-pt sg-pt-ok"></span><b data-draw="t-aprovados" data-field="aprovados" data-source="totais" data-row="0">—</b> o portal aceitou</p>
+        <p class="sg-sub"><span class="sg-pt sg-pt-ag"></span><b data-draw="t-aguardando" data-field="aguardando" data-source="totais" data-row="0">—</b> o portal ainda vai olhar</p>
+        <p class="sg-sub"><span class="sg-pt sg-pt-rep"></span><b data-draw="t-reprovados" data-field="reprovados" data-source="totais" data-row="0">—</b> o portal recusou: o cliente precisa mandar outro</p>
       </div>
-      <div class="sg-card" id="card-robo-total">
-        <h2>Enviados pelo robô</h2>
-        <div class="sg-big" data-draw="t-robo" data-source="totais" data-field="robo" data-row="0">—</div>
-        <p class="sg-sub"><b data-draw="t-robo_aprovados" data-source="totais" data-field="robo_aprovados" data-row="0">—</b> aprovados · <b data-draw="t-robo_aguardando" data-source="totais" data-field="robo_aguardando" data-row="0">—</b> aguardando análise · <b data-draw="t-robo_reprovados" data-source="totais" data-field="robo_reprovados" data-row="0">—</b> reprovados.</p>
+      <div class="sg-card" id="card-quem">
+        <h2>Quem enviou</h2>
+        <p class="sg-sub sg-quem"><b data-draw="t-robo" data-field="robo" data-source="totais" data-row="0">—</b> o robô</p>
+        <p class="sg-sub sg-quem"><b data-draw="t-equipe" data-field="equipe" data-source="totais" data-row="0">—</b> a equipe, à mão</p>
+        <p class="sg-sub sg-quem"><b data-draw="t-sem_id" data-field="sem_id" data-source="totais" data-row="0">—</b> não dá para saber</p>
+        <p class="sg-sub">"Não dá para saber": o portal apaga quem enviou quando recusa o documento, e o Bernhoeft não mostra quem enviou.</p>
       </div>
     </div>
   </section>
   <section class="sg-sec" id="responsaveis">
-    <h2>Pendentes: de quem é a ação</h2>
+    <h2>Quem precisa agir no que falta enviar</h2>
     <div class="sg-barra" data-draw="barra-resp" data-source="totais" role="img" aria-label="Divisão das pendentes por responsável"></div>
     <div class="sg-legenda">
       <span><i class="sg-leg-cli"></i>Cliente <b data-draw="t-cliente" data-source="totais" data-field="cliente" data-row="0">—</b></span>
       <span><i class="sg-leg-op"></i>Operação <b data-draw="t-operacao" data-source="totais" data-field="operacao" data-row="0">—</b></span>
       <span><i class="sg-leg-sis"></i>Sistema <b data-draw="t-sistema" data-source="totais" data-field="sistema" data-row="0">—</b></span>
     </div>
-    <p class="sg-nota">Cliente: falta documento, assinatura ou definição. Operação: conferir o PDF e soltar o envio. Sistema: falha nossa (sem regra, sem busca, erro de busca ou de envio); o esperado é zero.</p>
+    <p class="sg-nota">Cliente: falta mandar o documento ou decidir algo. Operação: a equipe precisa conferir. Sistema: um erro nosso, que deveria ser zero.</p>
   </section>
 
   <div class="sg-divisor" id="analises">
-    <h2>Análises</h2>
+    <h2>Detalhes</h2>
     <p>Detalhes para conferir o trabalho do sistema: origem dos envios, motivos, reprovações, o que foi processado em cada período e a lista completa.</p>
   </div>
 
   <section class="sg-sec" id="status-enviados">
-    <h2>Status dos enviados</h2>
+    <h2>Enviados: quem enviou e como estão</h2>
     <div class="sg-tab">
       <table class="sg-matriz" data-source="enviados" data-row-key="status_envio">
         <thead><tr><th data-field="status_envio">Status no portal</th><th class="sg-q" data-field="robo">Robô</th><th class="sg-q" data-field="equipe">Equipe</th><th class="sg-q" data-field="nao_registrado">Origem não registrada</th><th class="sg-q" data-field="total">Total</th></tr></thead>
@@ -278,7 +283,7 @@ body > .sg { max-width: 1200px; margin: 0 auto; }
 
 
   <section class="sg-sec" id="motivos">
-    <h2>Por que as pendentes estão paradas</h2>
+    <h2>Por que ainda não enviamos</h2>
     <div class="sg-tab">
       <table class="sg-motivos" data-source="motivos" data-row-key="motivo">
         <thead><tr><th data-field="descricao">Motivo</th><th data-field="responsavel">Responsável</th><th class="sg-q" data-field="quantidade">Qtd.</th></tr></thead>
@@ -292,7 +297,7 @@ body > .sg { max-width: 1200px; margin: 0 auto; }
 
 
   <section class="sg-sec" id="processado">
-    <h2>O que o sistema processou</h2>
+    <h2>O que os robôs fizeram</h2>
     <div class="sg-periodos" role="group" aria-label="Período">
       <button type="button" class="sg-per" data-periodo="hoje" aria-pressed="true">Hoje</button>
       <button type="button" class="sg-per" data-periodo="ontem" aria-pressed="false">Ontem</button>
@@ -309,17 +314,17 @@ body > .sg { max-width: 1200px; margin: 0 auto; }
         <p class="sg-sub"><b data-draw="p-robo_aprovados" data-source="proc_resumo" data-field="robo_aprovados" data-row="0">—</b> validados pelo portal · <b data-draw="p-robo_em_analise" data-source="proc_resumo" data-field="robo_em_analise" data-row="0">—</b> em análise ou aguardando outro documento</p>
       </div>
       <div class="sg-card" id="card-manual">
-        <h2>Entregues à mão no portal</h2>
+        <h2>Enviados pela equipe</h2>
         <div class="sg-big" data-draw="p-enviados_manual" data-source="proc_resumo" data-field="enviados_manual" data-row="0">—</div>
         <p class="sg-sub">Pela equipe, direto no portal, nas solicitações que o sistema acompanha.</p>
       </div>
       <div class="sg-card" id="card-leituras">
-        <h2>Leituras dos portais</h2>
+        <h2>Vezes que o robô olhou o portal</h2>
         <div class="sg-big" data-draw="p-leituras_total" data-source="p-leituras">—</div>
         <p class="sg-sub">Atlas <b data-draw="p-leituras_atlas" data-source="proc_resumo" data-field="leituras_atlas" data-row="0">—</b> · Bernhoeft <b data-draw="p-leituras_bernhoeft" data-source="proc_resumo" data-field="leituras_bernhoeft" data-row="0">—</b> · com erro <b data-draw="p-leituras_com_erro" data-source="proc_resumo" data-field="leituras_com_erro" data-row="0">—</b></p>
       </div>
       <div class="sg-card" id="card-acoes">
-        <h2>Ações dos robôs</h2>
+        <h2>Tarefas dos robôs</h2>
         <div class="sg-big" data-draw="p-acoes" data-source="proc_resumo" data-field="acoes" data-row="0">—</div>
         <p class="sg-sub">Buscas, montagens, conferências, travas e envios registrados, em <b data-draw="p-solicitacoes_tocadas" data-source="proc_resumo" data-field="solicitacoes_tocadas" data-row="0">—</b> solicitações.</p>
       </div>
@@ -372,7 +377,7 @@ body > .sg { max-width: 1200px; margin: 0 auto; }
 
 
   <section class="sg-sec" id="lista">
-    <h2>Cada solicitação</h2>
+    <h2>Todos os pedidos, um por um</h2>
     <div class="sg-filtros">
       <label for="f-ver">Mostrar</label>
       <select class="dash-select" id="f-ver" aria-label="Filtrar por etapa e status">
@@ -419,8 +424,8 @@ body > .sg { max-width: 1200px; margin: 0 auto; }
 
 
   <section class="sg-sec" id="reprovados">
-    <h2>Reprovados no portal</h2>
-    <p class="sg-nota">Responsabilidade do cliente: mandar o documento correto. O motivo é o texto que o portal deu.</p>
+    <h2>Recusados pelo portal</h2>
+    <p class="sg-nota">O cliente precisa mandar o documento certo. O motivo é o que o portal escreveu.</p>
     <div class="sg-tab">
       <table class="sg-reprovados" data-source="reprovados" data-row-key="id">
         <thead><tr><th data-field="documento">Documento</th><th data-field="unidade">Unidade</th><th data-field="competencia">Competência</th><th data-field="prazo">Prazo</th><th data-field="motivo_reprovacao">Motivo do portal</th><th data-field="quem_enviou">Quem enviou</th></tr></thead>
@@ -465,7 +470,7 @@ document.querySelectorAll('.sg').forEach((root) => {
   root.style.setProperty('--sg-op', dash.colors[1] || dash.colors[0]);
 });
 
-['pendentes', 'pend_atrasados', 'pend_no_prazo', 'enviados', 'aprovados', 'aguardando', 'reprovados', 'robo', 'robo_aprovados', 'robo_aguardando', 'robo_reprovados', 'cliente', 'operacao', 'sistema'].forEach((campo) => {
+['pendentes', 'pend_atrasados', 'pend_no_prazo', 'enviados', 'aprovados', 'aguardando', 'reprovados', 'robo', 'equipe', 'sem_id', 'robo_aprovados', 'robo_aguardando', 'robo_reprovados', 'cliente', 'operacao', 'sistema'].forEach((campo) => {
   dash.draw('t-' + campo, (el) => {
     const t = dash.data('totais');
     el.textContent = t.status === 'ok' && t.data[0] ? SG.fmt.format(Number(t.data[0][campo])) : '—';
@@ -523,7 +528,7 @@ dash.draw('ab-sub', (el) => {
   const a = dash.data('abertas');
   if (a.status !== 'ok' || !a.data) { el.textContent = '—'; return; }
   const p = document.createElement('p'); p.className = 'sg-sub';
-  p.textContent = a.data.por_portal.join(' · ') + '. Solicitações que o portal ainda não aceitou.';
+  p.textContent = a.data.por_portal.join(' · ') + '. Pedidos que o portal ainda não fechou.';
   el.replaceChildren(p);
 });
 dash.draw('ab-dif', (el) => { const a = dash.data('abertas'); el.textContent = a.status === 'ok' && a.data ? SG.fmt.format(a.data.portal - a.data.pendentes) : '—'; });
@@ -532,8 +537,8 @@ dash.draw('ab-dif-sub', (el) => {
   if (a.status !== 'ok' || !a.data) { el.textContent = '—'; return; }
   const d = a.data;
   const linha = (v, txt) => { const p = document.createElement('p'); p.className = 'sg-sub'; const b = document.createElement('b'); b.textContent = SG.fmt.format(v); p.append(b, ' ' + txt); return p; };
-  const ps = [linha(d.analise, 'enviadas, em análise no portal'), linha(d.reprovadas, 'enviadas e reprovadas, esperando o cliente substituir: ' + SG.fmt.format(d.rep_atrasadas) + ' fora do prazo · ' + SG.fmt.format(d.rep_no_prazo) + ' no prazo')];
-  if (d.fora > 0) ps.push(linha(d.fora, 'fora do painel (sem regra ou fora do escopo)'));
+  const ps = [linha(d.reprovadas, 'o portal recusou: o cliente precisa mandar outro (' + SG.fmt.format(d.rep_atrasadas) + ' já fora do prazo)'), linha(d.analise, 'o portal ainda vai olhar')];
+  if (d.fora > 0) ps.push(linha(d.fora, 'são de tipos que não acompanhamos'));
   el.replaceChildren(...ps);
 });
 
