@@ -1,7 +1,7 @@
 # Sincronização Factorial do Evilásio (homologação na VPS): roda e sai, não fica no ar. Só os doc_id de SINC_DOCS (9, 10; o 8 férias passou ao robô Atlas em 09/11);
 # 67/68/69 são do robô Atlas. Sem --gravar só simula (nada no Neon). Rodar sempre pelo cofre:
 #   cd /opt/gesdoc && sops exec-env infra/secrets/hml.enc.env 'docker compose -f services/sincronizacao/compose.hml.yml run --rm sincronizacao'
-#   ... run --rm sincronizacao --gravar      (precisa de SINC_DATABASE_URL = role gesdoc_sync no cofre e do OK do Augusto)
+#   ... run --rm sincronizacao --gravar      (SINC_DATABASE_URL = role sinc_factorial no cofre; a gesdoc_sync não é mais usada)
 # Relatório (sem nome/CPF) em /opt/gesdoc/data/hml/sincronizacao/ultima-*.json; PDFs gravados em .../sincronizacao/downloads,
 # que dentro do container é /srv/gesdoc/downloads (o caminho que vai para documentos.caminho_origem, como no DEPLOY.md dele).
 name: gesdoc-sincronizacao-hml

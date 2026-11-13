@@ -1,0 +1,3 @@
+app/tests
+app/.env*
+**/__pycache__

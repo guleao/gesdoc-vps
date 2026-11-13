@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alertas ODA</title>
+<style>
+  :root {
+    --bg: #f7f6f2; --card: #ffffff; --text: #1f2328; --muted: #5b6168; --line: #e3e1da;
+    --red: #b42318; --red-bg: #fdecea; --amber: #b54708; --amber-bg: #fdf1e3; --gray: #344054; --gray-bg: #eef0f3;
+    --accent: #1d4ed8; --code-bg: #f1efe8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #161718; --card: #1f2022; --text: #e8e6e1; --muted: #a5a39c; --line: #34363a;
+      --red: #f38b82; --red-bg: #3a1f1d; --amber: #f2b27a; --amber-bg: #3a2a1a; --gray: #c4cad3; --gray-bg: #2a2d31;
+      --accent: #8fb3ff; --code-bg: #2a2b2e;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.6 -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+  main { max-width: 960px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 30px; margin: 0 0 4px; }
+  h2 { font-size: 22px; margin: 40px 0 12px; padding-top: 8px; border-top: 1px solid var(--line); }
+  h3 { font-size: 17px; margin: 24px 0 8px; }
+  p, li { color: var(--text); }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px 20px; margin: 16px 0; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+  .pill { display: inline-block; font-size: 13px; font-weight: 600; padding: 2px 10px; border-radius: 999px; }
+  .p-red { background: var(--red-bg); color: var(--red); }
+  .p-amber { background: var(--amber-bg); color: var(--amber); }
+  .p-gray { background: var(--gray-bg); color: var(--gray); }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; }
+  .scroll { overflow-x: auto; }
+  code { background: var(--code-bg); padding: 1px 6px; border-radius: 4px; font-size: 13px; }
+  pre { background: var(--code-bg); padding: 12px 14px; border-radius: 8px; overflow-x: auto; font-size: 13px; line-height: 1.5; }
+  .note { border-left: 4px solid var(--amber); background: var(--amber-bg); padding: 10px 14px; border-radius: 0; margin: 16px 0; }
+  .timeline { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; margin: 12px 0; }
+  .step { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px; font-size: 14px; }
+  .step b { display: block; font-size: 13px; color: var(--muted); font-weight: 600; }
+  .mail { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; }
+  .mail .meta { color: var(--muted); font-size: 13px; margin: 0; }
+  .mail .subject { font-weight: 700; font-size: 16px; margin: 6px 0 4px; }
+  .mail h4 { margin: 18px 0 6px; font-size: 15px; }
+  .mail table { font-size: 12.5px; }
+  .red { color: var(--red); } .amber { color: var(--amber); } .gray { color: var(--gray); }
+  .flow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 12px 0; }
+  .flow .n { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; font-size: 14px; }
+  .flow .arr { color: var(--muted); }
+  footer { color: var(--muted); font-size: 13px; margin-top: 48px; }
+  @page { size: A4; margin: 14mm 12mm; }
+  @media print {
+    body { background: #ffffff; }
+    main { padding: 0; max-width: none; }
+    h2, h3, h4 { break-after: avoid; page-break-after: avoid; }
+    tr, pre, .card, .step, .note, .flow, .timeline { break-inside: avoid; page-break-inside: avoid; }
+    .mail > div, .mail h4 + div { break-inside: avoid; page-break-inside: avoid; }
+    footer { margin-top: 16px; }
+  }
+</style>
+</head>
+<body>
+<main>
+
+<h1>🚨 Alertas ODA</h1>
+<p class="sub">Como funciona o alerta por e-mail de documentos da Equatorial · atualizado em 11/11/2026</p>
+
+<h2>1. Visão geral</h2>
+<p>O Alertas ODA manda, uma vez por dia, um e-mail com os documentos da Equatorial que precisam de atenção. Ele cobre três situações:</p>
+<div class="grid">
+  <div class="card"><span class="pill p-amber">1. A vencer</span><p>Faltam 7, 3, 1 ou 0 dias para o prazo e o documento ainda não foi enviado.</p></div>
+  <div class="card"><span class="pill p-red">2. Enviado e reprovado</span><p>O documento foi enviado e o portal recusou, com o motivo da reprovação.</p></div>
+  <div class="card"><span class="pill p-red">3. Vencido e não enviado</span><p>O prazo já passou e o documento continua pendente no portal.</p></div>
+</div>
+<p>Cada documento é avisado uma única vez em cada situação. Dias sem nada novo não geram e-mail.</p>
+
+<div class="card">
+  <h3 style="margin-top:0">Onde está</h3>
+  <table>
+    <tr><th style="width:30%">Workflow</th><td><code>Alertas EQT</code> no n8n da Stant (<code>n8n.stant-ad.com</code>)</td></tr>
+    <tr><th>Banco</th><td>Neon de produção do GesDoc (o mesmo banco usado pelos robôs e pela sincronização)</td></tr>
+    <tr><th>Envio</th><td>Gmail, pela conta configurada no nó de envio</td></tr>
+    <tr><th>Registro</th><td>Tabela <code>alerta</code> do banco</td></tr>
+  </table>
+</div>
+
+<h3>Fluxo do workflow</h3>
+<div class="flow">
+  <span class="n">⏰ Todo dia às 8h</span><span class="arr">→</span>
+  <span class="n">Buscar prazos e rejeições não avisados</span><span class="arr">→</span>
+  <span class="n">Montar um e-mail por responsável</span><span class="arr">→</span>
+  <span class="n">Enviar e-mail ao responsável</span><span class="arr">→</span>
+  <span class="n">Registrar aviso enviado</span>
+</div>
+<p>Se a busca não encontra nada, o fluxo para logo no início e nenhum e-mail sai.</p>
+
+<h2>2. Quando roda e para quem vai</h2>
+<ul>
+  <li><b>Horário:</b> todo dia às 8h, horário de Brasília, inclusive sábados, domingos e feriados. Assim um prazo que cai no fim de semana também recebe o aviso no dia certo.</li>
+  <li><b>Destinatário:</b> o responsável cadastrado para o tipo de documento, no campo <code>email_responsavel</code> da tabela <code>documento_regras</code>. Hoje todos os 52 tipos apontam para <code>alertasodanip@gmail.com</code>.</li>
+  <li><b>Um e-mail por responsável:</b> se dois tipos de documento têm o mesmo responsável, os itens chegam juntos num único e-mail.</li>
+  <li><b>Cópia:</b> o nó de envio tem uma lista fixa de endereços em cópia, configurada direto no n8n.</li>
+  <li><b>Sem responsável:</b> o tipo de documento não gera aviso. O aviso sai na primeira rodada depois que o e-mail for cadastrado.</li>
+  <li><b>Escopo:</b> só documentos da Equatorial, nos portais Atlas e Bernhoeft. A EDP fica de fora.</li>
+</ul>
+
+<h2>3. O que dispara cada alerta</h2>
+
+<h3><span class="pill p-amber">A vencer</span> marcos de 7, 3, 1 e 0 dias</h3>
+<p>Entra o documento que ainda está <b>pendente no portal</b> (não enviado) e cujo prazo está entre hoje e daqui a 7 dias. O aviso enviado é o do <b>menor marco que ainda cobre os dias restantes</b>:</p>
+<div class="scroll"><table>
+  <tr><th>Dias até o prazo</th><th>Marco do aviso</th><th>Seção no e-mail</th><th>Prioridade</th></tr>
+  <tr><td>0 (vence hoje)</td><td>0</td><td class="red">Vence hoje</td><td>alta</td></tr>
+  <tr><td>1</td><td>1</td><td class="red">Vence amanhã</td><td>alta</td></tr>
+  <tr><td>2 ou 3</td><td>3</td><td class="amber">Vence em até 3 dias</td><td>média</td></tr>
+  <tr><td>4 a 7</td><td>7</td><td class="gray">Vence em até 7 dias</td><td>baixa</td></tr>
+</table></div>
+<p>Se uma rodada falhar ou o documento entrar na lista já dentro da janela, a rodada seguinte manda o marco correspondente aos dias que faltam. Um marco que já passou não é mandado depois.</p>
+
+<h3><span class="pill p-red">Enviado e reprovado</span></h3>
+<p>Entra o documento que foi enviado e reprovado pelo portal. O e-mail traz a data de envio, a situação no portal e o <b>motivo da reprovação completo</b>, como o portal escreveu.</p>
+<p>Sai um novo aviso para o mesmo documento quando:</p>
+<ul>
+  <li>a situação dele muda no portal e ele volta a ser reprovado; ou</li>
+  <li>chega uma reprovação com motivo diferente do que já foi avisado.</li>
+</ul>
+
+<h3><span class="pill p-red">Vencido e não enviado</span></h3>
+<p>Entra o documento que continua pendente no portal com o prazo já passado. Também entram os itens que o próprio portal marca como atrasados, mesmo sem data de prazo gravada, como acontece no Bernhoeft. Cada documento é avisado <b>uma vez por prazo</b>. Se ele ganhar um prazo novo, por exemplo na competência seguinte, sai outro aviso.</p>
+
+<h2>4. Linha do tempo de um documento</h2>
+<p>Exemplo: um documento com prazo em 20/11 que não é enviado.</p>
+<div class="timeline">
+  <div class="step"><b>13/11</b>Vence em até 7 dias</div>
+  <div class="step"><b>14 a 16/11</b>sem aviso</div>
+  <div class="step"><b>17/11</b>Vence em até 3 dias</div>
+  <div class="step"><b>18/11</b>sem aviso</div>
+  <div class="step"><b>19/11</b>Vence amanhã</div>
+  <div class="step"><b>20/11</b>Vence hoje</div>
+  <div class="step"><b>21/11</b>Vencido e não enviado</div>
+</div>
+<p>Se o documento for enviado em qualquer ponto desse caminho, ele sai da lista de pendentes e os avisos de prazo param. Se depois for reprovado, entra no aviso de reprovação.</p>
+
+<h2>5. Layout do e-mail</h2>
+<p>O e-mail é um só por responsável. A sequência é sempre a mesma: <b>1. A vencer</b>, <b>2. Enviados e reprovados</b>, <b>3. Vencidos e não enviados</b>. Seção sem documento não aparece.</p>
+<div class="scroll"><table>
+  <tr><th>Ordem</th><th>Seção</th><th>Cor do título</th><th>Colunas</th></tr>
+  <tr><td rowspan="4">1. A vencer</td><td>Vence hoje</td><td class="red">vermelho</td><td rowspan="4">Documento, De quem, Unidade, Competência, Prazo, Faltam, Motivo, Quem resolve, Portal</td></tr>
+  <tr><td>Vence amanhã</td><td class="red">vermelho</td></tr>
+  <tr><td>Vence em até 3 dias</td><td class="amber">laranja</td></tr>
+  <tr><td>Vence em até 7 dias</td><td class="gray">cinza-escuro</td></tr>
+  <tr><td>2. Reprovados</td><td>Enviados e reprovados no portal</td><td class="red">vermelho</td><td>Documento, De quem, Unidade, Competência, Enviado em, Situação, Motivo da reprovação</td></tr>
+  <tr><td>3. Vencidos</td><td>Vencidos e não enviados</td><td class="red">vermelho</td><td>Documento, De quem, Unidade, Competência, Prazo, Atraso, Motivo, Quem resolve, Portal</td></tr>
+</table></div>
+
+<h3>Assunto</h3>
+<p>O assunto resume o conteúdo na mesma sequência do corpo e começa com <b>URGENTE</b> quando há documento vencido, vencendo hoje ou vencendo amanhã:</p>
+<pre>🚨 Alertas ODA - URGENTE: 4 a vencer, 1 reprovado, 2 vencidos - Equatorial
+🚨 Alertas ODA - 2 a vencer - Equatorial</pre>
+
+<h3>Colunas explicadas</h3>
+<div class="scroll"><table>
+  <tr><th style="width:22%">Coluna</th><th>O que mostra</th></tr>
+  <tr><td>De quem</td><td>Se o documento é de um colaborador: nome e CPF (000.000.000-00). Se é da empresa: “Empresa”, o CNPJ da filial e o número do pedido no portal.</td></tr>
+  <tr><td>Motivo</td><td>Por que o documento ainda não foi enviado, como o sistema registra. Exemplos: “O documento não está na Factorial ou no SharePoint”, “Falta uma definição de regra ou de pasta”, “Nenhum robô busca este tipo de documento”, “Documento existe sem assinatura”.</td></tr>
+  <tr><td>Quem resolve</td><td>Cliente ou Sistema, conforme o catálogo de motivos.</td></tr>
+  <tr><td>Atraso / Faltam</td><td>Dias depois do prazo (vencidos) ou até o prazo (a vencer).</td></tr>
+  <tr><td>Motivo da reprovação</td><td>O texto completo que o portal informou ao recusar o documento.</td></tr>
+</table></div>
+
+<h3>Exemplo</h3>
+<p>Dados fictícios, só para mostrar o formato.</p>
+<div class="mail">
+  <p class="meta">Para: alertasodanip@gmail.com · Cc: endereços configurados no n8n</p>
+  <p class="subject">🚨 Alertas ODA - URGENTE: 4 a vencer, 1 reprovado, 2 vencidos - Equatorial</p>
+  <p class="meta">Documentos sob sua responsabilidade que precisam de atenção.</p>
+
+  <h4 class="red">Vence hoje (1)</h4>
+  <div class="scroll"><table>
+    <tr><th>Documento</th><th>De quem</th><th>Unidade</th><th>Prazo</th><th>Faltam</th><th>Motivo</th><th>Quem resolve</th></tr>
+    <tr><td>FGTS - Comprovante de pagamento</td><td>Empresa<br>CNPJ 02.867.678/0007-97</td><td>EQUATORIAL GOIÁS</td><td>11/11/2026</td><td>0 dias</td><td>O documento não está na Factorial ou no SharePoint</td><td>Cliente</td></tr>
+  </table></div>
+
+  <h4 class="red">Vence amanhã (1)</h4>
+  <div class="scroll"><table>
+    <tr><th>Documento</th><th>De quem</th><th>Unidade</th><th>Prazo</th><th>Faltam</th><th>Motivo</th><th>Quem resolve</th></tr>
+    <tr><td>TRCT</td><td>Fulano de Tal<br>CPF 123.456.789-01</td><td>EQUATORIAL MARANHÃO</td><td>12/11/2026</td><td>1 dia</td><td>Documento existe sem assinatura</td><td>Cliente</td></tr>
+  </table></div>
+
+  <h4 class="amber">Vence em até 3 dias (1)</h4>
+  <div class="scroll"><table>
+    <tr><th>Documento</th><th>De quem</th><th>Unidade</th><th>Prazo</th><th>Faltam</th><th>Motivo</th><th>Quem resolve</th></tr>
+    <tr><td>FGTS - RE</td><td>Empresa<br>Pedido 00012</td><td>CEA</td><td>13/11/2026</td><td>2 dias</td><td>O documento não está na Factorial ou no SharePoint</td><td>Cliente</td></tr>
+  </table></div>
+
+  <h4 class="gray">Vence em até 7 dias (1)</h4>
+  <div class="scroll"><table>
+    <tr><th>Documento</th><th>De quem</th><th>Unidade</th><th>Prazo</th><th>Faltam</th><th>Motivo</th><th>Quem resolve</th></tr>
+    <tr><td>DCTFWeb</td><td>Empresa<br>Pedido 00015</td><td>EQUATORIAL ALAGOAS</td><td>17/11/2026</td><td>6 dias</td><td>Nenhum robô busca este tipo de documento</td><td>Sistema</td></tr>
+  </table></div>
+
+  <h4 class="red">Enviados e reprovados no portal (1)</h4>
+  <div class="scroll"><table>
+    <tr><th>Documento</th><th>De quem</th><th>Unidade</th><th>Enviado em</th><th>Situação</th><th>Motivo da reprovação</th></tr>
+    <tr><td>Vale Transporte</td><td>Empresa<br>Pedido 00007</td><td>EQUATORIAL MARANHÃO</td><td>15/10/2026</td><td>Reprovado (atrasado)</td><td>Documento recusado. Não encontramos na relação de beneficiários alguns colaboradores…</td></tr>
+  </table></div>
+
+  <h4 class="red">Vencidos e não enviados (2)</h4>
+  <div class="scroll"><table>
+    <tr><th>Documento</th><th>De quem</th><th>Unidade</th><th>Prazo</th><th>Atraso</th><th>Motivo</th><th>Quem resolve</th></tr>
+    <tr><td>Vale Transporte</td><td>Empresa<br>CNPJ 02.867.678/0007-97<br>Pedido 00007</td><td>EQUATORIAL PIAUÍ</td><td>10/11/2026</td><td>1 dia</td><td>O documento não está na Factorial ou no SharePoint</td><td>Cliente</td></tr>
+    <tr><td>Plano de Saúde</td><td>Empresa<br>Pedido 00007</td><td>EQUATORIAL PARÁ</td><td>10/11/2026</td><td>1 dia</td><td>Falta uma definição de regra ou de pasta</td><td>Cliente</td></tr>
+  </table></div>
+</div>
+<p>As colunas Competência e Portal também aparecem no e-mail real; foram omitidas no exemplo para caber na tela.</p>
+
+<h2>6. Como o sistema evita avisos repetidos</h2>
+<p>Depois que o e-mail é enviado, o último passo grava uma linha na tabela <code>alerta</code> para cada documento avisado. Na rodada seguinte, a busca ignora quem já tem essa linha.</p>
+<div class="scroll"><table>
+  <tr><th>Situação</th><th><code>tipo_alerta</code></th><th>O que identifica o aviso</th></tr>
+  <tr><td>A vencer</td><td><code>PRAZO_VENCIMENTO</code></td><td>Documento + data do prazo + marco (7, 3, 1 ou 0)</td></tr>
+  <tr><td>Reprovado</td><td><code>DOCUMENTO_REJEITADO</code></td><td>Documento + motivo da reprovação, desde a última mudança de situação no portal</td></tr>
+  <tr><td>Vencido</td><td><code>DOCUMENTO_VENCIDO</code></td><td>Documento + data do prazo</td></tr>
+</table></div>
+<div class="note"><b>Ordem importa:</b> o registro só é gravado depois do envio. Se o e-mail falhar, nada é gravado e a próxima rodada tenta de novo. Se o e-mail sair e o registro falhar, a próxima rodada repete o aviso.</div>
+
+<h2>7. De onde vêm os dados</h2>
+<div class="scroll"><table>
+  <tr><th style="width:28%">Fonte</th><th>O que fornece</th></tr>
+  <tr><td><code>v_solicitacoes</code> (view)</td><td>Etapa do documento (pendente, enviado, fora do portal), dias até o prazo, situação no portal, motivo e quem resolve. É mantida pelo sistema do Augusto a partir das leituras dos portais.</td></tr>
+  <tr><td><code>documentos</code></td><td>Nome do documento, unidade, competência, colaborador, CPF, CNPJ da filial, número do pedido, data de envio e motivo da reprovação.</td></tr>
+  <tr><td><code>documento_regras</code></td><td>O responsável de cada tipo de documento (<code>email_responsavel</code>).</td></tr>
+  <tr><td><code>documento_destinos</code></td><td>Quando a situação do documento mudou no Atlas, usada para decidir se uma reprovação é nova.</td></tr>
+  <tr><td><code>alerta</code></td><td>Histórico do que já foi avisado.</td></tr>
+</table></div>
+<p>O alerta só lê essas tabelas e só grava na tabela <code>alerta</code>. Ele não altera documentos nem envia nada aos portais.</p>
+
+<h2>8. Operação do dia a dia</h2>
+
+<h3>Trocar ou cadastrar o responsável</h3>
+<pre>-- um tipo de documento
+UPDATE documento_regras SET email_responsavel = 'pessoa@empresa.com' WHERE doc_id = 25;
+
+-- mais de um endereço para o mesmo tipo
+UPDATE documento_regras SET email_responsavel = 'a@empresa.com, b@empresa.com' WHERE doc_id = 25;</pre>
+<p>Vale na próxima rodada. Itens que ainda não foram avisados vão para o novo endereço.</p>
+
+<h3>Reenviar um aviso já enviado</h3>
+<p>Apague os registros do envio na tabela <code>alerta</code> e rode o workflow de novo. Para ver o que cada envio gravou:</p>
+<pre>SELECT date_trunc('second', criado_em) AS envio, tipo_alerta, count(*), min(id), max(id)
+  FROM alerta
+ WHERE tipo_alerta IN ('PRAZO_VENCIMENTO', 'DOCUMENTO_VENCIDO', 'DOCUMENTO_REJEITADO')
+ GROUP BY 1, 2 ORDER BY 1 DESC;</pre>
+
+<h3>Rodar manualmente</h3>
+<p>No n8n, “Execute workflow” roda o <b>rascunho</b> atual. A rodada das 8h usa a <b>versão publicada</b>. Uma mudança só vale para a rodada automática depois de publicada.</p>
+
+<h3>Testar sem enviar</h3>
+<p>Para testar a montagem do e-mail sem disparar nada, desative ao mesmo tempo os nós “Enviar e-mail ao responsável” e “Registrar aviso enviado”. Desativar só o envio faz o registro gravar avisos que não saíram, e esses documentos não seriam mais avisados.</p>
+
+<h3>Ao editar o workflow</h3>
+<p>Ao salvar alterações pelo MCP, o n8n pode ligar automaticamente uma credencial de banco errada (já aconteceu com a credencial de outro projeto). Depois de qualquer alteração, confira se os dois nós de banco usam a credencial do Neon do GesDoc.</p>
+
+<h2>9. Limitações e pontos de atenção</h2>
+<ul>
+  <li><b>Bernhoeft sem prazo:</b> os itens do Bernhoeft não têm data de prazo no banco, então não recebem os avisos de 7, 3, 1 e 0 dias. Entram nos vencidos quando o portal os marca como atrasados, e nos reprovados.</li>
+  <li><b>EDP fora:</b> o filtro é só da Equatorial.</li>
+  <li><b>Vencido avisa uma vez:</b> o documento vencido não recebe lembrete diário. Ele é avisado uma vez por prazo.</li>
+  <li><b>Poucos documentos com colaborador:</b> a maioria dos documentos é da empresa (FGTS, benefícios, DCTFWeb). Nome e CPF só aparecem quando o documento é de uma pessoa.</li>
+  <li><b>Primeira rodada com responsáveis novos:</b> quando um tipo ganha responsável, ele recebe de uma vez tudo o que estava pendente daquele tipo.</li>
+  <li><b>Dependência das leituras dos portais:</b> o alerta usa a última leitura feita pelos robôs. Se a leitura estiver desatualizada, o e-mail também estará.</li>
+</ul>
+
+<div class="note"><b>Situação em 11/11/2026:</b> a versão publicada já inclui vencidos, marcos de prazo, reprovados com motivo e motivo nos vencidos e a vencer. A coluna “De quem” (nome, CPF, CNPJ e pedido) e a sequência das seções (a vencer, reprovados, vencidos) estão no rascunho e passam a valer na rodada automática depois de publicadas.</div>
+
+<footer>GesDoc · Alertas ODA · documento interno</footer>
+</main>
+</body>
+</html>

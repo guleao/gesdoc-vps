@@ -1,0 +1,932 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Solicitações ODA NIP</title>
+<style>
+:root {
+  --color-fg: #1f1e1b; --color-fg-muted: #6b6860; --color-bg: #faf9f5; --color-panel: #ffffff; --color-border-line: #e3e0d8;
+  --color-ok: #2f7d4f; --color-warn: #a35f00; --color-bad: #b4372f; --cds-chart-muted: #c9c5bb;
+  --font-anthropic-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; --font-anthropic-serif: Georgia, "Times New Roman", serif;
+  --cds-font-size-caption: 13px; --cds-font-size-body: 15px; --cds-font-size-heading: 18px; --cds-font-size-title: 30px; --cds-font-weight-medium: 600;
+  --cds-gap-xs: 6px; --cds-gap-sm: 10px; --cds-gap-md: 16px; --cds-gap-lg: 24px; --cds-gap-xl: 36px; --cds-pad-lg: 18px; --cds-radius: 10px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --color-fg: #ece9e2; --color-fg-muted: #a39f95; --color-bg: #1c1b19; --color-panel: #262522; --color-border-line: #3a3834;
+  --color-ok: #6cc28e; --color-warn: #e6a64a; --color-bad: #ee7b72; --cds-chart-muted: #55524c; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --color-fg: #ece9e2; --color-fg-muted: #a39f95; --color-bg: #1c1b19; --color-panel: #262522; --color-border-line: #3a3834;
+  --color-ok: #6cc28e; --color-warn: #e6a64a; --color-bad: #ee7b72; --cds-chart-muted: #55524c; color-scheme: dark; }
+html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
+body { padding: 32px max(16px, env(safe-area-inset-left)) 64px; }
+body > .sg { max-width: 1200px; margin: 0 auto; }
+.dash-select { font: inherit; font-size: var(--cds-font-size-caption); padding: 5px 10px; border-radius: 8px; border: 1px solid var(--color-border-line); background: var(--color-panel); color: var(--color-fg); }
+.vps-rodape { max-width: 1200px; margin: 24px auto 0; font: 13px var(--font-anthropic-sans); color: var(--color-fg-muted); }
+.vps-erro { color: var(--color-bad); }
+</style>
+</head>
+<body>
+<script>
+// Adaptador: implementa na VPS a mesma interface "dash" que o painel usa no claude.ai.
+// Os dados vêm de /api/dados/<consulta> (servidor deste serviço, só leitura). Recarrega a cada 5 minutos.
+(function () {
+  const USA_PERIODO = ["proc_resumo", "proc_acoes", "proc_envios", "proc_eventos"];
+  const CONSULTAS = ["totais", "saude", "enviados", "atlas_abas", "alertas_resumo", "alertas", "motivos", "lista", "reprovados", "proc_resumo", "proc_acoes", "proc_envios", "proc_eventos"];
+  const PERIODOS = ['hoje', 'ontem', '7d', '30d'];
+  const estado = {};            // id -> {status, data}
+  const desenhos = new Map();   // nome -> fn(el)
+  const calculos = new Map();   // id -> {inputs, fn}
+  const ouvintes = [];
+  let params = { periodo: 'hoje' };
+  try { const p = new URLSearchParams(location.search).get('periodo'); if (PERIODOS.includes(p)) params.periodo = p; } catch (e) {}
+
+  function corDe(v, reserva) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim() || reserva; }
+  function recalcular() {
+    calculos.forEach((c, id) => {
+      const ins = c.inputs.map((i) => estado[i]);
+      if (ins.every((x) => x && x.status === 'ok')) {
+        try { estado[id] = { status: 'ok', data: c.fn(...ins.map((x) => x.data)) }; } catch (e) { estado[id] = { status: 'error', data: null, error: String(e) }; }
+      } else if (ins.some((x) => x && x.status === 'error')) estado[id] = { status: 'error', data: null };
+      else estado[id] = { status: 'loading', data: null };
+    });
+  }
+  function desenhar(nome) {
+    const fn = desenhos.get(nome); if (!fn) return;
+    document.querySelectorAll('[data-draw="' + nome + '"]').forEach((el) => { try { fn(el); } catch (e) { console.error('desenho', nome, e); } });
+  }
+  function tudo() { recalcular(); desenhos.forEach((_, n) => desenhar(n)); ouvintes.forEach((f) => { try { f(); } catch (e) { console.error(e); } }); }
+  function marcar(id, valor) {
+    document.querySelectorAll('[data-source]').forEach((el) => {
+      if (el.dataset.source.split(/\s+/).includes(id)) { if (valor) el.setAttribute('data-dash-source-state', valor); else el.removeAttribute('data-dash-source-state'); }
+    });
+  }
+  let ultimaErro = null;
+  async function carregar(id) {
+    if (estado[id] && estado[id].status === 'ok') marcar(id, 'refreshing');
+    else estado[id] = { status: 'loading', data: null };
+    const q = USA_PERIODO.includes(id) ? '?periodo=' + encodeURIComponent(params.periodo) : '';
+    try {
+      const r = await fetch('api/dados/' + id + q, { cache: 'no-store' });
+      const j = await r.json();
+      if (!r.ok) throw new Error(j.erro || ('HTTP ' + r.status));
+      estado[id] = { status: 'ok', data: j.linhas || [] };
+    } catch (e) {
+      estado[id] = { status: 'error', data: null, error: String(e.message || e) };
+      ultimaErro = id + ': ' + (e.message || e);
+    }
+    marcar(id, null);
+    tudo();
+  }
+  async function carregarTodas(ids) {
+    ultimaErro = null;
+    await Promise.all(ids.map(carregar));
+    const r = document.getElementById('vps-atualizado');
+    if (r) {
+      r.className = ultimaErro ? 'vps-erro' : '';
+      r.textContent = ultimaErro ? 'Falha ao ler o banco (' + ultimaErro + '). Nova tentativa em 5 minutos.'
+        : 'Atualizado às ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) + '. Recarrega a cada 5 minutos.';
+    }
+  }
+
+  window.dash = {
+    colors: [corDe('--sg-cor-1', '#3b6fb6'), corDe('--sg-cor-2', '#c7782c'), '#5b9a6b', '#8a6bb8'],
+    data(id) { return estado[id] || { status: 'loading', data: null }; },
+    draw(nome, fn) { if (fn) { desenhos.set(nome, fn); desenhar(nome); } else desenhar(nome); },
+    calc(id, def) { calculos.set(id, def); recalcular(); },
+    onData(fn) { ouvintes.push(fn); },
+    params() { return { ...params }; },
+    setParams(p) {
+      const novo = { ...params, ...p };
+      if (!PERIODOS.includes(novo.periodo)) return;
+      const mudou = novo.periodo !== params.periodo; params = novo;
+      try { const u = new URL(location.href); u.searchParams.set('periodo', params.periodo); history.replaceState(null, '', u); } catch (e) {}
+      if (mudou) carregarTodas(USA_PERIODO);
+    },
+  };
+  document.addEventListener('DOMContentLoaded', () => {
+    carregarTodas(CONSULTAS);
+    setInterval(() => carregarTodas(CONSULTAS), 5 * 60 * 1000);
+  });
+})();
+</script>
+<style>
+.sg { display: grid; gap: var(--cds-gap-xl); font-family: var(--font-anthropic-sans); color: var(--color-fg); }
+.sg-head { display: grid; gap: var(--cds-gap-sm); }
+.sg-title { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); margin: 0; }
+.sg-lead { margin: 0; font-size: var(--cds-font-size-body); max-width: 70ch; }
+.sg-lead b { font-variant-numeric: tabular-nums; }
+.sg-saude { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--cds-gap-xs) var(--cds-gap-lg); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.sg-relogio { display: flex; flex-wrap: wrap; gap: var(--cds-gap-sm); list-style: none; margin: 0; padding: 0; }
+.sg-relogio li { display: flex; align-items: baseline; gap: 8px; background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: 999px; padding: 6px 14px; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.sg-relogio li b { color: var(--color-fg); }
+.sg-relogio .sg-min { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); color: var(--color-fg); font-variant-numeric: tabular-nums; }
+.sg-relogio li.sg-velho .sg-min { color: var(--color-warn); }
+.sg-relogio li.sg-parado { border-color: var(--color-bad); }
+.sg-relogio li.sg-parado .sg-min { color: var(--color-bad); }
+.sg-saude li { display: flex; flex-wrap: wrap; gap: 4px; align-items: baseline; }
+.sg-warn { color: var(--color-warn); font-weight: var(--cds-font-weight-medium); }
+.sg-bad { color: var(--color-bad); font-weight: var(--cds-font-weight-medium); }
+.sg-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--cds-gap-md); }
+.sg-card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); display: grid; gap: var(--cds-gap-xs); align-content: start; min-width: 0; }
+.sg-card h2 { margin: 0; font-size: var(--cds-font-size-caption); font-weight: var(--cds-font-weight-medium); color: var(--color-fg-muted); text-transform: uppercase; letter-spacing: .05em; }
+.sg-big { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: 40px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.sg-sub { margin: 0; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.sg-desde { font-family: var(--font-anthropic-sans); font-size: var(--cds-font-size-caption); font-weight: 400; color: var(--color-fg-muted); margin-left: 8px; }
+.sg-recuo { padding-left: 16px; }
+.sg-quem { font-size: var(--cds-font-size-body); color: var(--color-fg); }
+.sg-quem b { font-family: var(--font-anthropic-serif); font-size: 26px; font-weight: 400; margin-right: 6px; }
+.sg-sub b { color: var(--color-fg); font-variant-numeric: tabular-nums; }
+.sg-card.sg-acao { border-top: 3px solid var(--color-warn); }
+.sg-sec { display: grid; gap: var(--cds-gap-md); min-width: 0; }
+.sg-sec > h2 { margin: 0; font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); }
+.sg-nota { margin: 0; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); max-width: 75ch; }
+.sg-barra { display: flex; height: 28px; border-radius: var(--cds-radius); overflow: hidden; background: var(--color-panel); border: 1px solid var(--color-border-line); min-height: 28px; }
+.sg-barra > div { display: flex; align-items: center; padding: 0 8px; color: #fff; font-size: var(--cds-font-size-caption); font-weight: var(--cds-font-weight-medium); white-space: nowrap; overflow: hidden; min-width: 0; }
+.sg-legenda { display: flex; flex-wrap: wrap; gap: var(--cds-gap-xs) var(--cds-gap-lg); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.sg-legenda span { display: inline-flex; gap: 6px; align-items: center; }
+.sg-legenda i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+.sg-leg-cli { background: var(--sg-cli); } .sg-leg-op { background: var(--sg-op); } .sg-leg-sis { background: var(--color-bad); }
+.sg-tab { overflow-x: auto; border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); background: var(--color-panel); }
+.sg-tab table { width: 100%; border-collapse: collapse; font-size: var(--cds-font-size-caption); }
+.sg-tab th, .sg-tab td { padding: 8px 10px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--color-border-line); }
+.sg-tab tr:last-child td { border-bottom: 0; }
+.sg-tab th { font-weight: var(--cds-font-weight-medium); color: var(--color-fg-muted); white-space: nowrap; }
+.sg-tab td.sg-q, .sg-tab th.sg-q { text-align: right; font-variant-numeric: tabular-nums; }
+.sg-tab td small { display: block; color: var(--color-fg-muted); margin-top: 2px; }
+.sg-motivos td:first-child { min-width: 220px; }
+.sg-mbar { display: block; height: 6px; border-radius: 3px; margin-top: 6px; }
+.sg-chip { display: inline-block; padding: 2px 7px; border-radius: 4px; font-weight: var(--cds-font-weight-medium); white-space: nowrap; border: 1px solid currentColor; }
+.sg-c-rep { color: var(--color-bad); } .sg-c-atr { color: var(--color-warn); } .sg-c-pra { color: var(--color-fg-muted); }
+.sg-c-cli { color: var(--sg-cli); } .sg-c-op { color: var(--sg-op); } .sg-c-sis { color: var(--color-bad); }
+.sg-filtros { display: flex; flex-wrap: wrap; gap: var(--cds-gap-sm); align-items: center; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.sg-lista td:nth-child(2) { min-width: 200px; } .sg-lista td:nth-child(7) { min-width: 240px; } .sg-lista td:nth-child(8) { min-width: 220px; }
+.sg-def { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.sg-def summary { cursor: pointer; color: var(--color-fg); }
+.sg-def dl { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; margin: 10px 0 0; }
+.sg-def dt { color: var(--color-fg); font-weight: var(--cds-font-weight-medium); }
+.sg-def dd { margin: 0; }
+[data-dash-source-state=refreshing] { opacity: .5; }
+.sg-periodos { display: flex; flex-wrap: wrap; gap: var(--cds-gap-xs); align-items: center; }
+.sg-per { font: inherit; font-size: var(--cds-font-size-caption); font-weight: var(--cds-font-weight-medium); padding: 6px 14px; border-radius: 999px; border: 1px solid var(--color-border-line); background: var(--color-panel); color: var(--color-fg); cursor: pointer; }
+.sg-per[aria-pressed="true"] { background: var(--color-fg); color: var(--color-bg); border-color: var(--color-fg); }
+.sg-per:focus-visible { outline: 2px solid var(--color-fg); outline-offset: 2px; }
+.sg-intervalo { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin-left: 6px; }
+.sg-h3, .sg-conf h3 { margin: 0; font-size: var(--cds-font-size-body); font-weight: var(--cds-font-weight-medium); }
+.sg-conf { display: grid; gap: var(--cds-gap-xs); background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); }
+.sg-porque:empty { display: none; }
+.sg-conf p { margin: 0; max-width: 75ch; font-size: var(--cds-font-size-body); }
+.sg-conf .sg-nota { font-size: var(--cds-font-size-caption); }
+.sg-alerta { margin: 0; color: var(--color-warn); font-weight: var(--cds-font-weight-medium); font-size: var(--cds-font-size-body); }
+.sg-alerta:empty { display: none; }
+.sg-mt { margin-top: 10px; }
+.sg-c-ok { color: var(--color-ok); }
+.sg-eventos td:nth-child(8) { min-width: 260px; }
+.sg-envios td:nth-child(3) { min-width: 200px; }
+.sg-reprovados td:nth-child(5) { min-width: 280px; }
+.sg-lista td:nth-child(8) { min-width: 140px; } .sg-lista td:nth-child(9) { min-width: 220px; }
+.sg-divisor { display: grid; gap: 4px; border-top: 1px solid var(--color-border-line); padding-top: var(--cds-pad-lg); margin-top: var(--cds-gap-md); }
+.sg-divisor h2 { margin: 0; font-size: var(--cds-font-size-caption); font-weight: var(--cds-font-weight-medium); text-transform: uppercase; letter-spacing: .08em; color: var(--color-fg-muted); }
+.sg-divisor p { margin: 0; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); max-width: 75ch; }
+.sg-barra-st { height: 12px; min-height: 12px; margin: 4px 0 2px; }
+.sg-barra-st > div { padding: 0; }
+.sg-pt { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 4px; vertical-align: 0; }
+.sg-pt-ok { background: var(--color-ok); } .sg-pt-ag { background: var(--cds-chart-muted, var(--color-fg-muted)); } .sg-pt-rep { background: var(--color-bad); }
+.sg-indice { position: sticky; top: 0; z-index: 2; display: flex; flex-wrap: wrap; gap: var(--cds-gap-xs); padding: 10px 0; background: var(--color-bg); border-bottom: 1px solid var(--color-border-line); }
+.sg-indice a { font-size: var(--cds-font-size-caption); font-weight: var(--cds-font-weight-medium); padding: 6px 14px; border-radius: 999px; border: 1px solid var(--color-border-line); background: var(--color-panel); color: var(--color-fg); text-decoration: none; }
+.sg-indice a:hover, .sg-indice a:focus-visible { border-color: var(--color-fg); outline: none; }
+.sg-parte { display: grid; gap: var(--cds-gap-xl); min-width: 0; scroll-margin-top: 64px; }
+.sg-parte + .sg-parte { border-top: 2px solid var(--color-border-line); padding-top: var(--cds-gap-xl); }
+.sg-parte-cab { display: flex; gap: var(--cds-gap-md); align-items: flex-start; }
+.sg-parte-num { flex: none; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--color-fg); color: var(--color-bg); font-weight: var(--cds-font-weight-medium); font-size: var(--cds-font-size-body); }
+.sg-parte-cab h2 { margin: 0; font-family: var(--font-anthropic-serif); font-weight: 400; font-size: 24px; }
+.sg-parte-cab p { margin: 4px 0 0; font-size: var(--cds-font-size-body); color: var(--color-fg-muted); max-width: 75ch; }
+.sg-atlas { display: grid; gap: var(--cds-gap-sm); }
+.sg-atlas-cli { margin: 0; font-size: var(--cds-font-size-body); font-weight: var(--cds-font-weight-medium); }
+.sg-abas { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: var(--cds-gap-sm); }
+.sg-aba { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: 8px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: var(--cds-font-size-body); }
+.sg-aba b { font-variant-numeric: tabular-nums; font-size: var(--cds-font-size-heading); }
+.sg-aba.sg-aba-atr { border-left: 3px solid var(--color-warn); }
+.sg-aba.sg-aba-rep { border-left: 3px solid var(--color-bad); }
+.sg-aba.sg-aba-ent { border-left: 3px solid var(--color-ok); }
+.sg-alertas { border-left: 3px solid var(--color-warn); padding-left: var(--cds-pad-lg); }
+.sg-alertas > h2 { color: var(--color-warn); }
+</style>
+
+<div class="sg" id="painel">
+
+  <header class="sg-head" id="topo">
+    <h1 class="sg-title">Solicitações ODA NIP</h1>
+    <p class="sg-lead" id="resumo">O portal pede documentos. O robô procura cada um e envia sozinho. Aqui você vê o que falta, o que já foi e quem enviou.</p>
+    <ul class="sg-relogio" id="leituras" data-draw="saude" data-source="saude" aria-live="polite"></ul>
+  </header>
+
+  <nav class="sg-indice" aria-label="Partes do painel">
+    <a href="#parte-geral">1. Resumo geral</a>
+    <a href="#parte-atlas">2. No portal Atlas</a>
+    <a href="#parte-robos">3. O que os robôs fizeram</a>
+    <a href="#parte-detalhes">4. Detalhes</a>
+  </nav>
+
+  <div class="sg-parte" id="parte-geral">
+    <div class="sg-parte-cab">
+      <span class="sg-parte-num">1</span>
+      <div><h2>Resumo geral</h2><p>O que o sistema encontrou nos dois portais, Atlas e Bernhoeft: o que eles pedem, o que falta enviar, o que vence nos próximos dias e o que já foi enviado.</p></div>
+    </div>
+  <section class="sg-cards" id="grupos">
+    <div class="sg-card" id="card-abertas">
+      <h2>O portal está pedindo</h2>
+      <div class="sg-big" data-draw="ab-total" data-source="saude">—</div>
+      <div data-draw="ab-sub" data-source="saude" style="display:grid;gap:4px">—</div>
+    </div>
+    <div class="sg-card sg-acao" id="card-pendentes">
+      <h2>Falta enviar</h2>
+      <div class="sg-big" data-draw="t-pendentes" data-field="pendentes" data-source="totais" data-row="0">—</div>
+      <p class="sg-sub"><b data-draw="t-pend_atrasados" data-field="pend_atrasados" data-source="totais" data-row="0">—</b> já passaram do prazo · <b data-draw="t-pend_no_prazo" data-field="pend_no_prazo" data-source="totais" data-row="0">—</b> ainda estão no prazo</p>
+    </div>
+    <div class="sg-card" id="card-diferenca">
+      <h2>Já enviamos, o portal ainda não fechou</h2>
+      <div class="sg-big" data-draw="ab-dif" data-source="saude">—</div>
+      <div data-draw="ab-dif-sub" data-source="saude" style="display:grid;gap:4px">—</div>
+    </div>
+  </section>
+
+  <section class="sg-sec sg-alertas" id="alertas">
+    <h2>Vencem nos próximos 7 dias</h2>
+    <p class="sg-lead"><b data-draw="a-total" data-source="alertas_resumo" data-field="total" data-row="0">—</b> pendentes ainda no prazo vencem nos próximos 7 dias: <b data-draw="a-vence_hoje" data-source="alertas_resumo" data-field="vence_hoje" data-row="0">—</b> hoje, <b data-draw="a-em_1_a_3" data-source="alertas_resumo" data-field="em_1_a_3" data-row="0">—</b> em 1 a 3 dias e <b data-draw="a-em_4_a_7" data-source="alertas_resumo" data-field="em_4_a_7" data-row="0">—</b> em 4 a 7 dias. Cliente <b data-draw="a-cliente" data-source="alertas_resumo" data-field="cliente" data-row="0">—</b> · Operação <b data-draw="a-operacao" data-source="alertas_resumo" data-field="operacao" data-row="0">—</b> · Sistema <b data-draw="a-sistema" data-source="alertas_resumo" data-field="sistema" data-row="0">—</b>.</p>
+    <div class="sg-tab">
+      <table class="sg-alerta-tab" data-source="alertas" data-row-key="id">
+        <thead><tr><th data-field="dias_para_prazo">Vence</th><th data-field="documento">Documento</th><th data-field="unidade">Unidade</th><th data-field="competencia">Competência</th><th data-field="prazo">Prazo</th><th data-field="responsavel">Responsável</th><th data-field="descricao">Motivo</th></tr></thead>
+        <tbody data-draw="alertas"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="sg-sec" id="envios">
+    <h2>Tudo o que já enviamos <span class="sg-desde">pedidos vistos no portal desde 13/10/2026</span></h2>
+    <div class="sg-cards">
+      <div class="sg-card" id="card-enviados">
+        <h2>Enviados</h2>
+        <div class="sg-big" data-draw="t-enviados" data-field="enviados" data-source="totais" data-row="0">—</div>
+        <div class="sg-barra sg-barra-st" data-draw="barra-status" data-source="totais" role="img" aria-label="Como estão os enviados"></div>
+        <p class="sg-sub"><span class="sg-pt sg-pt-ok"></span><b data-draw="t-aprovados" data-field="aprovados" data-source="totais" data-row="0">—</b> o portal aceitou</p>
+        <p class="sg-sub"><span class="sg-pt sg-pt-ag"></span><b data-draw="t-aguardando" data-field="aguardando" data-source="totais" data-row="0">—</b> ainda sem resposta do portal:</p>
+        <p class="sg-sub sg-recuo"><b data-draw="t-em_analise" data-field="em_analise" data-source="totais" data-row="0">—</b> em análise</p>
+        <p class="sg-sub sg-recuo"><b data-draw="t-aguard_outro" data-field="aguard_outro" data-source="totais" data-row="0">—</b> esperando outro documento ser aceito (já foi entregue, mas o Atlas só analisa depois que outro documento ligado a ele for aprovado; funciona como uma fila)</p>
+        <p class="sg-sub sg-recuo"><b data-draw="t-sem_atualizar" data-field="sem_atualizar" data-source="totais" data-row="0">—</b> enviados, o portal ainda não atualizou</p>
+        <p class="sg-sub"><span class="sg-pt sg-pt-rep"></span><b data-draw="t-reprovados" data-field="reprovados" data-source="totais" data-row="0">—</b> o portal recusou: o cliente precisa mandar outro</p>
+      </div>
+      <div class="sg-card" id="card-quem">
+        <h2>Quem enviou</h2>
+        <p class="sg-sub sg-quem"><b data-draw="t-robo" data-field="robo" data-source="totais" data-row="0">—</b> o robô</p>
+        <p class="sg-sub sg-quem"><b data-draw="t-equipe" data-field="equipe" data-source="totais" data-row="0">—</b> a equipe, à mão</p>
+        <p class="sg-sub sg-quem"><b data-draw="t-sem_id" data-field="sem_id" data-source="totais" data-row="0">—</b> não dá para saber</p>
+        <p class="sg-sub">"Não dá para saber": o portal apaga quem enviou quando recusa o documento, e o Bernhoeft não mostra quem enviou.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sg-sec" id="responsaveis">
+    <h2>Quem precisa agir no que falta enviar</h2>
+    <div class="sg-barra" data-draw="barra-resp" data-source="totais" role="img" aria-label="Divisão das pendentes por responsável"></div>
+    <div class="sg-legenda">
+      <span><i class="sg-leg-cli"></i>Cliente <b data-draw="t-cliente" data-source="totais" data-field="cliente" data-row="0">—</b></span>
+      <span><i class="sg-leg-op"></i>Operação <b data-draw="t-operacao" data-source="totais" data-field="operacao" data-row="0">—</b></span>
+      <span><i class="sg-leg-sis"></i>Sistema <b data-draw="t-sistema" data-source="totais" data-field="sistema" data-row="0">—</b></span>
+    </div>
+    <p class="sg-nota">Cliente: falta mandar o documento ou decidir algo. Operação: a equipe precisa conferir. Sistema: um erro nosso, que deveria ser zero.</p>
+  </section>
+  </div>
+
+  <div class="sg-parte" id="parte-atlas">
+    <div class="sg-parte-cab">
+      <span class="sg-parte-num">2</span>
+      <div><h2>No portal Atlas</h2><p>Os mesmos números que aparecem nas abas do portal Atlas, para conferir lado a lado.</p></div>
+    </div>
+  <section class="sg-sec" id="como-no-atlas">
+    <p class="sg-nota">Os mesmos números das abas do portal Atlas, só da Equatorial. Como no portal, um reprovado com prazo vencido conta em Atrasados e em Reprovados. Entregues considera só os pedidos vistos desde 13/10/2026; o portal mostra o histórico inteiro.</p>
+    <div class="sg-atlas" data-draw="atlas-abas" data-source="atlas_abas">—</div>
+  </section>
+  </div>
+
+  <div class="sg-parte" id="parte-robos">
+    <div class="sg-parte-cab">
+      <span class="sg-parte-num">3</span>
+      <div><h2>O que os robôs fizeram</h2><p>Leituras dos portais, buscas, montagens e envios feitos pelos robôs no período escolhido.</p></div>
+    </div>
+  <section class="sg-sec" id="processado">
+    <div class="sg-periodos" role="group" aria-label="Período">
+      <button type="button" class="sg-per" data-periodo="hoje" aria-pressed="true">Hoje</button>
+      <button type="button" class="sg-per" data-periodo="ontem" aria-pressed="false">Ontem</button>
+      <button type="button" class="sg-per" data-periodo="7d" aria-pressed="false">7 dias</button>
+      <button type="button" class="sg-per" data-periodo="30d" aria-pressed="false">30 dias</button>
+      <span class="sg-intervalo" data-draw="p-intervalo" data-source="proc_resumo">—</span>
+    </div>
+    <p class="sg-lead" id="processado-resumo">No período, os robôs leram o Atlas <b data-draw="p-leituras_atlas" data-source="proc_resumo" data-field="leituras_atlas" data-row="0" data-fetchpriority="high">—</b> vezes e o Bernhoeft <b data-draw="p-leituras_bernhoeft" data-source="proc_resumo" data-field="leituras_bernhoeft" data-row="0">—</b>, registraram <b data-draw="p-acoes" data-source="proc_resumo" data-field="acoes" data-row="0">—</b> ações em <b data-draw="p-solicitacoes_tocadas" data-source="proc_resumo" data-field="solicitacoes_tocadas" data-row="0">—</b> solicitações e enviaram <b data-draw="p-enviados_robo" data-source="proc_resumo" data-field="enviados_robo" data-row="0">—</b> documentos.</p>
+
+    <div class="sg-cards" id="processado-cards">
+      <div class="sg-card" id="card-robo">
+        <h2>Enviados pelo robô</h2>
+        <div class="sg-big" data-draw="p-enviados_robo" data-source="proc_resumo" data-field="enviados_robo" data-row="0">—</div>
+        <p class="sg-sub"><b data-draw="p-robo_aprovados" data-source="proc_resumo" data-field="robo_aprovados" data-row="0">—</b> validados pelo portal · <b data-draw="p-robo_em_analise" data-source="proc_resumo" data-field="robo_em_analise" data-row="0">—</b> em análise ou aguardando outro documento</p>
+      </div>
+      <div class="sg-card" id="card-manual">
+        <h2>Enviados pela equipe</h2>
+        <div class="sg-big" data-draw="p-enviados_manual" data-source="proc_resumo" data-field="enviados_manual" data-row="0">—</div>
+        <p class="sg-sub">Pela equipe, direto no portal, nas solicitações que o sistema acompanha.</p>
+      </div>
+      <div class="sg-card" id="card-leituras">
+        <h2>Vezes que o robô olhou o portal</h2>
+        <div class="sg-big" data-draw="p-leituras_total" data-source="p-leituras">—</div>
+        <p class="sg-sub">Atlas <b data-draw="p-leituras_atlas" data-source="proc_resumo" data-field="leituras_atlas" data-row="0">—</b> · Bernhoeft <b data-draw="p-leituras_bernhoeft" data-source="proc_resumo" data-field="leituras_bernhoeft" data-row="0">—</b> · com erro <b data-draw="p-leituras_com_erro" data-source="proc_resumo" data-field="leituras_com_erro" data-row="0">—</b></p>
+      </div>
+      <div class="sg-card" id="card-acoes">
+        <h2>Tarefas dos robôs</h2>
+        <div class="sg-big" data-draw="p-acoes" data-source="proc_resumo" data-field="acoes" data-row="0">—</div>
+        <p class="sg-sub">Buscas, montagens, conferências, travas e envios registrados, em <b data-draw="p-solicitacoes_tocadas" data-source="proc_resumo" data-field="solicitacoes_tocadas" data-row="0">—</b> solicitações.</p>
+      </div>
+    </div>
+
+    <p class="sg-alerta" data-draw="p-sem-confirmacao" data-source="proc_resumo"></p>
+    <div class="sg-conf sg-porque" data-draw="p-porque" data-source="proc_resumo motivos"></div>
+
+    <div class="sg-conf" id="conferencia">
+      <h3>Conferência com o portal</h3>
+      <p>No Atlas, aba <b>Entregues</b>, filtrando pela data de envio do período, devem aparecer <b data-draw="p-total" data-source="p-total">—</b> documentos: os enviados pelo robô mais os entregues à mão. Cada envio do robô aparece na lista abaixo com a situação que o portal mostra agora.</p>
+      <p class="sg-nota">O sistema só acompanha as solicitações que o robô leu desde 13/10. Os registros de ações e de leituras começaram em 10/11, então períodos mais longos ainda mostram só o que foi registrado desde então.</p>
+    </div>
+
+    <h3 class="sg-h3">Ações por robô</h3>
+    <div class="sg-tab">
+      <table class="sg-acoes" data-source="proc_acoes" data-row-key="chave">
+        <thead><tr><th data-field="robo">Robô</th><th data-field="acao">Ação</th><th data-field="resultado">Resultado</th><th data-field="descricao">Motivo</th><th class="sg-q" data-field="quantidade">Qtd.</th></tr></thead>
+        <tbody data-draw="p-acoes-tab"></tbody>
+      </table>
+    </div>
+
+    <h3 class="sg-h3">Documentos entregues no período</h3>
+    <div class="sg-filtros">
+      <label for="f-quem">Quem entregou</label>
+      <select class="dash-select" id="f-quem" aria-label="Filtrar por quem entregou">
+        <option value="">Todos</option>
+        <option value="ROBO">Robô</option>
+        <option value="MANUAL">Equipe, à mão</option>
+      </select>
+      <span data-draw="p-envios-n" data-source="proc_envios">—</span>
+    </div>
+    <div class="sg-tab">
+      <table class="sg-envios" data-source="proc_envios" data-row-key="id">
+        <thead><tr><th data-field="enviado_em">Enviado em</th><th data-field="portal">Portal</th><th data-field="documento">Documento</th><th data-field="unidade">Unidade</th><th data-field="competencia">Competência</th><th data-field="quem">Quem</th><th data-field="situacao_portal">Situação no portal</th></tr></thead>
+        <tbody data-draw="p-envios"></tbody>
+      </table>
+    </div>
+
+    <details class="sg-def" id="registro-acoes">
+      <summary>Registro completo das ações no período</summary>
+      <div class="sg-tab sg-mt">
+        <table class="sg-eventos" data-source="proc_eventos" data-row-key="id">
+          <thead><tr><th data-field="em">Quando</th><th data-field="robo">Robô</th><th data-field="acao">Ação</th><th data-field="resultado">Resultado</th><th data-field="documento">Documento</th><th data-field="unidade">Unidade</th><th data-field="competencia">Competência</th><th data-field="detalhe">Detalhe</th></tr></thead>
+          <tbody data-draw="p-eventos"></tbody>
+        </table>
+      </div>
+    </details>
+  </section>
+  </div>
+
+  <div class="sg-parte" id="parte-detalhes">
+    <div class="sg-parte-cab">
+      <span class="sg-parte-num">4</span>
+      <div><h2>Detalhes</h2><p>Para conferir item a item: quem enviou, por que ainda não enviamos, o que o portal recusou e a lista completa.</p></div>
+    </div>
+  <section class="sg-sec" id="status-enviados">
+    <h2>Enviados: quem enviou e como estão</h2>
+    <div class="sg-tab">
+      <table class="sg-matriz" data-source="enviados" data-row-key="status_envio">
+        <thead><tr><th data-field="status_envio">Status no portal</th><th class="sg-q" data-field="robo">Robô</th><th class="sg-q" data-field="equipe">Equipe</th><th class="sg-q" data-field="nao_registrado">Origem não registrada</th><th class="sg-q" data-field="total">Total</th></tr></thead>
+        <tbody data-draw="matriz"></tbody>
+      </table>
+    </div>
+    <p class="sg-nota">"Origem não registrada": o portal reprovou ou recebeu o documento, mas não há registro de quem enviou (o texto que marcava o robô é trocado quando o portal reprova). Passa a ser exato com o registro de cada envio pelo robô.</p>
+  </section>
+
+  <section class="sg-sec" id="motivos">
+    <h2>Por que ainda não enviamos</h2>
+    <div class="sg-tab">
+      <table class="sg-motivos" data-source="motivos" data-row-key="motivo">
+        <thead><tr><th data-field="descricao">Motivo</th><th data-field="responsavel">Responsável</th><th class="sg-q" data-field="quantidade">Qtd.</th></tr></thead>
+        <tbody data-draw="motivos"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="sg-sec" id="reprovados">
+    <h2>Recusados pelo portal</h2>
+    <p class="sg-nota">O cliente precisa mandar o documento certo. O motivo é o que o portal escreveu.</p>
+    <div class="sg-tab">
+      <table class="sg-reprovados" data-source="reprovados" data-row-key="id">
+        <thead><tr><th data-field="documento">Documento</th><th data-field="unidade">Unidade</th><th data-field="competencia">Competência</th><th data-field="prazo">Prazo</th><th data-field="motivo_reprovacao">Motivo do portal</th><th data-field="quem_enviou">Quem enviou</th></tr></thead>
+        <tbody data-draw="reprovados"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="sg-sec" id="lista">
+    <h2>Todos os pedidos, um por um</h2>
+    <div class="sg-filtros">
+      <label for="f-ver">Mostrar</label>
+      <select class="dash-select" id="f-ver" aria-label="Filtrar por etapa e status">
+        <option value="">Todas</option>
+        <option value="PENDENTE">Pendentes</option>
+        <option value="REPROVADO">Reprovadas</option>
+        <option value="AGUARDANDO_ANALISE">Aguardando análise</option>
+        <option value="APROVADO">Aprovadas</option>
+      </select>
+      <label for="f-resp">Responsável</label>
+      <select class="dash-select" id="f-resp" aria-label="Filtrar por responsável">
+        <option value="">Todos</option>
+        <option value="CLIENTE">Cliente</option>
+        <option value="OPERACAO">Operação</option>
+        <option value="SISTEMA">Sistema</option>
+      </select>
+      <label for="f-quem-lista">Quem enviou</label>
+      <select class="dash-select" id="f-quem-lista" aria-label="Filtrar por quem enviou">
+        <option value="">Todos</option>
+        <option value="ROBO">Robô</option>
+        <option value="EQUIPE">Equipe</option>
+        <option value="NAO_REGISTRADO">Origem não registrada</option>
+        <option value="NINGUEM">Ainda não enviado</option>
+      </select>
+      <span data-draw="lista-n" data-source="lista">—</span>
+    </div>
+    <div class="sg-tab">
+      <table class="sg-lista" data-source="lista" data-row-key="id">
+        <thead><tr>
+          <th data-field="status">Situação</th>
+          <th data-field="documento">Documento</th>
+          <th data-field="unidade">Unidade</th>
+          <th data-field="competencia">Competência</th>
+          <th data-field="prazo">Prazo</th>
+          <th data-field="responsavel">Responsável</th>
+          <th data-field="descricao">Motivo</th>
+          <th data-field="quem_enviou">Quem enviou</th>
+          <th data-field="ultimo_evento_em">Último registro do robô</th>
+        </tr></thead>
+        <tbody data-draw="lista"></tbody>
+      </table>
+    </div>
+  </section>
+  </div>
+
+  <details class="sg-def" id="definicoes">
+    <summary>Como as solicitações são contadas</summary>
+    <dl>
+      <dt>Solicitação</dt><dd>Um item que o portal pede (no Atlas, um item da agenda de documentos; no Bernhoeft, um documento de um contrato). Cada uma conta uma vez: a aba Reprovados do Atlas repete itens de Atrasados e não é somada.</dd>
+      <dt>Pendente</dt><dd>Aberta no portal e ainda sem envio, atrasada ou no prazo. O sistema vai buscar o documento e tentar enviar.</dd>
+      <dt>Enviada</dt><dd>O documento já foi entregue ao portal, pelo robô ou pela equipe. Conta como enviada mesmo que o portal ainda não tenha confirmado.</dd>
+      <dt>Aprovada</dt><dd>O portal validou o documento.</dd>
+      <dt>Aguardando análise</dt><dd>O portal recebeu e ainda não validou, ou espera outro documento da cadeia ser aprovado.</dd>
+      <dt>Reprovada</dt><dd>O portal recusou o documento. Responsabilidade do cliente: mandar o documento correto.</dd>
+      <dt>Responsável</dt><dd>Só para as pendentes: Cliente (falta documento, assinatura ou definição), Operação (conferir e soltar o envio) ou Sistema (falha nossa).</dd>
+    </dl>
+  </details>
+</div>
+
+<script>
+window.SG = {
+  STATUS: { PENDENTE_ATRASADO: 'Pendente · atrasada', PENDENTE_NO_PRAZO: 'Pendente · no prazo', PENDENTE: 'Pendente', APROVADO: 'Enviada · aprovada', AGUARDANDO_ANALISE: 'Enviada · aguardando análise', REPROVADO: 'Enviada · reprovada' },
+  STATUS_CLASSE: { PENDENTE_ATRASADO: 'sg-c-atr', PENDENTE_NO_PRAZO: 'sg-c-pra', PENDENTE: 'sg-c-pra', APROVADO: 'sg-c-ok', AGUARDANDO_ANALISE: 'sg-c-pra', REPROVADO: 'sg-c-rep' },
+  ENVIO: { APROVADO: 'Aprovado', AGUARDANDO_ANALISE: 'Aguardando análise', REPROVADO: 'Reprovado' },
+  QUEM: { ROBO: 'Robô', EQUIPE: 'Equipe', NAO_REGISTRADO: 'Não registrado' },
+  RESP: { CLIENTE: 'Cliente', OPERACAO: 'Operação', SISTEMA: 'Sistema', NENHUM: '—' },
+  RESP_CLASSE: { CLIENTE: 'sg-c-cli', OPERACAO: 'sg-c-op', SISTEMA: 'sg-c-sis' },
+  filtro: { ver: '', resp: '' },
+  fmt: new Intl.NumberFormat('pt-BR'),
+  dataBR(s) { if (!s) return '—'; const p = String(s).slice(0, 10).split('-'); return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : String(s); },
+  dataHoraBR(s) { if (!s) return '—'; const [d, h] = String(s).split(' '); return SG.dataBR(d) + (h ? ' ' + h : ''); },
+  chip(texto, classe) { const s = document.createElement('span'); s.className = 'sg-chip ' + (classe || ''); s.textContent = texto; return s; },
+  vazio(el, cols, texto) { const tr = document.createElement('tr'); const td = document.createElement('td'); td.colSpan = cols; td.textContent = texto; tr.appendChild(td); el.replaceChildren(tr); },
+  statusDe(r) { return r.etapa === 'ENVIADO' ? r.status_envio : (r.situacao_portal === 'ATRASADO' ? 'PENDENTE_ATRASADO' : r.situacao_portal === 'NO_PRAZO' ? 'PENDENTE_NO_PRAZO' : 'PENDENTE'); },
+};
+</script>
+
+<script>
+document.querySelectorAll('.sg').forEach((root) => {
+  root.style.setProperty('--sg-cli', dash.colors[0]);
+  root.style.setProperty('--sg-op', dash.colors[1] || dash.colors[0]);
+});
+
+['pendentes', 'pend_atrasados', 'pend_no_prazo', 'enviados', 'aprovados', 'aguardando', 'reprovados', 'robo', 'equipe', 'sem_id', 'em_analise', 'aguard_outro', 'sem_atualizar', 'robo_aprovados', 'robo_aguardando', 'robo_reprovados', 'cliente', 'operacao', 'sistema'].forEach((campo) => {
+  dash.draw('t-' + campo, (el) => {
+    const t = dash.data('totais');
+    el.textContent = t.status === 'ok' && t.data[0] ? SG.fmt.format(Number(t.data[0][campo])) : '—';
+  });
+});
+
+dash.calc('diferenca', {
+  inputs: ['saude'],
+  title: 'Abertas no portal que não estão no painel',
+  description: 'Por portal: abertas no portal na última leitura menos abertas acompanhadas no banco.',
+  fn: (leituras) => leituras.map((l) => ({ portal: l.portal, faltando: Math.max(0, Number(l.abertos_no_portal || 0) - Number(l.abertos_no_banco || 0)) })),
+});
+
+dash.draw('saude', (el) => {
+  const s = dash.data('saude');
+  if (s.status !== 'ok') { el.replaceChildren(); return; }
+  const agora = Date.now();
+  el.replaceChildren(...s.data.map((l) => {
+    const li = document.createElement('li');
+    const b = document.createElement('b'); b.textContent = 'Robô ' + l.portal;
+    const m = document.createElement('span'); m.className = 'sg-min';
+    const resto = document.createElement('span');
+    const ms = Number(l.leitura_ms);
+    if (!ms) { m.textContent = '—'; resto.textContent = 'sem leitura registrada'; li.classList.add('sg-parado'); }
+    else {
+      const min = Math.max(0, Math.floor((agora - ms) / 60000));
+      m.textContent = min < 60 ? min + ' min' : Math.floor(min / 60) + ' h ' + (min % 60) + ' min';
+      resto.textContent = 'desde a última leitura (' + (l.ultima_leitura || '') + ')';
+      if (l.desatualizado === true || l.desatualizado === 'true') { li.classList.add('sg-parado'); resto.textContent += ' · parado'; }
+      else if (min >= 60) li.classList.add('sg-velho');
+    }
+    li.append(b, m, resto);
+    return li;
+  }));
+});
+setInterval(() => dash.draw('saude'), 30000);
+
+dash.calc('abertas', {
+  inputs: ['saude'],
+  title: 'Abertas no portal, divididas',
+  description: 'Soma dos portais: abertas no portal = pendentes + enviadas e reprovadas + enviadas aguardando análise + fora do painel.',
+  fn: (leituras) => {
+    const n = (v) => Number(v || 0);
+    const r = { portal: 0, pendentes: 0, reprovadas: 0, rep_no_prazo: 0, rep_atrasadas: 0, analise: 0, fora: 0, por_portal: [] };
+    leituras.forEach((l) => {
+      r.portal += n(l.abertos_no_portal); r.pendentes += n(l.abertos_pendentes); r.reprovadas += n(l.abertos_reprovados); r.rep_no_prazo += n(l.abertos_reprovados_no_prazo); r.rep_atrasadas += n(l.abertos_reprovados_atrasados);
+      r.analise += n(l.abertos_enviados_analise); r.fora += Math.max(0, n(l.abertos_no_portal) - n(l.abertos_no_banco));
+      r.por_portal.push(l.portal + ' ' + SG.fmt.format(n(l.abertos_no_portal)));
+    });
+    return r;
+  },
+});
+dash.draw('ab-total', (el) => { const a = dash.data('abertas'); el.textContent = a.status === 'ok' && a.data ? SG.fmt.format(a.data.portal) : '—'; });
+dash.draw('ab-sub', (el) => {
+  const a = dash.data('abertas');
+  if (a.status !== 'ok' || !a.data) { el.textContent = '—'; return; }
+  const p = document.createElement('p'); p.className = 'sg-sub';
+  p.textContent = a.data.por_portal.join(' · ') + '. Pedidos que o portal ainda não fechou.';
+  el.replaceChildren(p);
+});
+dash.draw('ab-dif', (el) => { const a = dash.data('abertas'); el.textContent = a.status === 'ok' && a.data ? SG.fmt.format(a.data.portal - a.data.pendentes) : '—'; });
+dash.draw('ab-dif-sub', (el) => {
+  const a = dash.data('abertas');
+  if (a.status !== 'ok' || !a.data) { el.textContent = '—'; return; }
+  const d = a.data;
+  const linha = (v, txt) => { const p = document.createElement('p'); p.className = 'sg-sub'; const b = document.createElement('b'); b.textContent = SG.fmt.format(v); p.append(b, ' ' + txt); return p; };
+  const ps = [linha(d.reprovadas, 'o portal recusou: o cliente precisa mandar outro (' + SG.fmt.format(d.rep_atrasadas) + ' já fora do prazo)'), linha(d.analise, 'enviados, o portal ainda não atualizou')];
+  if (d.fora > 0) ps.push(linha(d.fora, 'são de tipos que não acompanhamos'));
+  el.replaceChildren(...ps);
+});
+
+dash.draw('matriz', (el) => {
+  const m = dash.data('enviados');
+  if (m.status === 'error') { SG.vazio(el, 5, 'Falha ao carregar'); return; }
+  if (m.status !== 'ok') { SG.vazio(el, 5, '—'); return; }
+  if (!m.data.length) { SG.vazio(el, 5, 'Nenhum envio registrado.'); return; }
+  el.replaceChildren(...m.data.map((r) => {
+    const tr = document.createElement('tr'); tr.dataset.key = r.status_envio;
+    const st = document.createElement('td'); st.appendChild(SG.chip(SG.ENVIO[r.status_envio] || r.status_envio, SG.STATUS_CLASSE[r.status_envio]));
+    const q = (v) => { const c = document.createElement('td'); c.className = 'sg-q'; c.textContent = SG.fmt.format(Number(v)); return c; };
+    tr.append(st, q(r.robo), q(r.equipe), q(r.nao_registrado), q(r.total));
+    return tr;
+  }));
+});
+
+dash.draw('atlas-abas', (el) => {
+  const a = dash.data('atlas_abas');
+  if (a.status === 'error') { el.textContent = 'Falha ao carregar'; return; }
+  if (a.status !== 'ok') { el.textContent = '—'; return; }
+  if (!a.data.length) { el.textContent = 'Nenhuma solicitação do Atlas.'; return; }
+  const n = (v) => SG.fmt.format(Number(v || 0));
+  const aba = (texto, valor, classe, dica) => {
+    const d = document.createElement('div'); d.className = 'sg-aba ' + (classe || '');
+    if (dica) d.title = dica;
+    const s = document.createElement('span'); s.textContent = texto;
+    const b = document.createElement('b'); b.textContent = n(valor);
+    d.append(s, b);
+    return d;
+  };
+  el.replaceChildren(...a.data.map((r) => {
+    const bloco = document.createElement('div'); bloco.className = 'sg-atlas';
+    const h = document.createElement('h3'); h.className = 'sg-atlas-cli'; h.textContent = r.cliente || '—';
+    const abas = document.createElement('div'); abas.className = 'sg-abas';
+    abas.append(
+      aba('Atrasados', r.atrasados, 'sg-aba-atr', n(r.atrasados_sem_envio) + ' sem envio + ' + n(r.atrasados_reprovados) + ' reprovados com prazo vencido'),
+      aba('Próximas entregas', r.proximas, ''),
+      aba('Reprovados', r.reprovados, 'sg-aba-rep'),
+      aba('Entregues', r.entregues, 'sg-aba-ent', 'Vistos desde 13/10/2026'),
+    );
+    const leg = document.createElement('p'); leg.className = 'sg-sub';
+    leg.textContent = 'Atrasados: ' + n(r.atrasados_sem_envio) + ' sem envio + ' + n(r.atrasados_reprovados) + ' reprovados com prazo vencido · Entregues: '
+      + n(r.em_analise) + ' em análise, ' + n(r.aprovados) + ' aprovados, ' + n(r.aguardando_predecessores) + ' aguardando predecessores';
+    bloco.append(h, abas, leg);
+    return bloco;
+  }));
+});
+
+['total', 'vence_hoje', 'em_1_a_3', 'em_4_a_7', 'cliente', 'operacao', 'sistema'].forEach((campo) => {
+  dash.draw('a-' + campo, (el) => {
+    const a = dash.data('alertas_resumo');
+    el.textContent = a.status === 'ok' && a.data[0] ? SG.fmt.format(Number(a.data[0][campo])) : '—';
+  });
+});
+
+dash.draw('alertas', (el) => {
+  const a = dash.data('alertas');
+  if (a.status === 'error') { SG.vazio(el, 7, 'Falha ao carregar'); return; }
+  if (a.status !== 'ok') { SG.vazio(el, 7, '—'); return; }
+  if (!a.data.length) { SG.vazio(el, 7, 'Nenhuma pendente vence nos próximos 7 dias.'); return; }
+  el.replaceChildren(...a.data.map((r) => {
+    const tr = document.createElement('tr'); tr.dataset.key = String(r.id);
+    const td = (t) => { const c = document.createElement('td'); c.textContent = t; return c; };
+    const dias = Number(r.dias_para_prazo);
+    const vence = document.createElement('td');
+    vence.appendChild(SG.chip(dias === 0 ? 'Hoje' : dias === 1 ? 'Amanhã' : 'Em ' + dias + ' dias', dias <= 3 ? 'sg-c-rep' : 'sg-c-atr'));
+    const resp = document.createElement('td');
+    if (r.responsavel && r.responsavel !== 'NENHUM') resp.appendChild(SG.chip(SG.RESP[r.responsavel] || r.responsavel, SG.RESP_CLASSE[r.responsavel])); else resp.textContent = '—';
+    tr.append(vence, td(r.documento), td(r.unidade || '—'), td(r.competencia || '—'), td(SG.dataBR(r.prazo)), resp, td(r.descricao || '—'));
+    return tr;
+  }));
+});
+
+dash.draw('barra-status', (el) => {
+  const t = dash.data('totais');
+  if (t.status !== 'ok' || !t.data[0]) { el.replaceChildren(); return; }
+  const r = t.data[0];
+  const partes = [['Aprovados', Number(r.aprovados), 'var(--color-ok)'], ['Aguardando análise', Number(r.aguardando), 'var(--cds-chart-muted, var(--color-fg-muted))'], ['Reprovados', Number(r.reprovados), 'var(--color-bad)']];
+  const total = partes.reduce((s, p) => s + p[1], 0);
+  el.setAttribute('aria-label', partes.map((p) => p[0] + ' ' + p[1]).join(', '));
+  if (!total) { el.replaceChildren(); return; }
+  el.replaceChildren(...partes.filter((p) => p[1] > 0).map((p) => {
+    const d = document.createElement('div');
+    d.style.width = (100 * p[1] / total) + '%';
+    d.style.background = p[2];
+    return d;
+  }));
+});
+
+dash.draw('barra-resp', (el) => {
+  const t = dash.data('totais');
+  if (t.status !== 'ok' || !t.data[0]) { el.replaceChildren(); return; }
+  const r = t.data[0];
+  const partes = [['CLIENTE', Number(r.cliente), 'var(--sg-cli)'], ['OPERACAO', Number(r.operacao), 'var(--sg-op)'], ['SISTEMA', Number(r.sistema), 'var(--color-bad)']];
+  const total = partes.reduce((s, p) => s + p[1], 0);
+  el.setAttribute('aria-label', partes.map((p) => SG.RESP[p[0]] + ' ' + p[1]).join(', '));
+  if (!total) { el.replaceChildren(); return; }
+  el.replaceChildren(...partes.filter((p) => p[1] > 0).map((p) => {
+    const d = document.createElement('div');
+    d.style.width = (100 * p[1] / total) + '%';
+    d.style.background = p[2];
+    d.textContent = SG.RESP[p[0]] + ' ' + p[1];
+    return d;
+  }));
+});
+
+dash.draw('motivos', (el) => {
+  const m = dash.data('motivos');
+  if (m.status === 'error') { SG.vazio(el, 3, 'Falha ao carregar'); return; }
+  if (m.status !== 'ok') { SG.vazio(el, 3, '—'); return; }
+  if (!m.data.length) { SG.vazio(el, 3, 'Nenhuma pendente parada.'); return; }
+  const max = Math.max(...m.data.map((r) => Number(r.quantidade)));
+  el.replaceChildren(...m.data.map((r) => {
+    const tr = document.createElement('tr'); tr.dataset.key = r.motivo;
+    const td1 = document.createElement('td'); td1.textContent = r.descricao;
+    const bar = document.createElement('span'); bar.className = 'sg-mbar';
+    bar.style.width = (100 * Number(r.quantidade) / max) + '%';
+    bar.style.background = r.responsavel === 'SISTEMA' ? 'var(--color-bad)' : r.responsavel === 'OPERACAO' ? 'var(--sg-op)' : 'var(--sg-cli)';
+    td1.appendChild(bar);
+    const td2 = document.createElement('td'); td2.appendChild(SG.chip(SG.RESP[r.responsavel] || r.responsavel, SG.RESP_CLASSE[r.responsavel]));
+    const td3 = document.createElement('td'); td3.className = 'sg-q'; td3.textContent = SG.fmt.format(Number(r.quantidade));
+    tr.append(td1, td2, td3);
+    return tr;
+  }));
+});
+
+dash.draw('reprovados', (el) => {
+  const d = dash.data('reprovados');
+  if (d.status === 'error') { SG.vazio(el, 6, 'Falha ao carregar'); return; }
+  if (d.status !== 'ok') { SG.vazio(el, 6, '—'); return; }
+  if (!d.data.length) { SG.vazio(el, 6, 'Nenhuma reprovada.'); return; }
+  el.replaceChildren(...d.data.map((r) => {
+    const tr = document.createElement('tr'); tr.dataset.key = String(r.id);
+    const td = (t) => { const c = document.createElement('td'); c.textContent = t; return c; };
+    tr.append(td(r.documento), td(r.unidade || '—'), td(r.competencia || '—'), td(SG.dataBR(r.prazo)), td(r.motivo_reprovacao || '—'), td(SG.QUEM[r.quem_enviou] || r.quem_enviou || '—'));
+    return tr;
+  }));
+});
+
+function sgFiltradas() {
+  const l = dash.data('lista');
+  if (l.status !== 'ok') return null;
+  return l.data.filter((r) => {
+    const ver = SG.filtro.ver;
+    const okVer = !ver || (ver === 'PENDENTE' ? r.etapa === 'PENDENTE' : r.status_envio === ver);
+    const quem = SG.filtro.quem || '';
+    const okQuem = !quem || (quem === 'NINGUEM' ? r.etapa !== 'ENVIADO' : r.quem_enviou === quem);
+    return okVer && okQuem && (!SG.filtro.resp || r.responsavel === SG.filtro.resp);
+  });
+}
+window.sgFiltradas = sgFiltradas;
+
+dash.draw('lista-n', (el) => {
+  const l = dash.data('lista');
+  const f = sgFiltradas();
+  el.textContent = f ? 'Mostrando ' + SG.fmt.format(f.length) + ' de ' + SG.fmt.format(l.data.length) : '—';
+});
+
+dash.draw('lista', (el) => {
+  const l = dash.data('lista');
+  if (l.status === 'error') { SG.vazio(el, 9, 'Falha ao carregar'); return; }
+  const linhas = sgFiltradas();
+  if (!linhas) { SG.vazio(el, 9, '—'); return; }
+  if (!linhas.length) { SG.vazio(el, 9, 'Nenhuma solicitação com esses filtros.'); return; }
+  el.replaceChildren(...linhas.slice(0, 600).map((r) => {
+    const tr = document.createElement('tr'); tr.dataset.key = String(r.id);
+    const c = () => document.createElement('td');
+    const st = SG.statusDe(r);
+    const sit = c(); sit.appendChild(SG.chip(SG.STATUS[st] || st, SG.STATUS_CLASSE[st]));
+    const doc = c(); doc.textContent = r.documento;
+    const uni = c(); uni.textContent = r.unidade || '—';
+    const comp = c(); comp.textContent = r.competencia || '—';
+    const prazo = c(); prazo.textContent = SG.dataBR(r.prazo);
+    const dias = Number(r.dias_para_prazo);
+    if (r.etapa === 'PENDENTE' && r.prazo && !Number.isNaN(dias)) { const s = document.createElement('small'); s.textContent = dias < 0 ? SG.fmt.format(-dias) + ' dias de atraso' : dias === 0 ? 'vence hoje' : 'vence em ' + SG.fmt.format(dias) + ' dias'; prazo.appendChild(s); }
+    const resp = c(); if (r.responsavel && r.responsavel !== 'NENHUM') resp.appendChild(SG.chip(SG.RESP[r.responsavel] || r.responsavel, SG.RESP_CLASSE[r.responsavel])); else resp.textContent = '—';
+    const mot = c(); mot.textContent = r.descricao || '—';
+    if (r.motivo_reprovacao) { const s = document.createElement('small'); s.textContent = 'Portal: ' + r.motivo_reprovacao; mot.appendChild(s); }
+    const quem = c(); quem.textContent = r.etapa === 'ENVIADO' ? (SG.QUEM[r.quem_enviou] || r.quem_enviou || '—') + (r.enviado_em ? ' · ' + SG.dataHoraBR(r.enviado_em) : '') : '—';
+    const ev = c(); ev.textContent = SG.dataHoraBR(r.ultimo_evento_em);
+    if (r.ultimo_evento_detalhe) { const s = document.createElement('small'); s.textContent = r.ultimo_evento_detalhe; ev.appendChild(s); }
+    tr.append(sit, doc, uni, comp, prazo, resp, mot, quem, ev);
+    return tr;
+  }));
+});
+</script>
+
+<script>
+document.querySelectorAll('#f-ver').forEach((s) => s.addEventListener('change', () => { SG.filtro.ver = s.value; dash.draw('lista'); dash.draw('lista-n'); }));
+document.querySelectorAll('#f-resp').forEach((s) => s.addEventListener('change', () => { SG.filtro.resp = s.value; dash.draw('lista'); dash.draw('lista-n'); }));
+document.querySelectorAll('#f-quem-lista').forEach((s) => s.addEventListener('change', () => { SG.filtro.quem = s.value; dash.draw('lista'); dash.draw('lista-n'); }));
+</script>
+
+<script>
+window.SGP = {
+  ROBO: { sharepoint: 'Busca no SharePoint', factorial: 'Busca na Factorial', enviar: 'Envio ao Atlas', entregar: 'Envio ao Bernhoeft', sincronizacao: 'Sincronização Factorial', leitura: 'Leitura do portal', painel: 'Painel' },
+  ACAO: { busca: 'Busca', montagem: 'Montagem do PDF', conferencia: 'Conferência do conteúdo', trava: 'Trava antes do envio', soltura: 'Soltura', envio: 'Envio', reprovacao: 'Reprovação' },
+  RES: { falha: 'Não concluiu', bloqueado: 'Bloqueado', ok: 'OK', pulou: 'Pulou', iniciado: 'Iniciado' },
+  SIT: { ENTREGUE: 'Validado', CONCLUIDO: 'Validado', EM_ANALISE: 'Em análise', AGUARDANDO_PREDECESSORES: 'Aguardando outro documento', AGUARDANDO_OUTRO: 'Aguardando outro documento', REPROVADO: 'Reprovado', NO_PRAZO: 'Aberto no portal', ATRASADO: 'Aberto no portal', FORA_DO_PORTAL: 'Saiu do portal' },
+  SIT_CLASSE: { ENTREGUE: 'sg-c-ok', CONCLUIDO: 'sg-c-ok', EM_ANALISE: 'sg-c-pra', AGUARDANDO_PREDECESSORES: 'sg-c-pra', AGUARDANDO_OUTRO: 'sg-c-pra', REPROVADO: 'sg-c-rep', NO_PRAZO: 'sg-c-atr', ATRASADO: 'sg-c-atr' },
+  quem: '',
+  rotulo(mapa, v) { const k = String(v ?? '').toLowerCase(); return mapa[k] || mapa[String(v ?? '')] || (v ?? '—'); },
+};
+
+dash.calc('p-leituras', {
+  inputs: ['proc_resumo'],
+  title: 'Leituras dos portais no período',
+  description: 'Leituras do Atlas mais leituras do Bernhoeft no período.',
+  fn: (resumo) => resumo.length ? Number(resumo[0].leituras_atlas) + Number(resumo[0].leituras_bernhoeft) : null,
+});
+dash.calc('p-total', {
+  inputs: ['proc_resumo'],
+  title: 'Entregues no período (robô e equipe)',
+  description: 'Enviados pelo robô mais entregues à mão no portal, no período.',
+  fn: (resumo) => resumo.length ? Number(resumo[0].enviados_robo) + Number(resumo[0].enviados_manual) : null,
+});
+
+['leituras_atlas', 'leituras_bernhoeft', 'leituras_com_erro', 'acoes', 'solicitacoes_tocadas', 'enviados_robo', 'robo_aprovados', 'robo_em_analise', 'enviados_manual'].forEach((campo) => {
+  dash.draw('p-' + campo, (el) => {
+    const r = dash.data('proc_resumo');
+    el.textContent = r.status === 'ok' && r.data[0] ? SG.fmt.format(Number(r.data[0][campo])) : '—';
+  });
+});
+dash.draw('p-leituras_total', (el) => { const v = dash.data('p-leituras'); el.textContent = v.status === 'ok' && v.data != null ? SG.fmt.format(v.data) : '—'; });
+dash.draw('p-total', (el) => { const v = dash.data('p-total'); el.textContent = v.status === 'ok' && v.data != null ? SG.fmt.format(v.data) : '—'; });
+
+dash.draw('p-intervalo', (el) => {
+  const r = dash.data('proc_resumo');
+  if (r.status !== 'ok' || !r.data[0]) { el.textContent = '—'; return; }
+  const ini = SG.dataBR(r.data[0].inicio), fim = SG.dataBR(r.data[0].fim);
+  el.textContent = ini === fim ? ini : 'de ' + ini + ' a ' + fim;
+});
+
+dash.draw('p-porque', (el) => {
+  try {
+    const r = dash.data('proc_resumo'); const m = dash.data('motivos');
+    let periodo = 'hoje';
+    try { periodo = (dash.params() || {}).periodo || 'hoje'; } catch (e) {}
+    const resumo = r && r.status === 'ok' && Array.isArray(r.data) ? r.data[0] : null;
+    if (periodo !== 'hoje' || !resumo || Number(resumo.enviados_robo) > 0 || !m || m.status !== 'ok' || !Array.isArray(m.data)) { el.replaceChildren(); return; }
+    const linhas = m.data.map((x) => ({ cod: String(x.motivo || '').toUpperCase(), desc: String(x.descricao || x.motivo || ''), resp: String(x.responsavel || '').toUpperCase(), n: Number(x.quantidade) || 0 }));
+    const total = linhas.reduce((s, x) => s + x.n, 0);
+    const ehPronto = (x) => x.cod === 'PRONTO_PARA_ENVIO' || x.cod === 'PRONTO';
+    const prontas = linhas.filter(ehPronto).reduce((s, x) => s + x.n, 0);
+    const fmt = (v) => SG.fmt.format(v);
+    const h = document.createElement('h3'); h.textContent = 'Por que o robô não enviou nada hoje';
+    const p = document.createElement('p');
+    if (prontas > 0) {
+      p.className = 'sg-alerta';
+      p.textContent = fmt(prontas) + ' pendentes estão prontas para envio e mesmo assim nada foi enviado hoje. Conferir no painel da automação se o envio está liberado e se o robô de envio está rodando.';
+    } else {
+      p.textContent = 'Nenhuma das ' + fmt(total) + ' pendentes tem documento pronto para enviar. O robô procura a cada rodada e envia assim que o documento aparecer.';
+    }
+    const RESP = { CLIENTE: 'cliente', OPERACAO: 'operação', SISTEMA: 'sistema' };
+    const lista = linhas.filter((x) => !ehPronto(x)).map((x) => fmt(x.n) + ' ' + x.desc.charAt(0).toLowerCase() + x.desc.slice(1) + (RESP[x.resp] ? ' (' + RESP[x.resp] + ')' : ''));
+    const nota = document.createElement('p'); nota.className = 'sg-nota';
+    nota.textContent = lista.length ? 'Onde as pendentes estão paradas agora: ' + lista.join(' · ') + '.' : '';
+    el.replaceChildren(h, p, nota);
+  } catch (e) {
+    el.textContent = 'Erro ao montar "Por que o robô não enviou nada hoje": ' + (e && e.message ? e.message : e);
+  }
+});
+
+dash.draw('p-sem-confirmacao', (el) => {
+  const r = dash.data('proc_resumo');
+  const n = r.status === 'ok' && r.data[0] ? Number(r.data[0].robo_sem_confirmacao) : 0;
+  if (!n) { el.replaceChildren(); return; }
+  const b = document.createElement('span'); b.textContent = SG.fmt.format(n);
+  b.dataset.source = 'proc_resumo'; b.dataset.field = 'robo_sem_confirmacao'; b.dataset.row = '0';
+  el.replaceChildren(b, ' documentos enviados pelo robô continuam abertos no portal, sem confirmação de entrega (qualquer data). Conferir no portal se o envio entrou.');
+});
+
+dash.draw('p-acoes-tab', (el) => {
+  const a = dash.data('proc_acoes');
+  if (a.status === 'error') { SG.vazio(el, 5, 'Falha ao carregar'); return; }
+  if (a.status !== 'ok') { SG.vazio(el, 5, '—'); return; }
+  if (!a.data.length) { SG.vazio(el, 5, 'Nenhuma ação registrada no período.'); return; }
+  el.replaceChildren(...a.data.map((r) => {
+    const tr = document.createElement('tr'); tr.dataset.key = r.chave;
+    const td = (t) => { const c = document.createElement('td'); c.textContent = t; return c; };
+    const q = td(SG.fmt.format(Number(r.quantidade))); q.className = 'sg-q';
+    tr.append(td(SGP.rotulo(SGP.ROBO, r.robo)), td(SGP.rotulo(SGP.ACAO, r.acao)), td(SGP.rotulo(SGP.RES, r.resultado)), td(r.descricao || r.motivo || '—'), q);
+    return tr;
+  }));
+});
+
+function sgpEnvios() {
+  const e = dash.data('proc_envios');
+  if (e.status !== 'ok') return null;
+  return e.data.filter((r) => !SGP.quem || r.quem === SGP.quem);
+}
+window.sgpEnvios = sgpEnvios;
+
+dash.draw('p-envios-n', (el) => {
+  const e = dash.data('proc_envios'); const f = sgpEnvios();
+  el.textContent = f ? 'Mostrando ' + SG.fmt.format(f.length) + ' de ' + SG.fmt.format(e.data.length) : '—';
+});
+
+dash.draw('p-envios', (el) => {
+  const e = dash.data('proc_envios');
+  if (e.status === 'error') { SG.vazio(el, 7, 'Falha ao carregar'); return; }
+  const linhas = sgpEnvios();
+  if (!linhas) { SG.vazio(el, 7, '—'); return; }
+  if (!linhas.length) { SG.vazio(el, 7, 'Nenhum documento entregue no período.'); return; }
+  el.replaceChildren(...linhas.map((r) => {
+    const tr = document.createElement('tr'); tr.dataset.key = String(r.id);
+    const td = (t) => { const c = document.createElement('td'); c.textContent = t; return c; };
+    const quem = document.createElement('td'); quem.appendChild(SG.chip(r.quem === 'ROBO' ? 'Robô' : 'Equipe', r.quem === 'ROBO' ? 'sg-c-op' : 'sg-c-pra'));
+    const sit = document.createElement('td'); sit.appendChild(SG.chip(SGP.SIT[r.situacao_portal] || r.situacao_portal || '—', SGP.SIT_CLASSE[r.situacao_portal]));
+    tr.append(td(SG.dataHoraBR(r.enviado_em)), td(r.portal), td(r.documento), td(r.unidade || '—'), td(r.competencia || '—'), quem, sit);
+    return tr;
+  }));
+});
+
+dash.draw('p-eventos', (el) => {
+  const e = dash.data('proc_eventos');
+  if (e.status === 'error') { SG.vazio(el, 8, 'Falha ao carregar'); return; }
+  if (e.status !== 'ok') { SG.vazio(el, 8, '—'); return; }
+  if (!e.data.length) { SG.vazio(el, 8, 'Nenhuma ação registrada no período.'); return; }
+  el.replaceChildren(...e.data.map((r) => {
+    const tr = document.createElement('tr'); tr.dataset.key = String(r.id);
+    const td = (t) => { const c = document.createElement('td'); c.textContent = t; return c; };
+    tr.append(td(SG.dataHoraBR(r.em)), td(SGP.rotulo(SGP.ROBO, r.robo)), td(SGP.rotulo(SGP.ACAO, r.acao)), td(SGP.rotulo(SGP.RES, r.resultado)), td(r.documento || '—'), td(r.unidade || '—'), td(r.competencia || '—'), td(r.detalhe || '—'));
+    return tr;
+  }));
+});
+
+dash.onData(() => {
+  const atual = dash.params().periodo || 'hoje';
+  document.querySelectorAll('.sg-per').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.periodo === atual)));
+});
+</script>
+
+<script>
+document.querySelectorAll('.sg-per').forEach((b) => b.addEventListener('click', () => {
+  document.querySelectorAll('.sg-per').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+  dash.setParams({ periodo: b.dataset.periodo });
+}));
+document.querySelectorAll('#f-quem').forEach((s) => s.addEventListener('change', () => { SGP.quem = s.value; dash.draw('p-envios'); dash.draw('p-envios-n'); }));
+</script>
+
+<p class="vps-rodape" id="vps-atualizado">Carregando…</p>
+</body>
+</html>
