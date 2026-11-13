@@ -33,7 +33,7 @@ body > .sg { max-width: 1200px; margin: 0 auto; }
 // Os dados vêm de /api/dados/<consulta> (servidor deste serviço, só leitura). Recarrega a cada 5 minutos.
 (function () {
   const USA_PERIODO = ["proc_resumo", "proc_acoes", "proc_envios", "proc_eventos"];
-  const CONSULTAS = ["totais", "saude", "enviados", "alertas_resumo", "alertas", "motivos", "lista", "reprovados", "proc_resumo", "proc_acoes", "proc_envios", "proc_eventos"];
+  const CONSULTAS = ["totais", "saude", "enviados", "atlas_abas", "alertas_resumo", "alertas", "motivos", "lista", "reprovados", "proc_resumo", "proc_acoes", "proc_envios", "proc_eventos"];
   const PERIODOS = ['hoje', 'ontem', '7d', '30d'];
   const estado = {};            // id -> {status, data}
   const desenhos = new Map();   // nome -> fn(el)
@@ -193,6 +193,23 @@ body > .sg { max-width: 1200px; margin: 0 auto; }
 .sg-barra-st > div { padding: 0; }
 .sg-pt { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 4px; vertical-align: 0; }
 .sg-pt-ok { background: var(--color-ok); } .sg-pt-ag { background: var(--cds-chart-muted, var(--color-fg-muted)); } .sg-pt-rep { background: var(--color-bad); }
+.sg-indice { position: sticky; top: 0; z-index: 2; display: flex; flex-wrap: wrap; gap: var(--cds-gap-xs); padding: 10px 0; background: var(--color-bg); border-bottom: 1px solid var(--color-border-line); }
+.sg-indice a { font-size: var(--cds-font-size-caption); font-weight: var(--cds-font-weight-medium); padding: 6px 14px; border-radius: 999px; border: 1px solid var(--color-border-line); background: var(--color-panel); color: var(--color-fg); text-decoration: none; }
+.sg-indice a:hover, .sg-indice a:focus-visible { border-color: var(--color-fg); outline: none; }
+.sg-parte { display: grid; gap: var(--cds-gap-xl); min-width: 0; scroll-margin-top: 64px; }
+.sg-parte + .sg-parte { border-top: 2px solid var(--color-border-line); padding-top: var(--cds-gap-xl); }
+.sg-parte-cab { display: flex; gap: var(--cds-gap-md); align-items: flex-start; }
+.sg-parte-num { flex: none; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--color-fg); color: var(--color-bg); font-weight: var(--cds-font-weight-medium); font-size: var(--cds-font-size-body); }
+.sg-parte-cab h2 { margin: 0; font-family: var(--font-anthropic-serif); font-weight: 400; font-size: 24px; }
+.sg-parte-cab p { margin: 4px 0 0; font-size: var(--cds-font-size-body); color: var(--color-fg-muted); max-width: 75ch; }
+.sg-atlas { display: grid; gap: var(--cds-gap-sm); }
+.sg-atlas-cli { margin: 0; font-size: var(--cds-font-size-body); font-weight: var(--cds-font-weight-medium); }
+.sg-abas { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: var(--cds-gap-sm); }
+.sg-aba { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: 8px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: var(--cds-font-size-body); }
+.sg-aba b { font-variant-numeric: tabular-nums; font-size: var(--cds-font-size-heading); }
+.sg-aba.sg-aba-atr { border-left: 3px solid var(--color-warn); }
+.sg-aba.sg-aba-rep { border-left: 3px solid var(--color-bad); }
+.sg-aba.sg-aba-ent { border-left: 3px solid var(--color-ok); }
 .sg-alertas { border-left: 3px solid var(--color-warn); padding-left: var(--cds-pad-lg); }
 .sg-alertas > h2 { color: var(--color-warn); }
 </style>
@@ -205,7 +222,18 @@ body > .sg { max-width: 1200px; margin: 0 auto; }
     <ul class="sg-relogio" id="leituras" data-draw="saude" data-source="saude" aria-live="polite"></ul>
   </header>
 
+  <nav class="sg-indice" aria-label="Partes do painel">
+    <a href="#parte-geral">1. Resumo geral</a>
+    <a href="#parte-atlas">2. No portal Atlas</a>
+    <a href="#parte-robos">3. O que os robôs fizeram</a>
+    <a href="#parte-detalhes">4. Detalhes</a>
+  </nav>
 
+  <div class="sg-parte" id="parte-geral">
+    <div class="sg-parte-cab">
+      <span class="sg-parte-num">1</span>
+      <div><h2>Resumo geral</h2><p>O que o sistema encontrou nos dois portais, Atlas e Bernhoeft: o que eles pedem, o que falta enviar, o que vence nos próximos dias e o que já foi enviado.</p></div>
+    </div>
   <section class="sg-cards" id="grupos">
     <div class="sg-card" id="card-abertas">
       <h2>O portal está pedindo</h2>
@@ -224,8 +252,6 @@ body > .sg { max-width: 1200px; margin: 0 auto; }
     </div>
   </section>
 
-
-
   <section class="sg-sec sg-alertas" id="alertas">
     <h2>Vencem nos próximos 7 dias</h2>
     <p class="sg-lead"><b data-draw="a-total" data-source="alertas_resumo" data-field="total" data-row="0">—</b> pendentes ainda no prazo vencem nos próximos 7 dias: <b data-draw="a-vence_hoje" data-source="alertas_resumo" data-field="vence_hoje" data-row="0">—</b> hoje, <b data-draw="a-em_1_a_3" data-source="alertas_resumo" data-field="em_1_a_3" data-row="0">—</b> em 1 a 3 dias e <b data-draw="a-em_4_a_7" data-source="alertas_resumo" data-field="em_4_a_7" data-row="0">—</b> em 4 a 7 dias. Cliente <b data-draw="a-cliente" data-source="alertas_resumo" data-field="cliente" data-row="0">—</b> · Operação <b data-draw="a-operacao" data-source="alertas_resumo" data-field="operacao" data-row="0">—</b> · Sistema <b data-draw="a-sistema" data-source="alertas_resumo" data-field="sistema" data-row="0">—</b>.</p>
@@ -236,6 +262,7 @@ body > .sg { max-width: 1200px; margin: 0 auto; }
       </table>
     </div>
   </section>
+
   <section class="sg-sec" id="envios">
     <h2>Tudo o que já enviamos <span class="sg-desde">pedidos vistos no portal desde 13/10/2026</span></h2>
     <div class="sg-cards">
@@ -259,6 +286,7 @@ body > .sg { max-width: 1200px; margin: 0 auto; }
       </div>
     </div>
   </section>
+
   <section class="sg-sec" id="responsaveis">
     <h2>Quem precisa agir no que falta enviar</h2>
     <div class="sg-barra" data-draw="barra-resp" data-source="totais" role="img" aria-label="Divisão das pendentes por responsável"></div>
@@ -269,40 +297,25 @@ body > .sg { max-width: 1200px; margin: 0 auto; }
     </div>
     <p class="sg-nota">Cliente: falta mandar o documento ou decidir algo. Operação: a equipe precisa conferir. Sistema: um erro nosso, que deveria ser zero.</p>
   </section>
-
-  <div class="sg-divisor" id="analises">
-    <h2>Detalhes</h2>
-    <p>Detalhes para conferir o trabalho do sistema: origem dos envios, motivos, reprovações, o que foi processado em cada período e a lista completa.</p>
   </div>
 
-  <section class="sg-sec" id="status-enviados">
-    <h2>Enviados: quem enviou e como estão</h2>
-    <div class="sg-tab">
-      <table class="sg-matriz" data-source="enviados" data-row-key="status_envio">
-        <thead><tr><th data-field="status_envio">Status no portal</th><th class="sg-q" data-field="robo">Robô</th><th class="sg-q" data-field="equipe">Equipe</th><th class="sg-q" data-field="nao_registrado">Origem não registrada</th><th class="sg-q" data-field="total">Total</th></tr></thead>
-        <tbody data-draw="matriz"></tbody>
-      </table>
+  <div class="sg-parte" id="parte-atlas">
+    <div class="sg-parte-cab">
+      <span class="sg-parte-num">2</span>
+      <div><h2>No portal Atlas</h2><p>Os mesmos números que aparecem nas abas do portal Atlas, para conferir lado a lado.</p></div>
     </div>
-    <p class="sg-nota">"Origem não registrada": o portal reprovou ou recebeu o documento, mas não há registro de quem enviou (o texto que marcava o robô é trocado quando o portal reprova). Passa a ser exato com o registro de cada envio pelo robô.</p>
+  <section class="sg-sec" id="como-no-atlas">
+    <p class="sg-nota">Os mesmos números das abas do portal Atlas, só da Equatorial. Como no portal, um reprovado com prazo vencido conta em Atrasados e em Reprovados. Entregues considera só os pedidos vistos desde 13/10/2026; o portal mostra o histórico inteiro.</p>
+    <div class="sg-atlas" data-draw="atlas-abas" data-source="atlas_abas">—</div>
   </section>
+  </div>
 
-
-  <section class="sg-sec" id="motivos">
-    <h2>Por que ainda não enviamos</h2>
-    <div class="sg-tab">
-      <table class="sg-motivos" data-source="motivos" data-row-key="motivo">
-        <thead><tr><th data-field="descricao">Motivo</th><th data-field="responsavel">Responsável</th><th class="sg-q" data-field="quantidade">Qtd.</th></tr></thead>
-        <tbody data-draw="motivos"></tbody>
-      </table>
+  <div class="sg-parte" id="parte-robos">
+    <div class="sg-parte-cab">
+      <span class="sg-parte-num">3</span>
+      <div><h2>O que os robôs fizeram</h2><p>Leituras dos portais, buscas, montagens e envios feitos pelos robôs no período escolhido.</p></div>
     </div>
-  </section>
-
-
-  </section>
-
-
   <section class="sg-sec" id="processado">
-    <h2>O que os robôs fizeram</h2>
     <div class="sg-periodos" role="group" aria-label="Período">
       <button type="button" class="sg-per" data-periodo="hoje" aria-pressed="true">Hoje</button>
       <button type="button" class="sg-per" data-periodo="ontem" aria-pressed="false">Ontem</button>
@@ -379,7 +392,44 @@ body > .sg { max-width: 1200px; margin: 0 auto; }
       </div>
     </details>
   </section>
+  </div>
 
+  <div class="sg-parte" id="parte-detalhes">
+    <div class="sg-parte-cab">
+      <span class="sg-parte-num">4</span>
+      <div><h2>Detalhes</h2><p>Para conferir item a item: quem enviou, por que ainda não enviamos, o que o portal recusou e a lista completa.</p></div>
+    </div>
+  <section class="sg-sec" id="status-enviados">
+    <h2>Enviados: quem enviou e como estão</h2>
+    <div class="sg-tab">
+      <table class="sg-matriz" data-source="enviados" data-row-key="status_envio">
+        <thead><tr><th data-field="status_envio">Status no portal</th><th class="sg-q" data-field="robo">Robô</th><th class="sg-q" data-field="equipe">Equipe</th><th class="sg-q" data-field="nao_registrado">Origem não registrada</th><th class="sg-q" data-field="total">Total</th></tr></thead>
+        <tbody data-draw="matriz"></tbody>
+      </table>
+    </div>
+    <p class="sg-nota">"Origem não registrada": o portal reprovou ou recebeu o documento, mas não há registro de quem enviou (o texto que marcava o robô é trocado quando o portal reprova). Passa a ser exato com o registro de cada envio pelo robô.</p>
+  </section>
+
+  <section class="sg-sec" id="motivos">
+    <h2>Por que ainda não enviamos</h2>
+    <div class="sg-tab">
+      <table class="sg-motivos" data-source="motivos" data-row-key="motivo">
+        <thead><tr><th data-field="descricao">Motivo</th><th data-field="responsavel">Responsável</th><th class="sg-q" data-field="quantidade">Qtd.</th></tr></thead>
+        <tbody data-draw="motivos"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="sg-sec" id="reprovados">
+    <h2>Recusados pelo portal</h2>
+    <p class="sg-nota">O cliente precisa mandar o documento certo. O motivo é o que o portal escreveu.</p>
+    <div class="sg-tab">
+      <table class="sg-reprovados" data-source="reprovados" data-row-key="id">
+        <thead><tr><th data-field="documento">Documento</th><th data-field="unidade">Unidade</th><th data-field="competencia">Competência</th><th data-field="prazo">Prazo</th><th data-field="motivo_reprovacao">Motivo do portal</th><th data-field="quem_enviou">Quem enviou</th></tr></thead>
+        <tbody data-draw="reprovados"></tbody>
+      </table>
+    </div>
+  </section>
 
   <section class="sg-sec" id="lista">
     <h2>Todos os pedidos, um por um</h2>
@@ -426,17 +476,8 @@ body > .sg { max-width: 1200px; margin: 0 auto; }
       </table>
     </div>
   </section>
+  </div>
 
-
-  <section class="sg-sec" id="reprovados">
-    <h2>Recusados pelo portal</h2>
-    <p class="sg-nota">O cliente precisa mandar o documento certo. O motivo é o que o portal escreveu.</p>
-    <div class="sg-tab">
-      <table class="sg-reprovados" data-source="reprovados" data-row-key="id">
-        <thead><tr><th data-field="documento">Documento</th><th data-field="unidade">Unidade</th><th data-field="competencia">Competência</th><th data-field="prazo">Prazo</th><th data-field="motivo_reprovacao">Motivo do portal</th><th data-field="quem_enviou">Quem enviou</th></tr></thead>
-        <tbody data-draw="reprovados"></tbody>
-      </table>
-    </div>
   <details class="sg-def" id="definicoes">
     <summary>Como as solicitações são contadas</summary>
     <dl>
@@ -558,6 +599,38 @@ dash.draw('matriz', (el) => {
     const q = (v) => { const c = document.createElement('td'); c.className = 'sg-q'; c.textContent = SG.fmt.format(Number(v)); return c; };
     tr.append(st, q(r.robo), q(r.equipe), q(r.nao_registrado), q(r.total));
     return tr;
+  }));
+});
+
+dash.draw('atlas-abas', (el) => {
+  const a = dash.data('atlas_abas');
+  if (a.status === 'error') { el.textContent = 'Falha ao carregar'; return; }
+  if (a.status !== 'ok') { el.textContent = '—'; return; }
+  if (!a.data.length) { el.textContent = 'Nenhuma solicitação do Atlas.'; return; }
+  const n = (v) => SG.fmt.format(Number(v || 0));
+  const aba = (texto, valor, classe, dica) => {
+    const d = document.createElement('div'); d.className = 'sg-aba ' + (classe || '');
+    if (dica) d.title = dica;
+    const s = document.createElement('span'); s.textContent = texto;
+    const b = document.createElement('b'); b.textContent = n(valor);
+    d.append(s, b);
+    return d;
+  };
+  el.replaceChildren(...a.data.map((r) => {
+    const bloco = document.createElement('div'); bloco.className = 'sg-atlas';
+    const h = document.createElement('h3'); h.className = 'sg-atlas-cli'; h.textContent = r.cliente || '—';
+    const abas = document.createElement('div'); abas.className = 'sg-abas';
+    abas.append(
+      aba('Atrasados', r.atrasados, 'sg-aba-atr', n(r.atrasados_sem_envio) + ' sem envio + ' + n(r.atrasados_reprovados) + ' reprovados com prazo vencido'),
+      aba('Próximas entregas', r.proximas, ''),
+      aba('Reprovados', r.reprovados, 'sg-aba-rep'),
+      aba('Entregues', r.entregues, 'sg-aba-ent', 'Vistos desde 13/10/2026'),
+    );
+    const leg = document.createElement('p'); leg.className = 'sg-sub';
+    leg.textContent = 'Atrasados: ' + n(r.atrasados_sem_envio) + ' sem envio + ' + n(r.atrasados_reprovados) + ' reprovados com prazo vencido · Entregues: '
+      + n(r.em_analise) + ' em análise, ' + n(r.aprovados) + ' aprovados, ' + n(r.aguardando_predecessores) + ' aguardando predecessores';
+    bloco.append(h, abas, leg);
+    return bloco;
   }));
 });
 

@@ -4,7 +4,7 @@ Mesmo painel publicado no claude.ai, rodando na VPS: pendentes, enviados (aprova
 alertas dos que vencem em até 7 dias, de quem é a ação, motivos, o que o sistema processou (hoje, ontem, 7 e 30 dias),
 cada solicitação com filtros e os reprovados no portal.
 
-- **Só leitura:** usa a role `painel_leitura` (só SELECT). O servidor aceita só GET e só roda as 12 consultas fixas de `consultas.json`;
+- **Só leitura:** usa a role `painel_leitura` (só SELECT). O servidor aceita só GET e só roda as 13 consultas fixas de `consultas.json`;
   o único parâmetro é o período, validado contra `hoje | ontem | 7d | 30d`.
 - **Sem dependências:** `node server.js` (Node 22), Neon pela API HTTPS, igual ao painel da automação.
 - **Acesso:** só pelo Tailscale, `http://100.103.196.93:3022` (3020 = painel da automação, 3021 = proxy do Docker).

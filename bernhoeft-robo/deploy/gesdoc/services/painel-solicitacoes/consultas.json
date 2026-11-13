@@ -14,6 +14,11 @@
     "descricao": "Enviados por status no portal (aprovado, aguardando análise, reprovado) e por quem enviou.",
     "sql": "select status_envio, count(*) filter (where quem_enviou = 'ROBO')::int as robo, count(*) filter (where quem_enviou = 'EQUIPE')::int as equipe, count(*) filter (where quem_enviou = 'NAO_REGISTRADO')::int as nao_registrado, count(*)::int as total from v_solicitacoes where etapa = 'ENVIADO' group by 1 order by case status_envio when 'APROVADO' then 1 when 'AGUARDANDO_ANALISE' then 2 else 3 end"
   },
+  "atlas_abas": {
+    "titulo": "Como aparece no Atlas",
+    "descricao": "Só a Equatorial, com as mesmas abas do portal Atlas: Atrasados (inclui os reprovados com prazo vencido, como o portal faz), Próximas entregas, Reprovados e Entregues (em análise, aprovados e aguardando predecessores).",
+    "sql": "select s.cliente, (count(*) filter (where s.etapa = 'PENDENTE' and s.aberto_no_portal and s.situacao_portal = 'ATRASADO') + count(*) filter (where s.situacao_portal = 'REPROVADO' and s.dias_para_prazo < 0))::int as atrasados, count(*) filter (where s.etapa = 'PENDENTE' and s.aberto_no_portal and s.situacao_portal = 'ATRASADO')::int as atrasados_sem_envio, count(*) filter (where s.situacao_portal = 'REPROVADO' and s.dias_para_prazo < 0)::int as atrasados_reprovados, count(*) filter (where s.etapa = 'PENDENTE' and s.aberto_no_portal and s.situacao_portal = 'NO_PRAZO')::int as proximas, count(*) filter (where s.situacao_portal = 'REPROVADO')::int as reprovados, count(*) filter (where s.situacao_portal in ('ENTREGUE','CONCLUIDO','EM_ANALISE','AGUARDANDO_PREDECESSORES','AGUARDANDO_OUTRO'))::int as entregues, count(*) filter (where s.situacao_portal = 'EM_ANALISE')::int as em_analise, count(*) filter (where s.situacao_portal in ('ENTREGUE','CONCLUIDO'))::int as aprovados, count(*) filter (where s.situacao_portal in ('AGUARDANDO_PREDECESSORES','AGUARDANDO_OUTRO'))::int as aguardando_predecessores from v_solicitacoes s where s.portal = 'Atlas' and s.cliente ilike 'Equatorial%' group by 1 order by 1"
+  },
   "alertas_resumo": {
     "titulo": "Alertas: totais",
     "descricao": "Pendentes ainda no prazo que vencem em até 7 dias, por faixa de dias e por responsável.",
